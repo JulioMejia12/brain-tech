@@ -5,7 +5,7 @@ export default function LandingGeneric() {
         <main className="bg-gray-950 text-white">
 
             {/* HERO */}
-            <section className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-10 items-center">
+            <section className="max-w-7xl mx-auto px-6 py-12 sm:py-20 grid md:grid-cols-2 gap-8 md:gap-10 items-center">
                 <div>
                     <span className="bg-yellow-600/20 text-[var(--primary)] px-3 py-1 rounded-full text-sm">
                         PARA CUALQUIER NEGOCIO QUE QUIERA CRECER
@@ -26,15 +26,22 @@ export default function LandingGeneric() {
                     <div className="mt-6 text-[var(--primary)] font-semibold">
                         🔥 Primer mes $999 — después $150/mes
                     </div>
-
-                    <div className="flex gap-4 mt-8">
-                        <button className="bg-[var(--primary)] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/80">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-8">
+                        <button className="cursor-pointer w-full sm:w-auto bg-[var(--primary)] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/80 text-center">
                             Quiero más clientes
                         </button>
 
-                        <a href="/demo" className="border border-[var(--primary)] px-6 py-3 rounded-lg hover:bg-[var(--primary)]/10">
-                            Ver cómo funciona
-                        </a>
+                        <div className="grid grid-cols-1 sm:grid-flow-col sm:auto-cols-min sm:grid-cols-3 gap-2 w-full sm:w-auto">
+                            <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
+                                demo negocio 1
+                            </a>
+                            <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
+                                demo negocio 2
+                            </a>
+                            <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
+                                demo negocio 3
+                            </a>
+                        </div>
                     </div>
 
                     <p className="text-gray-400 mt-6 text-sm">
@@ -44,16 +51,15 @@ export default function LandingGeneric() {
 
                 {/* Imagen mock */}
                 <div className="rounded-2xl border border-[#111827]/10 bg-[#F9FAFB] p-3 dark:border-[#FFFFFF]/15 dark:bg-[#1E293B]">
-                    <div className="relative overflow-hidden rounded-xl bg-[#F9FAFB] dark:bg-[#1E293B]">
+                    <div className="relative overflow-hidden rounded-xl bg-[#F9FAFB] dark:bg-[#1E293B] h-56 sm:h-72 md:h-[400px]">
                         <Image
                             src={"/eats.jpeg"}
                             alt="Mockup de telefono con menu QR"
-                            width={700}
-                            height={500}
-                            className="h-auto w-full object-cover"
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 700px"
+                            className="object-cover"
                         />
                     </div>
-                    {/* <p className="mt-3 text-center text-sm font-semibold">Escanea tu menu y visualiza al instante</p> */}
                 </div>
             </section>
 
@@ -76,7 +82,7 @@ export default function LandingGeneric() {
                     Tu negocio en internet en minutos
                 </h2>
 
-                <div className="grid md:grid-cols-2 gap-6 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 text-left">
                     <div className="bg-gray-900 p-6 rounded-xl">
                         ✔ Perfil profesional listo para compartir
                     </div>
@@ -98,7 +104,7 @@ export default function LandingGeneric() {
                     ¿Qué ganas al unirte?
                 </h2>
 
-                <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
                     {[
                         "🧲 Más clientes",
                         "📈 Más ventas",
@@ -113,9 +119,9 @@ export default function LandingGeneric() {
                     ))}
                 </div>
 
-                <p className="mt-10 text-[var(--primary)]">
+                {/* <p className="mt-10 text-[var(--primary)]">
                     Con 1 cliente nuevo al mes, se paga solo
-                </p>
+                </p> */}
             </section>
 
             {/* PASOS */}
@@ -124,7 +130,7 @@ export default function LandingGeneric() {
                     Empieza en 3 pasos
                 </h2>
 
-                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                     <div className="bg-gray-900 p-6 rounded-xl">
                         1. Regístrate
                     </div>
@@ -158,7 +164,7 @@ export default function LandingGeneric() {
                         <li>✔ Acceso desde cualquier dispositivo</li>
                     </ul>
 
-                    <button className="mt-6 w-full bg-[var(--primary)] text-black py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/80">
+                    <button className="cursor-pointer mt-6 w-full bg-[var(--primary)] text-black py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/80">
                         Empezar ahora
                     </button>
                 </div>
@@ -190,7 +196,7 @@ export default function LandingGeneric() {
 
             {/* CTA FINAL */}
             <section className="bg-[var(--primary)] text-black py-16 text-center">
-                <h2 className="text-3xl font-bold">
+                <h2 className="text-3xl font-bold text-[var(--secondary)]">
                     Empieza hoy a conseguir clientes
                 </h2>
 

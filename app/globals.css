@@ -7,6 +7,7 @@
   --foreground: #06122d;
 
   --primary: #16a34a;
+  --secondary: #011906;
 }
 
 .dark {
@@ -25,4 +26,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), sans-serif;
+}
+
+/* Utility: cursor pointer for buttons */
+.btn-pointer,
+button,
+input[type="button"],
+input[type="submit"],
+.btn {
+  cursor: pointer;
 }
