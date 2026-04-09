@@ -60,7 +60,7 @@ export default function LandingGeneric() {
                             className="object-cover"
                         />
                     </div>
-                    <p className="mt-3 text-center text-sm font-semibold">El cliente escanea el QR y visualiza al instante</p>
+                    <p className="mt-3 text-center text-sm font-semibold">El cliente escanea el QR y visualiza al instante tus productos o servicio.</p>
                 </div>
             </section>
 
@@ -120,9 +120,33 @@ export default function LandingGeneric() {
                     ))}
                 </div>
 
-                <p className="text-lg mt-10 text-[var(--primary)]">
+                <p className="text-2xl mt-10 text-[var(--primary)]">
                     En 24 horas tendras listo tu perfil profesional.
                 </p>
+                <div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto mt-10">
+                        {[
+                            { name: "Bazarcito", image: "/1.jpeg" },
+                            { name: "Store", image: "/2.jpeg" },
+                            { name: "Mi tiendita", image: "/3.jpeg" },
+                        ].map((profile, i) => (
+                            <div key={i} className="rounded-lg overflow-hidden bg-gray-800 hover:shadow-lg transition">
+                                <div className="relative w-full h-120">
+                                    <Image
+                                        src={profile.image}
+                                        alt={profile.name}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
+                                <div className="p-4">
+                                    <p className="font-semibold text-white">{profile.name}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                </div>
             </section>
 
             {/* PASOS */}
