@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
+          {/* Floating WhatsApp button uses NEXT_PUBLIC_WHATSAPP_NUMBER if set */}
+          <FloatingWhatsApp whatsappNumber={process.env.NEXT_PUBLIC_WHATSAPP_NUMBER} message={"Hola, quiero información sobre el plan de lanzamiento"} />
         </ThemeProvider>
       </body>
     </html>

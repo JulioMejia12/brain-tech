@@ -12,16 +12,16 @@ export default function LandingGeneric() {
                     </span>
 
                     <h1 className="text-4xl md:text-5xl font-bold mt-6 leading-tight">
-                        Consigue más clientes y vende en internet sin complicarte
+                        Consigue más clientes y vende en internet sin complicarte a 1 QR de distancia
                     </h1>
 
                     <p className="text-gray-300 mt-6">
                         Crea tu perfil profesional y empieza a recibir clientes, reservas o pedidos desde internet desde el primer día.
                     </p>
 
-                    <p className="text-gray-400 mt-4">
+                    {/* <p className="text-gray-400 mt-4">
                         No necesitas página web ni conocimientos técnicos.
-                    </p>
+                    </p> */}
 
                     <div className="mt-6 text-[var(--primary)] font-semibold">
                         🔥 Primer mes $999 — después $150/mes
@@ -53,13 +53,14 @@ export default function LandingGeneric() {
                 <div className="rounded-2xl border border-[#111827]/10 bg-[#F9FAFB] p-3 dark:border-[#FFFFFF]/15 dark:bg-[#1E293B]">
                     <div className="relative overflow-hidden rounded-xl bg-[#F9FAFB] dark:bg-[#1E293B] h-56 sm:h-72 md:h-[400px]">
                         <Image
-                            src={"/eats.jpeg"}
+                            src={"/qr.jpeg"}
                             alt="Mockup de telefono con menu QR"
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 700px"
                             className="object-cover"
                         />
                     </div>
+                    <p className="mt-3 text-center text-sm font-semibold">El cliente escanea el QR y visualiza al instante</p>
                 </div>
             </section>
 
@@ -110,7 +111,7 @@ export default function LandingGeneric() {
                         "📈 Más ventas",
                         "📲 Presencia profesional",
                         "⏰ Disponible 24/7",
-                        "💳 Cobros en línea",
+                        // "💳 Cobros en línea",
                         "📊 Visibilidad",
                     ].map((item, i) => (
                         <div key={i} className="bg-gray-800 p-6 rounded-xl">
@@ -119,9 +120,9 @@ export default function LandingGeneric() {
                     ))}
                 </div>
 
-                {/* <p className="mt-10 text-[var(--primary)]">
-                    Con 1 cliente nuevo al mes, se paga solo
-                </p> */}
+                <p className="text-lg mt-10 text-[var(--primary)]">
+                    En 24 horas tendras listo tu perfil profesional.
+                </p>
             </section>
 
             {/* PASOS */}
@@ -135,7 +136,7 @@ export default function LandingGeneric() {
                         1. Regístrate
                     </div>
                     <div className="bg-gray-900 p-6 rounded-xl">
-                        2. Crea tu perfil
+                        2. Danos información de tu negocio que quieras mostrar
                     </div>
                     <div className="bg-gray-900 p-6 rounded-xl">
                         3. Recibe clientes
@@ -148,8 +149,11 @@ export default function LandingGeneric() {
                 <h2 className="text-3xl font-bold mb-6">
                     Plan de lanzamiento
                 </h2>
-
                 <div className="bg-gray-800 max-w-md mx-auto p-8 rounded-xl">
+                    <div className="inline-block mb-4 px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 font-semibold text-sm">
+                        PROMOCIÓN — primeros 10 negocios inscritos
+                    </div>
+
                     <p className="text-[var(--primary)] text-xl font-bold">
                         $999 primer mes
                     </p>
@@ -163,6 +167,15 @@ export default function LandingGeneric() {
                         <li>✔ Recepción de clientes</li>
                         <li>✔ Acceso desde cualquier dispositivo</li>
                     </ul>
+
+                    <div className="mt-6 text-left text-sm text-gray-200">
+                        <p className="font-semibold mb-2">Adicional por promoción (primeros 10 inscritos):</p>
+                        <ul className="list-disc list-inside text-gray-300 space-y-1">
+                            <li>Diseño de logotipo</li>
+                            <li>Diseño de tarjeta de presentación</li>
+                            <li>Diseño de post para redes sociales</li>
+                        </ul>
+                    </div>
 
                     <button className="cursor-pointer mt-6 w-full bg-[var(--primary)] text-black py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/80">
                         Empezar ahora
