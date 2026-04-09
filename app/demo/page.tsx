@@ -33,7 +33,7 @@ export default function Page() {
   const [detailQty, setDetailQty] = useState(1);
   const [activeBottomTab, setActiveBottomTab] = useState<"Inicio" | "Menu" | "Promos" | "Contacto">("Menu");
   const [promotions, setPromotions] = useState<PromotionItem[]>([]);
-  
+
   const categories = ["Entradas", "Tacos", "Bebidas", "Postres"];
   const restaurantName = restaurantConfig.name;
   const restaurantLogo = restaurantConfig.logo;
@@ -121,21 +121,21 @@ export default function Page() {
               />
             </div>
             <div className="min-w-0">
-            <h1 className="truncate text-xl font-bold sm:text-3xl">{restaurantName}</h1>
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold sm:text-xs">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#16A34A]/25 bg-[#16A34A]/12 px-2 py-0.5 text-[#166534] dark:border-[#F59E0B]/35 dark:bg-[#F59E0B]/16 dark:text-[#FCD34D]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#16A34A] dark:bg-[#FCD34D]" />
-                Abierto ahora
-              </span>
-              <span className="text-[#4B5563] dark:text-[#CBD5E1]">Hoy: 10:00 AM - 11:00 PM</span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#3B82F6]/25 bg-[#3B82F6]/12 px-2 py-0.5 text-[#1E40AF] dark:border-[#60A5FA]/30 dark:bg-[#3B82F6]/20 dark:text-[#93C5FD]">
-                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                2 clientes viendo el menu
-              </span>
-            </div>
+              <h1 className="truncate text-xl font-bold sm:text-3xl">{restaurantName}</h1>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold sm:text-xs">
+                <span className="inline-flex items-center gap-1 rounded-full border border-[#16A34A]/25 bg-[#16A34A]/12 px-2 py-0.5 text-[#166534] dark:border-[#F59E0B]/35 dark:bg-[#F59E0B]/16 dark:text-[#FCD34D]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#16A34A] dark:bg-[#FCD34D]" />
+                  Abierto ahora
+                </span>
+                <span className="text-[#4B5563] dark:text-[#CBD5E1]">Hoy: 10:00 AM - 11:00 PM</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-[#3B82F6]/25 bg-[#3B82F6]/12 px-2 py-0.5 text-[#1E40AF] dark:border-[#60A5FA]/30 dark:bg-[#3B82F6]/20 dark:text-[#93C5FD]">
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  2 clientes viendo el menu
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
@@ -162,7 +162,7 @@ export default function Page() {
               </svg>
               Pedir por WhatsApp
             </a>
-            <button
+            {/* <button
               onClick={() => (window.location.href = '/business-panel')}
               className="hidden sm:flex items-center gap-2 rounded-full bg-[#4F46E5] px-5 py-2.5 text-sm font-bold text-white transition hover:opacity-90 shadow-sm dark:bg-[#6366F1]"
             >
@@ -173,7 +173,7 @@ export default function Page() {
                 <rect x="16" y="4" width="3" height="12" rx="1" />
               </svg>
               Ver panel del negocio
-            </button>
+            </button> */}
             <ThemeToggle />
           </div>
         </div>
@@ -198,11 +198,10 @@ export default function Page() {
                   {categories.map((category, index) => (
                     <button
                       key={category}
-                      className={`w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${
-                        index === 0
-                          ? "bg-[#16A34A] text-white dark:bg-[#F59E0B] dark:text-[#111827]"
-                          : "bg-[#FFFFFF] text-[#111827] dark:bg-[#0F172A] dark:text-[#FFFFFF]"
-                      }`}
+                      className={`w-full rounded-xl px-4 py-3 text-left text-sm font-semibold transition ${index === 0
+                        ? "bg-[#16A34A] text-white dark:bg-[#F59E0B] dark:text-[#111827]"
+                        : "bg-[#FFFFFF] text-[#111827] dark:bg-[#0F172A] dark:text-[#FFFFFF]"
+                        }`}
                     >
                       {category}
                     </button>
@@ -291,11 +290,10 @@ export default function Page() {
                 {categories.map((category, index) => (
                   <button
                     key={category}
-                    className={`rounded-xl px-4 py-3 text-sm font-semibold ${
-                      index === 0
-                        ? "bg-[#16A34A] text-white dark:bg-[#F59E0B] dark:text-[#111827]"
-                        : "bg-[#FFFFFF] text-[#111827] dark:bg-[#0F172A] dark:text-[#FFFFFF]"
-                    }`}
+                    className={`rounded-xl px-4 py-3 text-sm font-semibold ${index === 0
+                      ? "bg-[#16A34A] text-white dark:bg-[#F59E0B] dark:text-[#111827]"
+                      : "bg-[#FFFFFF] text-[#111827] dark:bg-[#0F172A] dark:text-[#FFFFFF]"
+                      }`}
                   >
                     {category}
                   </button>
@@ -369,11 +367,10 @@ export default function Page() {
                             return next;
                           });
                         }}
-                        className={`flex h-14 items-center justify-center gap-1.5 rounded-xl transition 2xl:px-5 2xl:text-base ${
-                          (cartQuantities[item.id] ?? 0) > 0
-                            ? "border border-[#16A34A] bg-[#16A34A]/10 px-4 text-center text-sm font-semibold text-[#166534] animate-pulse dark:border-[#F59E0B] dark:bg-[#F59E0B]/20 dark:text-[#FCD34D]"
-                            : "border border-[#16A34A] bg-[#16A34A] px-4 text-center text-sm font-semibold text-white hover:opacity-90 dark:bg-[#F59E0B] dark:text-[#111827]"
-                        }`}
+                        className={`flex h-14 items-center justify-center gap-1.5 rounded-xl transition 2xl:px-5 2xl:text-base ${(cartQuantities[item.id] ?? 0) > 0
+                          ? "border border-[#16A34A] bg-[#16A34A]/10 px-4 text-center text-sm font-semibold text-[#166534] animate-pulse dark:border-[#F59E0B] dark:bg-[#F59E0B]/20 dark:text-[#FCD34D]"
+                          : "border border-[#16A34A] bg-[#16A34A] px-4 text-center text-sm font-semibold text-white hover:opacity-90 dark:bg-[#F59E0B] dark:text-[#111827]"
+                          }`}
                       >
                         {(cartQuantities[item.id] ?? 0) > 0 ? (
                           <>
@@ -493,11 +490,10 @@ export default function Page() {
                   window.open("https://wa.me/5210000000000?text=Hola%2C%20quiero%20hacer%20un%20pedido", "_blank", "noopener,noreferrer");
                 }
               }}
-              className={`rounded-xl px-2 py-2.5 ${
-                activeBottomTab === label
-                  ? "bg-[#16A34A]/12 text-[#16A34A] dark:bg-[#F59E0B]/18 dark:text-[#F59E0B]"
-                  : "text-[#111827] dark:text-[#FFFFFF]"
-              }`}
+              className={`rounded-xl px-2 py-2.5 ${activeBottomTab === label
+                ? "bg-[#16A34A]/12 text-[#16A34A] dark:bg-[#F59E0B]/18 dark:text-[#F59E0B]"
+                : "text-[#111827] dark:text-[#FFFFFF]"
+                }`}
             >
               <div className="flex justify-center">
                 {label === "Inicio" && (

@@ -33,10 +33,10 @@ export default function LandingGeneric() {
 
                         <div className="grid grid-cols-1 sm:grid-flow-col sm:auto-cols-min sm:grid-cols-3 gap-2 w-full sm:w-auto">
                             <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
-                                demo negocio 1
+                                demo Taqueria
                             </a>
-                            <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
-                                demo negocio 2
+                            <a href="/barberias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
+                                demo barberia
                             </a>
                             <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
                                 demo negocio 3
