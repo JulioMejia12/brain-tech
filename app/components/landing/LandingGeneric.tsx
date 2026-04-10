@@ -32,14 +32,14 @@ export default function LandingGeneric() {
                         </button>
 
                         <div className="grid grid-cols-1 sm:grid-flow-col sm:auto-cols-min sm:grid-cols-3 gap-2 w-full sm:w-auto">
-                            <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
-                                demo Taqueria
+                            <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 flex items-center justify-center">
+                                Ver Taqueria
                             </a>
-                            <a href="/barberias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
-                                demo barberia
+                            <a href="/barberias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 items-center justify-center">
+                                Ver Barberia
                             </a>
-                            <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10">
-                                demo negocio 3
+                            <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 items-center justify-center">
+                                Ver negocio
                             </a>
                         </div>
                     </div>
@@ -197,7 +197,7 @@ export default function LandingGeneric() {
                         <ul className="list-disc list-inside text-gray-300 space-y-1">
                             <li>Diseño de logotipo</li>
                             <li>Diseño de tarjeta de presentación</li>
-                            <li>Diseño de post para redes sociales</li>
+                            {/* <li>Diseño de post para redes sociales</li> */}
                         </ul>
                     </div>
 
