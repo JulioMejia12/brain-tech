@@ -1,6 +1,8 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useRef, useEffect } from "react"
+import FloatingWhatsApp from '../../../components/FloatingWhatsApp'
+import Map from '../../../components/Map'
 
 interface BarberiasProps {
     primary?: string
@@ -10,8 +12,15 @@ interface BarberiasProps {
     logo?: string
     textColor?: string
     children?: React.ReactNode
-    heroImage?: string
+    heroImage: string
     whatsappNumber?: string
+    mapQuery?: string
+    mapLat?: number
+    mapLng?: number
+    mapZoom?: number
+    mapHeight?: string
+    about?: string
+    services?: { name: string; price: string }[]
 }
 
 const Barberias: React.FC<BarberiasProps> = ({
@@ -24,6 +33,13 @@ const Barberias: React.FC<BarberiasProps> = ({
     logo,
     children,
     whatsappNumber = '',
+    mapQuery,
+    mapLat,
+    mapLng,
+    mapZoom = 15,
+    mapHeight = '420px',
+    about,
+    services = [],
 }) => {
     const openWhatsApp = (service?: string) => {
         const raw = whatsappNumber || ''
@@ -39,6 +55,32 @@ const Barberias: React.FC<BarberiasProps> = ({
         window.open(url, '_blank')
     }
     const [menuOpen, setMenuOpen] = useState(false)
+    const heroRef = useRef<HTMLImageElement | null>(null)
+
+    useEffect(() => {
+        let rafId = 0
+        const speed = 0.2
+
+        const onScroll = () => {
+            if (rafId) cancelAnimationFrame(rafId)
+            rafId = requestAnimationFrame(() => {
+                if (!heroRef.current) return
+                const rect = heroRef.current.getBoundingClientRect()
+                const offset = -rect.top * speed
+                heroRef.current.style.transform = `translateY(${offset}px) scale(1.05)`
+            })
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true })
+        // initial position
+        onScroll()
+
+        return () => {
+            window.removeEventListener('scroll', onScroll)
+            if (rafId) cancelAnimationFrame(rafId)
+        }
+    }, [])
+    const effectiveMapQuery = mapQuery || title
 
     return (
         <div className="min-h-screen flex flex-col" style={{ backgroundColor: background }}>
@@ -47,7 +89,7 @@ const Barberias: React.FC<BarberiasProps> = ({
                     <div className="flex items-center gap-4">
                         {logo ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={logo} alt={title} className="w-10 h-10 object-contain rounded-full" />
+                            <img src={logo} alt={title} className="w-14 h-14 md:w-16 md:h-16 object-contain rounded-full" />
                         ) : (
                             <div className="text-2xl font-bold" style={{ color: textColor }}>{title}</div>
                         )}
@@ -55,17 +97,17 @@ const Barberias: React.FC<BarberiasProps> = ({
                         <nav className="hidden sm:flex gap-4 text-md" style={{ color: textColor }}>
                             <a style={{ color: textColor }}>Inicio</a>
                             <a style={{ color: textColor }}>Servicios</a>
-                            <a style={{ color: textColor }}>Contacto</a>
+                            <a style={{ color: textColor }}>Nosotros</a>
                         </nav>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
+                        {/* <button
                             className="inline-block px-3 py-1.5 rounded"
                             style={{ backgroundColor: primary, color: '#fff' }}
                             onClick={() => openWhatsApp()}
                         >
                             Reservar
-                        </button>
+                        </button> */}
 
                         <button
                             className="sm:hidden p-2 rounded"
@@ -100,15 +142,14 @@ const Barberias: React.FC<BarberiasProps> = ({
                 {/* Hero: imagen de bienvenida full-width */}
                 <div className="w-full h-[60vh] relative overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={heroImage} alt="Barbería hero" className="absolute inset-0 w-full h-full object-cover" />
-
+                    <img ref={heroRef} src={heroImage} alt="Barbería hero" className="absolute inset-0 w-full h-full object-cover transform-gpu" style={{ transform: 'translateY(0px)' }} />
                     <div className="absolute inset-0 bg-black/40 flex items-center">
                         <div className="max-w-7xl mx-auto px-6 text-white">
                             <h1 className="text-4xl md:text-6xl font-extrabold">{title}</h1>
                             <p className="mt-4 max-w-2xl text-lg text-gray-100">Bienvenido a {title}. Reserva tu corte, consulta servicios y descubre nuestras reseñas.</p>
                             <div className="mt-6">
                                 <button className="px-4 py-2 rounded mr-3" style={{ backgroundColor: primary, color: '#fff' }} onClick={() => openWhatsApp()}>
-                                    Reservar
+                                    Reservar cita ahora
                                 </button>
                                 <a href="#info" className="px-4 py-2 rounded border text-white">Más información</a>
                             </div>
@@ -116,14 +157,18 @@ const Barberias: React.FC<BarberiasProps> = ({
                     </div>
                 </div>
                 <div>
-                    <h2 className="text-3xl font-bold text-center mt-12 mb-6">Nuestros Servicios</h2>
+                    <h2 className="text-3xl font-bold text-center mt-12 mb-6" style={{ color: primary }}>Nuestros Servicios</h2>
                     <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4 lg:px-0">
-                        <div className="bg-white rounded-lg shadow p-6 text-center">
-                            <h3 className="text-xl font-semibold mb-2" style={{ color: secondary }}>Corte de Cabello</h3>
-                            <p className="text-gray-600 mb-4">Desde $15.000</p>
-                            <button className="px-4 py-2 rounded w-full sm:inline-block" style={{ backgroundColor: primary, color: '#fff' }} onClick={() => openWhatsApp('Corte de Cabello')}>Reservar</button>
-                        </div>
-                        <div className="bg-white rounded-lg shadow p-6 text-center">
+                        {services.length > 0 ? services.map((service, idx) => (
+                            <div key={idx} className="bg-white rounded-lg shadow p-6 text-center">
+                                <h3 className="text-xl font-semibold mb-2" style={{ color: secondary }}>{service.name}</h3>
+                                <p className="text-gray-600 mb-4">{service.price}</p>
+                                <button className="px-4 py-2 rounded w-full sm:inline-block" style={{ backgroundColor: primary, color: '#fff' }} onClick={() => openWhatsApp(service.name)}>Reservar</button>
+                            </div>
+                        )) : (
+                            <p className="text-center text-gray-500 col-span-full">No hay servicios disponibles en este momento.</p>
+                        )}
+                        {/* <div className="bg-white rounded-lg shadow p-6 text-center">
                             <h3 className="text-xl font-semibold mb-2" style={{ color: secondary }}>Afeitado Clásico</h3>
                             <p className="text-gray-600 mb-4">Desde $10.000</p>
                             <button className="px-4 py-2 rounded w-full sm:inline-block" style={{ backgroundColor: primary, color: '#fff' }} onClick={() => openWhatsApp('Afeitado Clásico')}>Reservar</button>
@@ -132,59 +177,32 @@ const Barberias: React.FC<BarberiasProps> = ({
                             <h3 className="text-xl font-semibold mb-2" style={{ color: secondary }}>Corte de Barba</h3>
                             <p className="text-gray-600 mb-4">Desde $12.000</p>
                             <button className="px-4 py-2 rounded w-full sm:inline-block" style={{ backgroundColor: primary, color: '#fff' }} onClick={() => openWhatsApp('Corte de Barba')}>Reservar</button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
-                <div>
-                    <h2 className="text-3xl font-bold text-center mt-12 mb-6">Reseñas de Clientes</h2>
-                    <div className="max-w-4xl mx-auto space-y-6 px-4 lg:px-0">
-                        <div className="bg-white rounded-lg shadow p-6 overflow-hidden">
-                            <p className="text-gray-600 mb-4 whitespace-normal break-words">"Excelente servicio, el mejor corte que he tenido. El personal es muy amable y profesional."</p>
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold flex-shrink-0" style={{ backgroundColor: primary, color: '#fff' }}>
-                                    JP
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-lg" style={{ color: secondary }}>Juan Pérez</p>
-                                    <p className="text-sm text-gray-500">Cliente desde 2022</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-lg shadow p-6 overflow-hidden">
-                            <p className="text-gray-600 mb-4 whitespace-normal break-words">"Me encanta venir aquí, siempre salgo satisfecho con mi corte. El ambiente es genial y los precios son justos."</p>
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-sm font-semibold flex-shrink-0" style={{ backgroundColor: primary, color: '#fff' }}>
-                                    MG
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-lg" style={{ color: secondary }}>María Gómez</p>
-                                    <p className="text-sm text-gray-500">Cliente desde 2021</p>
-                                </div>
-                            </div>
+                {/* Sobre nosotros */}
+                <section className="text-gray-600 text-3xl font-bold text-center mt-12 mb-6">
+                    <div className="max-w-4xl mx-auto px-4 lg:px-0">
+                        <h2 className="text-3xl font-bold mb-6" style={{ color: primary }}>Sobre nosotros</h2>
+                        <div className="bg-white rounded-lg shadow p-8">
+                            <p className="text-lg mb-4">{about ? about : `En ${title} nos apasiona ofrecer cortes y servicios de barbería con atención personalizada. Nuestro equipo está formado por profesionales con experiencia, comprometidos con la calidad y la satisfacción del cliente.`}</p>
+                            <p className="text-lg">Buscamos crear un espacio cómodo, moderno y confiable donde te sientas bienvenido en cada visita.</p>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                {/* Cards de imágenes de nuestros cortes, servicios, precios, etc */}
-                <div>
-                    <h2 className="text-3xl font-bold text-center mt-12 mb-6">Nuestros cortes mas pedidos</h2>
-                    <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4 lg:px-0">
-                        <img src="/image.jpeg" alt="Corte 1" className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg shadow" />
-                        <img src="/image2.jpeg" alt="Corte 2" className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg shadow" />
-                        <img src="/image3.jpeg" alt="Corte 3" className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg shadow" />
-                        <img src="/hero-barber.jpeg" alt="Corte 4" className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg shadow" />
-                        <img src="/image2.jpeg" alt="Corte 2" className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg shadow" />
-                        <img src="/image3.jpeg" alt="Corte 3" className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg shadow" />
-                    </div>
-                </div>
-
-                {/* Contenido principal debajo del hero */}
-                <div id="info" className="max-w-7xl mx-auto px-6 py-8 w-full">
-                    {children}
-                </div>
+                {/* Mapa */}
+                <section className="text-3xl font-bold text-center mt-12 mb-6">
+                    <h2 className="text-2xl font-bold mb-4" style={{ color: primary }}>Encuéntranos</h2>
+                    <Map query={effectiveMapQuery} lat={mapLat} lng={mapLng} zoom={mapZoom} height={mapHeight} />
+                </section>
             </main>
 
+            {/* Contenido principal debajo del hero */}
+            <div id="info" className="max-w-7xl mx-auto px-6 py-8 w-full">
+                {children}
+            </div>
             <footer className="bg-white border-t">
                 <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-600">
                     <div>© {new Date().getFullYear()} Brain Tech. Todos los derechos reservados.</div>
@@ -194,6 +212,8 @@ const Barberias: React.FC<BarberiasProps> = ({
                     </div>
                 </div>
             </footer>
+            {/* Botón flotante de WhatsApp */}
+            <FloatingWhatsApp whatsappNumber={whatsappNumber} message={`Hola, quiero reservar en ${title}`} />
         </div>
     )
 }

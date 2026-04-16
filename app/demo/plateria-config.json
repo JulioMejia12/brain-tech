@@ -1,0 +1,30 @@
+{
+    "logo": "/toñito.png",
+    "name": "Joyería Plata Pura",
+    "textColor": "#222222",
+    "primaryColor": "#C0C0C0",
+    "secondaryColor": "#8A8A8A",
+    "heroImage": "/hero-plata.jpeg",
+    "services": [
+        {
+            "name": "Collar de plata 925",
+            "description": "Collar elegante en plata 925 con cierre seguro. Perfecto para uso diario y eventos.",
+            "price": "$45"
+        },
+        {
+            "name": "Anillo liso de plata",
+            "description": "Anillo clásico de plata pulida, disponible en varias tallas.",
+            "price": "$30"
+        },
+        {
+            "name": "Pulsera con dije",
+            "description": "Pulsera de plata con dije personalizado, acabado mate brillante.",
+            "price": "$35"
+        }
+    ],
+    "about": "En Joyería Plata Pura, nos dedicamos a ofrecer piezas de joyería de alta calidad en un ambiente acogedor. Nuestro equipo de expertos está comprometido a brindarte el mejor servicio para que siempre luzcas tu mejor estilo.",
+    "contact": {
+        "phone": "+1 234 567 890",
+        "email": "contacto@joyeriaplatapura.com"
+    }
+}

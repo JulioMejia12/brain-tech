@@ -38,8 +38,8 @@ export default function LandingGeneric() {
                             <a href="/barberias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 items-center justify-center">
                                 Ver Barberia
                             </a>
-                            <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 items-center justify-center">
-                                Ver negocio
+                            <a href="/platerias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 items-center justify-center">
+                                Ver Plateria
                             </a>
                         </div>
                     </div>

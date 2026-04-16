@@ -1,0 +1,25 @@
+{
+    "logo": "/barber.png",
+    "name": "Barbería El Estilo",
+    "textColor": "#333333",
+    "primaryColor": "#FF5733",
+    "secondaryColor": "#C70039",
+    "heroImage": "/image.jpeg",
+    "services": [
+        {
+            "name": "Corte de cabello",
+            "description": "Cortes de cabello modernos y clásicos para hombres.",
+            "price": "$15"
+        },
+        {
+            "name": "Afeitado",
+            "description": "Afeitado tradicional con navaja para un acabado suave.",
+            "price": "$10"
+        }
+    ],
+    "about": "En Barbería El Estilo, nos dedicamos a ofrecer cortes de cabello y afeitados de alta calidad en un ambiente acogedor. Nuestro equipo de barberos profesionales está comprometido a brindarte el mejor servicio para que siempre luzcas tu mejor estilo.",
+    "contact": {
+        "phone": "+1 234 567 890",
+        "email": "contacto@barberiaelestilo.com"
+    }
+}
