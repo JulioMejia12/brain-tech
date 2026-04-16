@@ -5,13 +5,13 @@ export default function LandingGeneric() {
         <main className="bg-gray-950 text-white">
 
             {/* HERO */}
-            <section className="max-w-7xl mx-auto px-6 py-12 sm:py-20 grid md:grid-cols-2 gap-8 md:gap-10 items-center">
+            <section className="max-w-7xl mx-auto px-6 py-8 sm:py-12 md:py-20 grid md:grid-cols-2 gap-8 md:gap-10 items-center">
                 <div>
                     <span className="bg-yellow-600/20 text-[var(--primary)] px-3 py-1 rounded-full text-sm">
                         PARA CUALQUIER NEGOCIO QUE QUIERA CRECER
                     </span>
 
-                    <h1 className="text-4xl md:text-5xl font-bold mt-6 leading-tight">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-6 leading-tight">
                         Consigue más clientes y vende en internet sin complicarte a 1 QR de distancia
                     </h1>
 
@@ -27,18 +27,18 @@ export default function LandingGeneric() {
                         🔥 Primer mes $999 — después $150/mes
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-8">
-                        <button className="cursor-pointer w-full sm:w-auto bg-[var(--primary)] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/80 text-center">
+                        <button className="cursor-pointer w-full sm:w-auto min-w-[180px] bg-[var(--primary)] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/80 text-center">
                             Quiero más clientes
                         </button>
 
-                        <div className="grid grid-cols-1 sm:grid-flow-col sm:auto-cols-min sm:grid-cols-3 gap-2 w-full sm:w-auto">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full sm:w-auto">
                             <a href="/demo" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 flex items-center justify-center">
                                 Ver Taqueria
                             </a>
-                            <a href="/barberias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 items-center justify-center">
+                            <a href="/barberias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 flex items-center justify-center">
                                 Ver Barberia
                             </a>
-                            <a href="/platerias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 items-center justify-center">
+                            <a href="/platerias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 flex items-center justify-center">
                                 Ver Plateria
                             </a>
                         </div>
@@ -131,7 +131,7 @@ export default function LandingGeneric() {
                             { name: "Mi tiendita", image: "/3.jpeg" },
                         ].map((profile, i) => (
                             <div key={i} className="rounded-lg overflow-hidden bg-gray-800 hover:shadow-lg transition">
-                                <div className="relative w-full h-120">
+                                <div className="relative w-full h-48 sm:h-56 md:h-64">
                                     <Image
                                         src={profile.image}
                                         alt={profile.name}

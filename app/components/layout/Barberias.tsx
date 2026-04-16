@@ -59,7 +59,7 @@ const Barberias: React.FC<BarberiasProps> = ({
 
     useEffect(() => {
         let rafId = 0
-        const speed = 0.2
+        const speed = 0.12
 
         const onScroll = () => {
             if (rafId) cancelAnimationFrame(rafId)
@@ -67,7 +67,8 @@ const Barberias: React.FC<BarberiasProps> = ({
                 if (!heroRef.current) return
                 const rect = heroRef.current.getBoundingClientRect()
                 const offset = -rect.top * speed
-                heroRef.current.style.transform = `translateY(${offset}px) scale(1.05)`
+                // avoid scaling to prevent visible edges/artifacts on small screens
+                heroRef.current.style.transform = `translateY(${offset}px)`
             })
         }
 
@@ -143,15 +144,17 @@ const Barberias: React.FC<BarberiasProps> = ({
                 <div className="w-full h-[60vh] relative overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img ref={heroRef} src={heroImage} alt="Barbería hero" className="absolute inset-0 w-full h-full object-cover transform-gpu" style={{ transform: 'translateY(0px)' }} />
-                    <div className="absolute inset-0 bg-black/40 flex items-center">
-                        <div className="max-w-7xl mx-auto px-6 text-white">
-                            <h1 className="text-4xl md:text-6xl font-extrabold">{title}</h1>
-                            <p className="mt-4 max-w-2xl text-lg text-gray-100">Bienvenido a {title}. Reserva tu corte, consulta servicios y descubre nuestras reseñas.</p>
-                            <div className="mt-6">
-                                <button className="px-4 py-2 rounded mr-3" style={{ backgroundColor: primary, color: '#fff' }} onClick={() => openWhatsApp()}>
+                    <div className="absolute inset-0 bg-black/40 flex items-center z-10">
+                        <div className="max-w-2xl md:max-w-3xl mx-auto px-6 text-white z-20">
+                            <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold leading-tight">{title}</h1>
+                            <p className="mt-4 text-base sm:text-lg text-gray-100">Bienvenido a {title}. Reserva tu corte, consulta servicios y descubre nuestras reseñas.</p>
+                            <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
+                                <button className="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 rounded mr-0 sm:mr-3" style={{ backgroundColor: primary, color: '#fff', zIndex: 20 }} onClick={() => openWhatsApp()}>
                                     Reservar cita ahora
                                 </button>
-                                <a href="#info" className="px-4 py-2 rounded border text-white">Más información</a>
+                                <a href="#info" className="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 rounded border text-white mt-2 sm:mt-0" style={{ zIndex: 20 }}>
+                                    Más información
+                                </a>
                             </div>
                         </div>
                     </div>
