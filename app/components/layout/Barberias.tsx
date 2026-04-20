@@ -21,7 +21,7 @@ interface BarberiasProps {
     mapHeight?: string
     about?: string
     services?: { name: string; price: string }[]
-    images?: { name: string; image: string }[]
+    images?: (string | { name: string; image: string })[]
 }
 
 const Barberias: React.FC<BarberiasProps> = ({
@@ -41,8 +41,12 @@ const Barberias: React.FC<BarberiasProps> = ({
     mapHeight = '420px',
     about,
     services = [],
-    images = []
+    images = [],
 }) => {
+    // normalize images to objects { name, image }
+    const normalizedImages: { name: string; image: string }[] = Array.isArray(images)
+        ? images.map((it) => (typeof it === 'string' ? { name: '', image: it } : it))
+        : []
     const openWhatsApp = (service?: string) => {
         const raw = whatsappNumber || ''
         const digits = raw.replace(/[^0-9]/g, '')
@@ -304,8 +308,8 @@ const Barberias: React.FC<BarberiasProps> = ({
                 <div>
                     <h2 className="text-3xl font-bold text-center mt-12 mb-6" style={{ color: primary }}>Nuestros cortes mas pedidos</h2>
                     <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4 lg:px-0">
-                        {images && images.length > 0 ? images.map((img, idx) => (
-                            <img key={idx} src={img || ''} alt={img.name} className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg shadow" />
+                        {normalizedImages && normalizedImages.length > 0 ? normalizedImages.map((img, idx) => (
+                            <img key={idx} src={img.image || ''} alt={img.name || ''} className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg shadow" />
                         )) : null}
                     </div>
                 </div>
