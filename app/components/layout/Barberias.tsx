@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react"
 import FloatingWhatsApp from '../../../components/FloatingWhatsApp'
 import Map from '../../../components/Map'
+import { text } from "stream/consumers"
 
 interface BarberiasProps {
     primary?: string
@@ -28,7 +29,7 @@ const Barberias: React.FC<BarberiasProps> = ({
     primary = '#0f172a',
     secondary = '#6b7280',
     background = '#f8fafc',
-    textColor = '#000',
+    textColor = '',
     title = 'MiBarber',
     heroImage = '/images/hero-barber.jpg',
     logo,
@@ -101,6 +102,7 @@ const Barberias: React.FC<BarberiasProps> = ({
         setTimeout(() => setSending(false), 800)
     }
     const [menuOpen, setMenuOpen] = useState(false)
+    const [activeNav, setActiveNav] = useState<'home' | 'menu' | 'promos' | 'contact'>('home')
     const heroRef = useRef<HTMLImageElement | null>(null)
 
     useEffect(() => {
@@ -156,17 +158,16 @@ const Barberias: React.FC<BarberiasProps> = ({
                             Reservar
                         </button> */}
 
-                        <button
+                        {/* <button
                             className="sm:hidden p-2 rounded"
                             style={{ backgroundColor: secondary, color: '#fff' }}
                             onClick={() => setMenuOpen((s) => !s)}
                             aria-label="Abrir menú"
                         >
-                            {/* simple hamburger */}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
-                        </button>
+                        </button> */}
                     </div>
                 </div>
 
@@ -205,7 +206,7 @@ const Barberias: React.FC<BarberiasProps> = ({
                         </div>
                     </div>
                 </div>
-                <div>
+                <div id="info">
                     <h2 className="text-3xl font-bold text-center mt-12 mb-6" style={{ color: primary }}>Nuestros Servicios</h2>
                     <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4 lg:px-0">
                         {services.length > 0 ? services.map((service, idx) => (
@@ -322,7 +323,7 @@ const Barberias: React.FC<BarberiasProps> = ({
             </main>
 
             {/* Contenido principal debajo del hero */}
-            <div id="info" className="max-w-7xl mx-auto px-6 py-8 w-full">
+            <div className="max-w-7xl mx-auto px-6 py-8 w-full">
                 {children}
             </div>
             <footer className="bg-white border-t">
@@ -334,8 +335,40 @@ const Barberias: React.FC<BarberiasProps> = ({
                     </div>
                 </div>
             </footer>
-            {/* Botón flotante de WhatsApp */}
-            <FloatingWhatsApp whatsappNumber={whatsappNumber} message={`Hola, quiero reservar en ${title}`} />
+            {/* Botón flotante de WhatsApp (lado superior derecho) */}
+            <FloatingWhatsApp whatsappNumber={whatsappNumber} message={`Hola, quiero reservar en ${title}`} className="top-6 right-6 md:top-auto md:bottom-6 md:right-6 lg:bottom-8" />
+            {/* Bottom mobile navigation */}
+            <nav aria-label="Mobile navigation" className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-[94%] max-w-3xl sm:hidden bg-white/95 backdrop-blur rounded-xl shadow-lg px-3 py-2">
+                <div className="flex items-center justify-between">
+                    <button onClick={() => { setActiveNav('home'); window.scrollTo({ top: 0, behavior: 'smooth' }) }} className={`flex flex-col items-center text-sm px-2 py-1 rounded ${activeNav === 'home' ? '' : ''}`} style={activeNav === 'home' ? { backgroundColor: primary, color: '#fff' } : { color: '#374151' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mb-1 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l9-9 9 9v8a2 2 0 01-2 2h-4a2 2 0 01-2-2v-6H9v6a2 2 0 01-2 2H3a2 2 0 01-2-2v-8z" />
+                        </svg>
+                        <span>Inicio</span>
+                    </button>
+
+                    <button onClick={() => { setActiveNav('menu'); const el = document.querySelector('#info'); el && (el as HTMLElement).scrollIntoView({ behavior: 'smooth' }); }} className={`flex flex-col items-center text-sm px-2 py-1 rounded`} style={activeNav === 'menu' ? { backgroundColor: primary, color: '#fff' } : { color: '#374151' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mb-1 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <span>Servicios</span>
+                    </button>
+
+                    <button onClick={() => { setActiveNav('promos'); alert('Promociones no disponibles aún') }} className={`flex flex-col items-center text-sm px-2 py-1 rounded`} style={activeNav === 'promos' ? { backgroundColor: primary, color: '#fff' } : { color: '#374151' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mb-1 text-current" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7l3-7z" />
+                        </svg>
+                        <span>Promos</span>
+                    </button>
+
+                    <button onClick={() => { setActiveNav('contact'); openWhatsApp() }} className={`flex flex-col items-center text-sm px-2 py-1 rounded`} style={activeNav === 'contact' ? { backgroundColor: primary, color: '#fff' } : { color: '#374151' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mb-1 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a2 2 0 011.9 1.4l.95 3.32a2 2 0 01-.45 1.9L8.7 12.7a11 11 0 005.6 5.6l1.08-1.08a2 2 0 011.9-.45l3.32.95A2 2 0 0121 18.72V22a2 2 0 01-2 2A19 19 0 013 5z" />
+                        </svg>
+                        <span>Contacto</span>
+                    </button>
+                </div>
+            </nav>
         </div>
     )
 }

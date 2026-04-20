@@ -5,9 +5,10 @@ import React from "react"
 type Props = {
   whatsappNumber?: string
   message?: string
+  className?: string
 }
 
-export default function FloatingWhatsApp({ whatsappNumber, message }: Props) {
+export default function FloatingWhatsApp({ whatsappNumber, message, className }: Props) {
   const digits = (whatsappNumber || "").replace(/[^0-9]/g, "")
   if (!digits) return null
 
@@ -17,11 +18,13 @@ export default function FloatingWhatsApp({ whatsappNumber, message }: Props) {
     window.open(url, "_blank")
   }
 
+  const baseClass = "fixed z-50 bg-green-500 hover:bg-green-600 text-white rounded-full p-3 shadow-lg flex items-center justify-center transition-transform duration-200 ease-in-out hover:scale-110 active:scale-95 motion-safe:animate-pulse"
+
   return (
     <button
       onClick={openWhatsApp}
       aria-label="Contactar por WhatsApp"
-      className="fixed z-50 right-6 bottom-6 md:right-8 md:bottom-8 bg-green-500 hover:bg-green-600 text-white rounded-full p-3 shadow-lg flex items-center justify-center transition-transform duration-200 ease-in-out hover:scale-110 active:scale-95 motion-safe:animate-pulse"
+      className={`${className ? className : 'right-6 bottom-6 md:right-8 md:bottom-8'} ${baseClass}`}
       title="Contactar por WhatsApp"
     >
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
