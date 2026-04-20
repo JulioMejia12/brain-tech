@@ -174,9 +174,9 @@ const Barberias: React.FC<BarberiasProps> = ({
                 {menuOpen && (
                     <div className="sm:hidden px-6 pb-4" style={{ background: primary }}>
                         <nav className="flex flex-col gap-3" style={{ color: textColor }}>
-                            <a className="block py-2">Inicio</a>
-                            <a className="block py-2">Servicios</a>
-                            <a className="block py-2">Contacto</a>
+                            <a className="block py-2" style={{ color: primary }}>Inicio</a>
+                            <a className="block py-2" style={{ color: secondary }}>Servicios</a>
+                            <a className="block py-2" style={{ color: secondary }}>Contacto</a>
                             <button className="mt-2 px-4 py-2 rounded" style={{ backgroundColor: secondary, color: '#fff' }} onClick={() => { openWhatsApp(); setMenuOpen(false); }}>
                                 Reservar
                             </button>
