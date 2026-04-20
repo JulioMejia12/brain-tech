@@ -22,9 +22,17 @@
             "price": "$35"
         }
     ],
+    "images": [
+        "/joya.jpeg",
+        "/joya.jpeg",
+        "/joya.jpeg",
+        "/joya.jpeg",
+        "/joya.jpeg",
+        "/hero-plata.jpeg"
+    ],
     "about": "En Joyería Plata Pura, nos dedicamos a ofrecer piezas de joyería de alta calidad en un ambiente acogedor. Nuestro equipo de expertos está comprometido a brindarte el mejor servicio para que siempre luzcas tu mejor estilo.",
     "contact": {
-        "phone": "+1 234 567 890",
+        "phone": "5571906152",
         "email": "contacto@joyeriaplatapura.com"
     }
 }

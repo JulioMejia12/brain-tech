@@ -13,6 +13,7 @@ const page = () => {
             whatsappNumber={config.contact?.phone}
             about={config.about}
             services={config.services}
+            images={config.images}
             background="bg-gradient-to-r from-gray-100 to-gray-200"
         >
             {/* <div>

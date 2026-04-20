@@ -21,6 +21,7 @@ interface BarberiasProps {
     mapHeight?: string
     about?: string
     services?: { name: string; price: string }[]
+    images?: { name: string; image: string }[]
 }
 
 const Barberias: React.FC<BarberiasProps> = ({
@@ -40,6 +41,7 @@ const Barberias: React.FC<BarberiasProps> = ({
     mapHeight = '420px',
     about,
     services = [],
+    images = []
 }) => {
     const openWhatsApp = (service?: string) => {
         const raw = whatsappNumber || ''
@@ -53,6 +55,46 @@ const Barberias: React.FC<BarberiasProps> = ({
         const message = service ? `Hola, quiero reservar: ${service}` : `Hola, quiero reservar un servicio en ${title}`
         const url = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
         window.open(url, '_blank')
+    }
+
+    // Booking form state
+    const [bookingName, setBookingName] = useState('')
+    const [bookingDate, setBookingDate] = useState('')
+    const [bookingService, setBookingService] = useState<string>(services && services.length > 0 ? services[0].name : 'General')
+    const [sending, setSending] = useState(false)
+
+    const formatBookingDate = (iso: string) => {
+        if (!iso) return ''
+        const d = new Date(iso)
+        if (isNaN(d.getTime())) return iso
+        const day = d.getDate()
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+        const month = months[d.getMonth()] || ''
+        const year = d.getFullYear()
+        const hours = String(d.getHours()).padStart(2, '0')
+        const minutes = String(d.getMinutes()).padStart(2, '0')
+        return `${day} ${month} ${year} ${hours}:${minutes}`
+    }
+
+    const sendBookingWhatsApp = () => {
+        const raw = whatsappNumber || ''
+        const digits = raw.replace(/[^0-9]/g, '')
+        if (!digits) {
+            alert('No hay número de WhatsApp configurado.')
+            return
+        }
+        if (!bookingName || !bookingDate || !bookingService) {
+            alert('Por favor completa nombre, fecha y servicio.')
+            return
+        }
+
+        setSending(true)
+        const formattedDate = formatBookingDate(bookingDate)
+        const messageText = `Reserva\nNegocio: ${title}\nNombre: ${bookingName}\nServicio: ${bookingService}\nFecha: ${formattedDate}`
+        const url = `https://wa.me/${digits}?text=${encodeURIComponent(messageText)}`
+        window.open(url, '_blank')
+        // small delay to show sending state
+        setTimeout(() => setSending(false), 800)
     }
     const [menuOpen, setMenuOpen] = useState(false)
     const heroRef = useRef<HTMLImageElement | null>(null)
@@ -184,16 +226,89 @@ const Barberias: React.FC<BarberiasProps> = ({
                     </div>
                 </div>
 
-                {/* Sobre nosotros */}
-                <section className="text-gray-600 text-3xl font-bold text-center mt-12 mb-6">
-                    <div className="max-w-4xl mx-auto px-4 lg:px-0">
-                        <h2 className="text-3xl font-bold mb-6" style={{ color: primary }}>Sobre nosotros</h2>
-                        <div className="bg-white rounded-lg shadow p-8">
-                            <p className="text-lg mb-4">{about ? about : `En ${title} nos apasiona ofrecer cortes y servicios de barbería con atención personalizada. Nuestro equipo está formado por profesionales con experiencia, comprometidos con la calidad y la satisfacción del cliente.`}</p>
-                            <p className="text-lg">Buscamos crear un espacio cómodo, moderno y confiable donde te sientas bienvenido en cada visita.</p>
+                {/* FORMULARIO DE RESERVA */}
+                <section className="max-w-4xl mx-auto px-4 lg:px-0 mt-12 mb-6">
+                    <h2 className="text-2xl font-bold mb-4 text-center" style={{ color: primary }}>Reservar cita</h2>
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <label className="block mb-3">
+                            <span className="text-sm font-medium text-gray-900">Nombre</span>
+                            <input
+                                type="text"
+                                value={bookingName}
+                                onChange={(e) => setBookingName(e.target.value)}
+                                placeholder="Tu nombre"
+                                className="mt-1 block w-full rounded border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400"
+                            />
+                        </label>
+
+                        <label className="block mb-3">
+                            <span className="text-sm font-medium text-gray-900">Fecha y hora</span>
+                            <input
+                                type="datetime-local"
+                                value={bookingDate}
+                                onChange={(e) => setBookingDate(e.target.value)}
+                                className="mt-1 block w-full rounded border-gray-300 px-3 py-2 text-gray-900"
+                            />
+                            {bookingDate && (
+                                <p className="mt-2 text-sm text-gray-700">Fecha seleccionada: {formatBookingDate(bookingDate)}</p>
+                            )}
+                        </label>
+
+                        <label className="block mb-4">
+                            <span className="text-sm font-medium text-gray-900">Servicio</span>
+                            <select
+                                value={bookingService}
+                                onChange={(e) => setBookingService(e.target.value)}
+                                className="mt-1 block w-full rounded border-gray-300 px-3 py-2 text-gray-900"
+                            >
+                                {services && services.length > 0 ? (
+                                    services.map((s) => (
+                                        <option key={s.name} value={s.name}>{`${s.name} ${s.price ? '- ' + s.price : ''}`}</option>
+                                    ))
+                                ) : (
+                                    <option value="General">General</option>
+                                )}
+                            </select>
+                        </label>
+
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                onClick={sendBookingWhatsApp}
+                                className="flex-1 px-4 py-2 rounded text-white"
+                                style={{ backgroundColor: primary }}
+                                disabled={sending}
+                            >
+                                {sending ? 'Enviando...' : 'Enviar por WhatsApp'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { setBookingName(''); setBookingDate(''); setBookingService(services && services.length > 0 ? services[0].name : 'General') }}
+                                className="px-4 py-2 rounded border text-gray-700"
+                            >
+                                Limpiar
+                            </button>
                         </div>
                     </div>
                 </section>
+
+                {/* Sobre nosotros */}
+                <section className="text-gray-900 text-3xl font-bold text-center mt-12 mb-6">
+                    <div className="max-w-4xl mx-auto px-4 lg:px-0">
+                        <h2 className="text-3xl font-bold mb-6" style={{ color: primary }}>Sobre nosotros</h2>
+                        <div className="bg-white rounded-lg shadow p-8">
+                            <p className="text-lg mb-4 text-gray-900">{about ? about : `En ${title} nos apasiona ofrecer cortes y servicios de barbería con atención personalizada. Nuestro equipo está formado por profesionales con experiencia, comprometidos con la calidad y la satisfacción del cliente.`}</p>
+                            <p className="text-lg text-gray-900">Buscamos crear un espacio cómodo, moderno y confiable donde te sientas bienvenido en cada visita.</p>
+                        </div>
+                    </div>
+                </section>
+                <div>
+                    <h2 className="text-3xl font-bold text-center mt-12 mb-6" style={{ color: primary }}>Nuestros cortes mas pedidos</h2>
+                    <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4 lg:px-0">
+                        {images && images.length > 0 ? images.map((img, idx) => (
+                            <img key={idx} src={img || ''} alt={img.name} className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg shadow" />
+                        )) : null}
+                    </div>
+                </div>
 
                 {/* Mapa */}
                 <section className="text-3xl font-bold text-center mt-12 mb-6">

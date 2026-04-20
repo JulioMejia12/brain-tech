@@ -13,6 +13,7 @@ const page = () => {
             whatsappNumber={config.contact?.phone}
             about={config.about}
             services={config.services}
+            images={config.images}
         />
     )
 }

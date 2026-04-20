@@ -9,17 +9,25 @@
         {
             "name": "Corte de cabello",
             "description": "Cortes de cabello modernos y clásicos para hombres.",
-            "price": "$15"
+            "price": "$150"
         },
         {
             "name": "Afeitado",
             "description": "Afeitado tradicional con navaja para un acabado suave.",
-            "price": "$10"
+            "price": "$200"
         }
+    ],
+    "images": [
+        "/image.jpeg",
+        "/image2.jpeg",
+        "/image3.jpeg",
+        "/image4.jpeg",
+        "/image.jpeg",
+        "/hero-barber.jpeg"
     ],
     "about": "En Barbería El Estilo, nos dedicamos a ofrecer cortes de cabello y afeitados de alta calidad en un ambiente acogedor. Nuestro equipo de barberos profesionales está comprometido a brindarte el mejor servicio para que siempre luzcas tu mejor estilo.",
     "contact": {
-        "phone": "+1 234 567 890",
+        "phone": "4421437834",
         "email": "contacto@barberiaelestilo.com"
     }
 }
