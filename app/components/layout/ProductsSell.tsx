@@ -5,6 +5,7 @@ import AdsCarousel from '../../../components/AdsCarousel'
 import Image from 'next/image'
 import Footer from './Footer'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
+import MobileMenu from './MobileMenu'
 type Props = {
     logo?: string
     title?: string
@@ -44,8 +45,8 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
     const visible = products.filter((p) => selectedCategory === 'Todos' || p.category === selectedCategory)
 
     return (
-        <div style={{ background: secondary }}>
-            <NavBar title="Bazarcito online" primary="#ff81e3" textColor="#000" logo="" textColorLogo="#632e57" />
+        <div style={{ background: '#ffe7fa' }}>
+            <NavBar title="Bazarcito online" primary="#ff81e3" textColor="#160612" logo="" textColorLogo="#ffe7fa" />
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 {/* filtros por categoria */}
                 <h2 className="text-xl font-bold mb-4" style={{ color: primary }}>Nuestros Productos</h2>
@@ -88,9 +89,10 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
                 </>
             </section>
 
-            <FloatingWhatsApp whatsappNumber={'5571906152'} message={`Hola, quiero reservar en ${title}`} className="top-6 right-6 md:top-auto md:bottom-6 md:right-6 lg:bottom-8" />
-            <section>
-                sesion quienes somos
+            <div className="hidden md:block">
+                <FloatingWhatsApp whatsappNumber={'5571906152'} message={`Hola, quiero reservar en ${title}`} className="top-6 right-6 md:top-auto md:bottom-6 md:right-6 lg:bottom-8" />
+            </div>
+            <section id='info'>
                 <div className="max-w-3xl mx-auto py-8 px-4">
                     <h2 className="text-2xl font-bold mb-4" style={{ color: primary }}>¿Quiénes somos?</h2>
                     <p className="text-gray-700 text-base mb-2">
@@ -101,7 +103,7 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
                     </p>
                 </div>
             </section>
-            <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
+            <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 {/* <h2 className="text-xl font-bold mb-4">Publicidad</h2> */}
                 <AdsCarousel images={demo} />
             </section>
@@ -121,6 +123,7 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
                 </div>
             </section>
             <Footer />
+            <MobileMenu primary={'#ff81e3'} whatsappNumber={'5571906152'} />
         </div>
     )
 }
