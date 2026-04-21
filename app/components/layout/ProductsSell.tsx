@@ -7,14 +7,14 @@ import Footer from './Footer'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 type Props = {
     logo?: string
-    title: string
+    title?: string
     primary: string
     secondary: string
     textColor: string
     textColorLogo?: string
 }
 
-const ProductsSell = ({ logo, title, primary, secondary, textColor, textColorLogo }: Props) => {
+const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, textColor, textColorLogo }: Props) => {
     const demo = [
         'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=80&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1511988617509-a57c8a288659?w=1200&q=80&auto=format&fit=crop',
