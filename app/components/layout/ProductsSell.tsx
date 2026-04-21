@@ -1,5 +1,5 @@
 'use client'
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import NavBar from "./NavBar"
 import AdsCarousel from '../../../components/AdsCarousel'
 import Image from 'next/image'
@@ -21,6 +21,23 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
         'https://images.unsplash.com/photo-1511988617509-a57c8a288659?w=1200&q=80&auto=format&fit=crop',
         'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200&q=80&auto=format&fit=crop',
     ]
+
+    const heroBgRef = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        const onScroll = () => {
+            const el = heroBgRef.current
+            if (!el) return
+            const rect = el.getBoundingClientRect()
+            const speed = 0.3
+            const y = -rect.top * speed
+            el.style.transform = `translateY(${y}px)`
+        }
+
+        onScroll()
+        window.addEventListener('scroll', onScroll, { passive: true })
+        return () => window.removeEventListener('scroll', onScroll)
+    }, [])
 
     // Move products, selectedCategory, setSelectedCategory, and categories to component scope
     const products = [
@@ -46,7 +63,26 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
 
     return (
         <div style={{ background: '#ffe7fa' }}>
-            <NavBar title="Bazarcito online" primary="#ff81e3" textColor="#160612" logo="" textColorLogo="#ffe7fa" />
+            {/* <NavBar title="Bazarcito online" primary="#ff81e3" textColor="#160612" logo="" textColorLogo="#ffe7fa" /> */}
+            {/* Hero con efecto parallax */}
+            <div className="relative w-full overflow-hidden h-64 md:h-96">
+                <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
+                    <Image
+                        src={demo[0]}
+                        alt="hero"
+                        fill
+                        style={{ objectFit: 'cover' }}
+                        priority
+                    />
+                </div>
+                <div className="relative z-10 h-full flex items-center justify-center">
+                    <div className="text-center px-4">
+                        <h1 className="text-3xl md:text-4xl font-bold" style={{ color: textColor || '#160612' }}>{title}</h1>
+                        <p className="mt-2 text-sm md:text-base text-white/90">Explora nuestros todos nuestros productos</p>
+                    </div>
+                </div>
+            </div>
+
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 {/* filtros por categoria */}
                 <h2 className="text-xl font-bold mb-4" style={{ color: primary }}>Nuestros Productos</h2>
