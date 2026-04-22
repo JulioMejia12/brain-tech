@@ -19,7 +19,6 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
     const demo = [
         'https://betterware.com.mx/cdn/shop/files/banner-cooler-mar26-mobile_900x.png?v=1774614976',
         'https://betterware.com.mx/cdn/shop/files/vitrolux-abril26-mobile_3000x.png?v=1774611821',
-        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200&q=80&auto=format&fit=crop',
     ]
 
     const heroBgRef = useRef<HTMLDivElement | null>(null)
