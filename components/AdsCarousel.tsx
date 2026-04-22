@@ -60,8 +60,8 @@ const AdsCarousel: React.FC<AdsCarouselProps> = ({ images, interval = 4000, clas
         <div ref={containerRef} className={`relative overflow-hidden rounded-lg ${className}`}>
             <div className="flex transition-transform duration-500" style={{ transform: `translateX(-${index * 100}%)` }}>
                 {images.map((src, i) => (
-                    <div key={i} className="w-full flex-shrink-0 relative h-48 sm:h-56 md:h-64">
-                        <Image src={src} alt={`Ad ${i + 1}`} fill style={{ objectFit: 'cover' }} />
+                    <div key={i} className="w-full flex-shrink-0 relative h-48 sm:h-56 md:h-64 bg-gray-100 overflow-hidden">
+                        <Image src={src} alt={`Ad ${i + 1}`} fill style={{ objectFit: 'cover', objectPosition: 'center' }} />
                     </div>
                 ))}
             </div>

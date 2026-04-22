@@ -1,6 +1,6 @@
 'use client'
 import React, { useMemo, useState, useEffect, useRef } from 'react'
-import NavBar from "./NavBar"
+// import NavBar from "./NavBar"
 import AdsCarousel from '../../../components/AdsCarousel'
 import Image from 'next/image'
 import Footer from './Footer'
@@ -17,8 +17,8 @@ type Props = {
 
 const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, textColor, textColorLogo }: Props) => {
     const demo = [
-        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=80&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1511988617509-a57c8a288659?w=1200&q=80&auto=format&fit=crop',
+        'https://betterware.com.mx/cdn/shop/files/banner-cooler-mar26-mobile_900x.png?v=1774614976',
+        'https://betterware.com.mx/cdn/shop/files/vitrolux-abril26-mobile_3000x.png?v=1774611821',
         'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200&q=80&auto=format&fit=crop',
     ]
 
@@ -41,15 +41,10 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
 
     // Move products, selectedCategory, setSelectedCategory, and categories to component scope
     const products = [
-        { id: 'p1', name: 'Cera modeladora', price: '$8.000', image: demo[0], description: 'Fijación media, acabado natural.', category: 'Estilizado' },
-        { id: 'p2', name: 'Shampoo premium', price: '$12.000', image: demo[1], description: 'Limpieza profunda y brillo.', category: 'Cuidado' },
-        { id: 'p3', name: 'Aceite para barba', price: '$9.500', image: demo[2], description: 'Hidratación y fragancia suave.', category: 'Cuidado' },
-        { id: 'p4', name: 'Cera modeladora', price: '$8.000', image: demo[0], description: 'Fijación media, acabado natural.', category: 'Estilizado' },
-        { id: 'p5', name: 'Shampoo premium', price: '$12.000', image: demo[1], description: 'Limpieza profunda y brillo.', category: 'Cuidado' },
-        { id: 'p6', name: 'Aceite para barba', price: '$9.500', image: demo[2], description: 'Hidratación y fragancia suave.', category: 'Cuidado' },
-        { id: 'p7', name: 'Cera modeladora', price: '$8.000', image: demo[0], description: 'Fijación media, acabado natural.', category: 'Estilizado' },
-        { id: 'p8', name: 'Shampoo premium', price: '$12.000', image: demo[1], description: 'Limpieza profunda y brillo.', category: 'Cuidado' },
-        { id: 'p9', name: 'Aceite para barba', price: '$9.500', image: demo[2], description: 'Hidratación y fragancia suave.', category: 'Cuidado' },
+        { id: 'p1', name: 'Vitro Bambú', price: '$299.00', image: 'https://betterware.com.mx/cdn/shop/files/26522-1-Vitro-Bambu-Betterware_1680x.jpg', description: 'Sirve y disfruta de bebidas con la Maxi Vitro Bambú Betterware.', category: 'Cocina' },
+        { id: 'p2', name: 'Set Dispensa Vitrolux', price: '$1,300.00', image: 'https://betterware.com.mx/cdn/shop/files/26021-1-Set-Dispensa-Vitrolux-Betterware_1680x.jpg', description: 'Organiza y protege hasta 20 pares de zapatos con la Modu Zapatera Moka Betterware.', category: 'Cocina' },
+        { id: 'p3', name: 'Modu Zapatera Moka', price: '$1,200.00', image: 'https://betterware.com.mx/cdn/shop/files/26301-1-Modu-Zapatera-Moka-Betterware_1680x.jpg', description: 'Hidratación y fragancia suave.', category: 'Recamara' },
+        { id: 'p4', name: 'Mesa Lateral Harmony ( 2 Pzs)', price: '$1,200.00', image: 'https://betterware.com.mx/cdn/shop/files/25815-1-Mesa-Lateral-Harmony-Betterware_6fc9d19a-aeb3-473d-a064-4dd2cdd1189e_1680x.jpg', description: 'Fijación media, acabado natural.', category: 'Hogar' },
     ]
 
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
@@ -62,13 +57,13 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
     const visible = products.filter((p) => selectedCategory === 'Todos' || p.category === selectedCategory)
 
     return (
-        <div style={{ background: '#ffe7fa' }}>
+        <div style={{ background: secondary }}>
             {/* <NavBar title="Bazarcito online" primary="#ff81e3" textColor="#160612" logo="" textColorLogo="#ffe7fa" /> */}
             {/* Hero con efecto parallax */}
             <div className="relative w-full overflow-hidden h-64 md:h-96">
                 <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
                     <Image
-                        src={demo[0]}
+                        src={'/bazar4.jpeg'}
                         alt="hero"
                         fill
                         style={{ objectFit: 'cover' }}
@@ -78,7 +73,7 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
                 <div className="relative z-10 h-full flex items-center justify-center">
                     <div className="text-center px-4">
                         <h1 className="text-3xl md:text-4xl font-bold" style={{ color: textColor || '#160612' }}>{title}</h1>
-                        <p className="mt-2 text-sm md:text-base text-white/90">Explora nuestros todos nuestros productos</p>
+                        <p className="mt-2 text-sm md:text-base text-white/90" style={{ color: textColor }}>Explora todos nuestros productos</p>
                     </div>
                 </div>
             </div>
@@ -105,18 +100,31 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {visible.map((p) => (
                             <div key={p.id} className="bg-white rounded-lg shadow overflow-hidden">
-                                <div className="relative w-full h-40">
-                                    <Image src={p.image} alt={p.name} fill style={{ objectFit: 'cover' }} />
+                                <div className="w-full bg-gray-50">
+                                    <Image
+                                        src={p.image}
+                                        alt={p.name}
+                                        width={800}
+                                        height={600}
+                                        style={{ width: '100%', height: 'auto', objectFit: 'contain', objectPosition: 'center' }}
+                                    />
                                 </div>
                                 <div className="p-4">
                                     <h3 className="font-semibold text-gray-900">{p.name}</h3>
                                     <p className="text-sm text-gray-600 mt-1">{p.description}</p>
-                                    <div className="mt-3 flex items-center justify-between">
-                                        <div className="text-lg font-bold text-gray-900">{p.price}</div>
-                                        <button
-                                            className="px-3 py-1 rounded text-white"
-                                            style={{ background: primary }}
-                                        >Pedir por WhatsApp</button>
+                                    <div className="mt-3">
+                                        <div className="flex flex-col gap-3 min-w-0">
+                                            <div className="text-lg font-bold text-gray-900">{p.price}</div>
+                                            <button
+                                                type="button"
+                                                className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap"
+                                                style={{ background: primary }}
+                                                onClick={() => window.open(
+                                                    `https://wa.me/5571906152?text=${encodeURIComponent(`Hola,%20quiero%20realizar%20el%20pedido%20de%20${p.name}%20por%20${p.price}.%20Por%20favor%20me%20pueden%20confirmar%20disponibilidad.`)}`,
+                                                    '_blank'
+                                                )}
+                                            >Pedir por WhatsApp</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

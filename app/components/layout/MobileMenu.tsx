@@ -16,7 +16,9 @@ const MobileMenu = ({ primary, whatsappNumber, title }: Props) => {
             return
         }
 
-        const message = service ? `Hola, quiero reservar: ${service}` : `Hola, quiero reservar un servicio en ${title}`
+        const message = service
+            ? `Hola, quiero comprar el producto: ${service}`
+            : `Hola, me interesa comprar productos de ${title}. ¿Me pueden ayudar con más información?`
         const url = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
         window.open(url, '_blank')
     }
@@ -50,7 +52,7 @@ const MobileMenu = ({ primary, whatsappNumber, title }: Props) => {
                             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.08 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12.83.31 1.64.57 2.42a2 2 0 0 1-.45 2.11L8.09 9.91c1.28 2.56 3.48 4.76 6.04 6.04l1.66-1.66a2 2 0 0 1 2.11-.45c.78.26 1.59.45 2.42.57A2 2 0 0 1 22 16.92z" />
                         </svg>
                     </div>
-                    <span>Contacto</span>
+                    <span>Contactame</span>
                     {/* WhatsApp small badge */}
 
                 </button>
