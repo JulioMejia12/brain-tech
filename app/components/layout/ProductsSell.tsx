@@ -77,8 +77,14 @@ const ProductsSell = ({ title = 'Bazarcito online', primary, secondary, textColo
                 />
             </div>
             {/* Hero con efecto parallax */}
-            <div className="block sm:hidden xs:block relative w-full overflow-hidden h-30 md:h-96" style={{ background: primary }}>
+            <div className="block sm:hidden xs:block relative w-full overflow-hidden h-60 md:h-96" style={{ background: primary }}>
                 <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
+                    <Image
+                        src="/bazar4.jpeg"
+                        alt="Hero"
+                        fill
+                        style={{ objectFit: 'cover', objectPosition: 'center' }}
+                    />
                 </div>
                 <div className="relative z-10 h-full flex items-center justify-center">
                     <div className="text-center px-4">
