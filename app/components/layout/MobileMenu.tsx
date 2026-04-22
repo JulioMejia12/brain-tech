@@ -18,7 +18,7 @@ const MobileMenu = ({ primary, whatsappNumber, title }: Props) => {
 
         const message = service
             ? `Hola, quiero comprar el producto: ${service}`
-            : `Hola, me interesa comprar productos de ${title}. ¿Me pueden ayudar con más información?`
+            : `Hola, me interesa comprar productos. ¿Me pueden ayudar con más información?`
         const url = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
         window.open(url, '_blank')
     }

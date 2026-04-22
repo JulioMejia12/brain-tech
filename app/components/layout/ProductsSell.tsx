@@ -120,7 +120,7 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
                                                 className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap"
                                                 style={{ background: primary }}
                                                 onClick={() => window.open(
-                                                    `https://wa.me/5571906152?text=${encodeURIComponent(`Hola,%20quiero%20realizar%20el%20pedido%20de%20${p.name}%20por%20${p.price}.%20Por%20favor%20me%20pueden%20confirmar%20disponibilidad.`)}`,
+                                                    `https://wa.me/5571906152?text=${encodeURIComponent(`Hola, quiero realizar el pedido de ${p.name} por ${p.price}. Por favor me pueden confirmar disponibilidad.`)}`,
                                                     '_blank'
                                                 )}
                                             >Pedir por WhatsApp</button>
