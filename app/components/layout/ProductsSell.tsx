@@ -1,21 +1,22 @@
 'use client'
-import React, { useMemo, useState, useEffect, useRef } from 'react'
-// import NavBar from "./NavBar"
+import { useMemo, useState, useEffect, useRef } from 'react'
 import AdsCarousel from '../../../components/AdsCarousel'
 import Image from 'next/image'
 import Footer from './Footer'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 import MobileMenu from './MobileMenu'
+import NavBar from './NavBar'
 type Props = {
     logo?: string
     title?: string
+    bgColor?: string
     primary: string
     secondary: string
     textColor: string
     textColorLogo?: string
 }
 
-const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, textColor, textColorLogo }: Props) => {
+const ProductsSell = ({ title = 'Bazarcito online', primary, secondary, textColor, bgColor }: Props) => {
     const demo = [
         'https://betterware.com.mx/cdn/shop/files/banner-cooler-mar26-mobile_900x.png?v=1774614976',
         'https://betterware.com.mx/cdn/shop/files/vitrolux-abril26-mobile_3000x.png?v=1774611821',
@@ -38,36 +39,46 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
         return () => window.removeEventListener('scroll', onScroll)
     }, [])
 
-    // Move products, selectedCategory, setSelectedCategory, and categories to component scope
-    const products = [
-        { id: 'p1', name: 'Vitro Bambú', price: '$299.00', image: 'https://betterware.com.mx/cdn/shop/files/26522-1-Vitro-Bambu-Betterware_1680x.jpg', description: 'Sirve y disfruta de bebidas con la Maxi Vitro Bambú Betterware.', category: 'Cocina' },
-        { id: 'p2', name: 'Set Dispensa Vitrolux', price: '$1,300.00', image: 'https://betterware.com.mx/cdn/shop/files/26021-1-Set-Dispensa-Vitrolux-Betterware_1680x.jpg', description: 'Organiza y protege hasta 20 pares de zapatos con la Modu Zapatera Moka Betterware.', category: 'Cocina' },
-        { id: 'p3', name: 'Modu Zapatera Moka', price: '$1,200.00', image: 'https://betterware.com.mx/cdn/shop/files/26301-1-Modu-Zapatera-Moka-Betterware_1680x.jpg', description: 'Hidratación y fragancia suave.', category: 'Recamara' },
-        { id: 'p4', name: 'Mesa Lateral Harmony ( 2 Pzs)', price: '$1,200.00', image: 'https://betterware.com.mx/cdn/shop/files/25815-1-Mesa-Lateral-Harmony-Betterware_6fc9d19a-aeb3-473d-a064-4dd2cdd1189e_1680x.jpg', description: 'Fijación media, acabado natural.', category: 'Hogar' },
-    ]
+    const products = useMemo(
+        () => [
+            { id: 'p1', name: 'Vitro Bambú', price: '$299.00', image: 'https://betterware.com.mx/cdn/shop/files/26522-1-Vitro-Bambu-Betterware_1680x.jpg', description: 'Sirve y disfruta de bebidas con la Maxi Vitro Bambú Betterware.', category: 'Cocina' },
+            { id: 'p2', name: 'Set Dispensa Vitrolux', price: '$1,300.00', image: 'https://betterware.com.mx/cdn/shop/files/26021-1-Set-Dispensa-Vitrolux-Betterware_1680x.jpg', description: 'Organiza y protege hasta 20 pares de zapatos con la Modu Zapatera Moka Betterware.', category: 'Cocina' },
+            { id: 'p3', name: 'Modu Zapatera Moka', price: '$1,200.00', image: 'https://betterware.com.mx/cdn/shop/files/26301-1-Modu-Zapatera-Moka-Betterware_1680x.jpg', description: 'Hidratación y fragancia suave.', category: 'Recamara' },
+            { id: 'p4', name: 'Mesa Lateral Harmony ( 2 Pzs)', price: '$1,200.00', image: 'https://betterware.com.mx/cdn/shop/files/25815-1-Mesa-Lateral-Harmony-Betterware_6fc9d19a-aeb3-473d-a064-4dd2cdd1189e_1680x.jpg', description: 'Fijación media, acabado natural.', category: 'Hogar' },
+        ],
+        []
+    )
 
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
+    const [searchQuery, setSearchQuery] = useState<string>('')
 
     const categories = useMemo(() => {
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))
         return ['Todos', ...Array.from(set)]
     }, [products])
 
-    const visible = products.filter((p) => selectedCategory === 'Todos' || p.category === selectedCategory)
+    const visible = products.filter((p) => {
+        const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory
+        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+        return matchesCategory && matchesSearch
+    })
 
     return (
-        <div style={{ background: secondary }}>
-            {/* <NavBar title="Bazarcito online" primary="#ff81e3" textColor="#160612" logo="" textColorLogo="#ffe7fa" /> */}
+        <div style={{ background: bgColor }}>
+            <div className="hidden sm:block">
+                <NavBar
+                    title="Bazarcito online"
+                    primary={primary}
+                    textColor={textColor}
+                    logo=""
+                    textColorLogo="#fff"
+                    query={searchQuery}
+                    onQueryChange={(value) => setSearchQuery(value)}
+                />
+            </div>
             {/* Hero con efecto parallax */}
-            <div className="relative w-full overflow-hidden h-64 md:h-96">
+            <div className="block sm:hidden xs:block relative w-full overflow-hidden h-30 md:h-96" style={{ background: primary }}>
                 <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
-                    <Image
-                        src={'/bazar4.jpeg'}
-                        alt="hero"
-                        fill
-                        style={{ objectFit: 'cover' }}
-                        priority
-                    />
                 </div>
                 <div className="relative z-10 h-full flex items-center justify-center">
                     <div className="text-center px-4">
@@ -78,10 +89,7 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
             </div>
 
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                {/* filtros por categoria */}
-                <h2 className="text-xl font-bold mb-4" style={{ color: primary }}>Nuestros Productos</h2>
-
-                {/* demo product cards with category filters */}
+                <h2 className="text-xl font-bold mb-4" style={{ color: secondary }}>Nuestros Productos</h2>
                 <>
                     <div className="flex gap-2 mb-4 flex-wrap">
                         {categories.map((c) => (
@@ -135,38 +143,34 @@ const ProductsSell = ({ logo, title = 'Bazarcito online', primary, secondary, te
             <div className="hidden md:block">
                 <FloatingWhatsApp whatsappNumber={'5571906152'} message={`Hola, quiero reservar en ${title}`} className="top-6 right-6 md:top-auto md:bottom-6 md:right-6 lg:bottom-8" />
             </div>
-            <section id='info'>
-                <div className="max-w-3xl mx-auto py-8 px-4">
-                    <h2 className="text-2xl font-bold mb-4" style={{ color: primary }}>¿Quiénes somos?</h2>
-                    <p className="text-gray-700 text-base mb-2">
-                        Somos un equipo apasionado por ofrecer productos de calidad para el cuidado personal y el estilizado. Nuestro objetivo es brindar a nuestros clientes una experiencia de compra sencilla, segura y cercana, con atención personalizada y productos seleccionados cuidadosamente.
-                    </p>
-                    <p className="text-gray-700 text-base">
-                        Creemos en la importancia de sentirte bien contigo mismo y por eso trabajamos cada día para acercarte lo mejor en cuidado y estilo. ¡Gracias por confiar en nosotros!
-                    </p>
-                </div>
+            <section id="info" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
+                <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Quienes somos</h2>
+                <p className="text-gray-700 text-base mb-2">
+                    Somos un equipo apasionado por ofrecer productos de calidad para el cuidado personal y el estilizado. Nuestro objetivo es brindar a nuestros clientes una experiencia de compra sencilla, segura y cercana, con atención personalizada y productos seleccionados cuidadosamente.
+                </p>
+                <p className="text-gray-700 text-base">
+                    Creemos en la importancia de sentirte bien contigo mismo y por eso trabajamos cada día para acercarte lo mejor en cuidado y estilo. ¡Gracias por confiar en nosotros!
+                </p>
             </section>
             <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                {/* <h2 className="text-xl font-bold mb-4">Publicidad</h2> */}
+                <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Promociones</h2>
                 <AdsCarousel images={demo} />
             </section>
-            <section>
-                <div className="max-w-3xl mx-auto py-8 px-4">
-                    <h2 className="text-2xl font-bold mb-4" style={{ color: primary }}>¿Quieres vender nuestros productos?</h2>
-                    <p className="text-gray-700 text-base mb-4">
-                        Si estás interesado en convertirte en distribuidor de  Betterware.
-                    </p>
-                    <button
-                        onClick={() => window.open('https://wa.me/5571906152?text=Hola,%20estoy%20interesado%20en%20vender%20sus%20productos', '_blank')}
-                        className="px-4 py-2 rounded text-white"
-                        style={{ background: primary }}
-                    >
-                        Contáctanos por WhatsApp
-                    </button>
-                </div>
+            <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
+                <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>¿Quieres vender nuestros productos?</h2>
+                <p className="text-gray-700 text-base mb-4">
+                    Si estás interesado en convertirte en distribuidor de  Betterware.
+                </p>
+                <button
+                    onClick={() => window.open('https://wa.me/5571906152?text=Hola,%20estoy%20interesado%20en%20vender%20sus%20productos', '_blank')}
+                    className="px-4 py-2 rounded text-white"
+                    style={{ background: primary }}
+                >
+                    Contáctanos por WhatsApp
+                </button>
             </section>
             <Footer />
-            <MobileMenu primary={'#ff81e3'} whatsappNumber={'5571906152'} />
+            <MobileMenu primary={primary} whatsappNumber={'5571906152'} />
         </div>
     )
 }

@@ -1,9 +1,8 @@
-import React from 'react'
 import ProductsSell from '../components/layout/ProductsSell'
 
 const page = () => {
     return (
-        <ProductsSell secondary='#ffc3f2' primary='#000' textColor='#fff' />
+        <ProductsSell secondary='#2e1227' primary='#ff81e3' textColor='#fff' bgColor='#ffb6ef' />
     )
 }
 
