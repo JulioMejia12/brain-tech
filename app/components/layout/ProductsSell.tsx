@@ -58,8 +58,8 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
     })
 
     const handleShareProduct = (product: Product) => {
-        const pageUrl = `${SHARE_BASE_URL}/bazarcito/product/${product.id}`
-        const text = `Te comparto este producto: ${product.name}\nPrecio: ${product.price}\n${product.description}\nMira más: ${pageUrl}`
+        const pageUrl = `${SHARE_BASE_URL}/bazarcito`
+        const text = `Adquiere este producto: ${product.name}\nPrecio: ${product.price}\n${product.description}\nMira más productos entrando a mi aplicación: ${pageUrl}`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
     }
 
