@@ -78,7 +78,7 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
             )
             .join('\n\n')
 
-        const text = `Te comparto estos productos:\n\n${productLines}`
+        const text = `Te comparto estos productos:\n\n${productLines}\n\nMira más productos en ${SHARE_BASE_URL}/bazarcito`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
     }
 
