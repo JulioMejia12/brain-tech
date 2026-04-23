@@ -72,12 +72,13 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
         const items = getSelectedItems()
         if (items.length === 0) return
 
-        const firstProductUrl = `${SHARE_BASE_URL}/bazarcito/product/${items[0].id}`
         const productLines = items
-            .map((product) => `- ${product.name} (${product.price})\n  ${product.description}`)
+            .map((product) =>
+                `- ${product.name} (${product.price})\n  ${product.description}\n  ${SHARE_BASE_URL}/bazarcito/product/${product.id}`
+            )
             .join('\n\n')
 
-        const text = `Te comparto estos productos:\n\n${productLines}\n\nVer el primero aquí: ${firstProductUrl}`
+        const text = `Te comparto estos productos:\n\n${productLines}`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
     }
 
