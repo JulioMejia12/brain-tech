@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getBazarcitoProductById, bazarcitoProducts } from '../../../lib/products'
 import type { Metadata } from 'next'
@@ -53,7 +54,13 @@ const ProductPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                     <h1 className="text-3xl font-extrabold mb-3">{product.name}</h1>
                     <p className="text-xl font-semibold text-pink-600 mb-4">{product.price}</p>
                     <p className="text-gray-700 leading-7 mb-4">{product.description}</p>
-                    <p className="text-sm text-gray-500">Categoría: {product.category}</p>
+                    <p className="text-sm text-gray-500 mb-4">Categoría: {product.category}</p>
+                    <Link
+                        href="/bazarcito"
+                        className="inline-block mt-3 text-sm font-semibold text-pink-600 hover:text-pink-800"
+                    >
+                        Ver más productos
+                    </Link>
                 </div>
             </div>
         </main>
