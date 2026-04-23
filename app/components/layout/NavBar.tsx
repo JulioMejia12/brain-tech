@@ -2,7 +2,7 @@ import React from 'react'
 
 type Props = {
     logo?: string
-    title: string
+    title?: string
     primary: string
     textColor: string
     textColorLogo?: string

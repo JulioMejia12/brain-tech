@@ -16,7 +16,16 @@ type Props = {
     textColorLogo?: string
 }
 
-const ProductsSell = ({ title = 'Bazarcito online', primary, secondary, textColor, bgColor }: Props) => {
+type Product = {
+    id: string
+    name: string
+    price: string
+    image: string
+    description: string
+    category: string
+}
+
+const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) => {
     const demo = [
         'https://betterware.com.mx/cdn/shop/files/banner-cooler-mar26-mobile_900x.png?v=1774614976',
         'https://betterware.com.mx/cdn/shop/files/vitrolux-abril26-mobile_3000x.png?v=1774611821',
@@ -63,11 +72,17 @@ const ProductsSell = ({ title = 'Bazarcito online', primary, secondary, textColo
         return matchesCategory && matchesSearch
     })
 
+    const handleShareProduct = (product: Product) => {
+        const pageUrl = typeof window !== 'undefined' ? window.location.href : ''
+        const text = `Te comparto este producto: ${product.name}\nPrecio: ${product.price}\n${product.description}\nMira más: ${pageUrl}`
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+    }
+
     return (
         <div style={{ background: bgColor }}>
             <div className="hidden sm:block">
                 <NavBar
-                    title="Bazarcito online"
+                    title={title}
                     primary={primary}
                     textColor={textColor}
                     logo=""
@@ -137,6 +152,11 @@ const ProductsSell = ({ title = 'Bazarcito online', primary, secondary, textColo
                                                     '_blank'
                                                 )}
                                             >Pedir por WhatsApp</button>
+                                            <button
+                                                type="button"
+                                                className="w-full px-4 py-2 rounded border border-gray-300 text-gray-800 text-sm md:text-base whitespace-nowrap hover:bg-gray-50"
+                                                onClick={() => handleShareProduct(p)}
+                                            >Compartir por WhatsApp</button>
                                         </div>
                                     </div>
                                 </div>

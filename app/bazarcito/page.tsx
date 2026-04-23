@@ -2,7 +2,7 @@ import ProductsSell from '../components/layout/ProductsSell'
 
 const page = () => {
     return (
-        <ProductsSell secondary='#2e1227' primary='#ff81e3' textColor='#fff' bgColor='#ffb6ef' />
+        <ProductsSell title='Bazarcito online' secondary='#2e1227' primary='#ff81e3' textColor='#fff' bgColor='#ffb6ef' />
     )
 }
 
