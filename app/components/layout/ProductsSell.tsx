@@ -182,10 +182,11 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
                                                 type="button"
                                                 className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap"
                                                 style={{ background: primary }}
-                                                onClick={() => window.open(
-                                                    `https://wa.me/5571906152?text=${encodeURIComponent(`Hola, quiero realizar el pedido de ${p.name} por ${p.price}. Por favor me pueden confirmar disponibilidad.`)}`,
-                                                    '_blank'
-                                                )}
+                                                onClick={() => {
+                                                    const pageUrl = `${SHARE_BASE_URL}/bazarcito/product/${p.id}`
+                                                    const message = `Hola, quiero realizar el pedido de ${p.name} por ${p.price}. Por favor me pueden confirmar disponibilidad. ${pageUrl}`
+                                                    window.open(`https://wa.me/5571906152?text=${encodeURIComponent(message)}`, '_blank')
+                                                }}
                                             >Pedir por WhatsApp</button>
                                             <button
                                                 type="button"
