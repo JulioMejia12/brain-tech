@@ -57,7 +57,7 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
     })
 
     const handleShareProduct = (product: Product) => {
-        const pageUrl = typeof window !== 'undefined' ? `${window.location.origin}/bazarcito/product/${product.id}` : ''
+        const pageUrl = typeof window !== 'undefined' ? `${window.location.origin}/bazarcito` : ''
         const text = `Te comparto este producto: ${product.name}\nPrecio: ${product.price}\n${product.description}\nMira más: ${pageUrl}`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
     }
