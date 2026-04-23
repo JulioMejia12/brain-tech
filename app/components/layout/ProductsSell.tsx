@@ -44,6 +44,7 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
 
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
     const [searchQuery, setSearchQuery] = useState<string>('')
+    const [selectedProducts, setSelectedProducts] = useState<string[]>([])
 
     const categories = useMemo(() => {
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))
@@ -55,6 +56,29 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
         return matchesCategory && matchesSearch
     })
+
+    const handleToggleProduct = (productId: string) => {
+        setSelectedProducts((current) =>
+            current.includes(productId)
+                ? current.filter((id) => id !== productId)
+                : [...current, productId]
+        )
+    }
+
+    const getSelectedItems = () => products.filter((product) => selectedProducts.includes(product.id))
+
+    const handleShareSelectedProducts = () => {
+        const items = getSelectedItems()
+        if (items.length === 0) return
+
+        const pageUrl = typeof window !== 'undefined' ? `${window.location.origin}/bazarcito` : ''
+        const productLines = items
+            .map((product) => `- ${product.name} (${product.price})\n  ${product.description}`)
+            .join('\n\n')
+
+        const text = `Te comparto estos productos:\n\n${productLines}\n\nMira más: ${pageUrl}`
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+    }
 
     const handleShareProduct = (product: Product) => {
         const pageUrl = typeof window !== 'undefined' ? `${window.location.origin}/bazarcito` : ''
@@ -96,22 +120,47 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-xl font-bold mb-4" style={{ color: secondary }}>Nuestros Productos</h2>
                 <>
-                    <div className="flex gap-2 mb-4 flex-wrap">
-                        {categories.map((c) => (
+                    <div className="flex flex-col gap-3 mb-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex gap-2 flex-wrap">
+                                {categories.map((c) => (
+                                    <button
+                                        key={c}
+                                        onClick={() => setSelectedCategory(c)}
+                                        className={`px-3 py-1 rounded-full text-sm ${selectedCategory === c ? 'text-white' : 'text-gray-800'}`}
+                                        style={selectedCategory === c ? { background: primary } : { background: 'white' }}
+                                    >
+                                        {c}
+                                    </button>
+                                ))}
+                            </div>
                             <button
-                                key={c}
-                                onClick={() => setSelectedCategory(c)}
-                                className={`px-3 py-1 rounded-full text-sm ${selectedCategory === c ? 'text-white' : 'text-gray-800'}`}
-                                style={selectedCategory === c ? { background: primary } : { background: 'white' }}
+                                type="button"
+                                disabled={selectedProducts.length === 0}
+                                onClick={handleShareSelectedProducts}
+                                className="px-4 py-2 rounded text-sm font-semibold text-white disabled:opacity-50"
+                                style={{ background: selectedProducts.length > 0 ? primary : '#999' }}
                             >
-                                {c}
+                                Compartir {selectedProducts.length > 0 ? `(${selectedProducts.length})` : ''}
                             </button>
-                        ))}
+                        </div>
+                        <p className="text-sm text-gray-500">Selecciona varios productos para compartirlos juntos por WhatsApp.</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {visible.map((p) => (
                             <div key={p.id} className="bg-white rounded-lg shadow overflow-hidden">
+                                <div className="flex items-center justify-between px-4 pt-4">
+                                    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedProducts.includes(p.id)}
+                                            onChange={() => handleToggleProduct(p.id)}
+                                            className="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                                        />
+                                        Seleccionar
+                                    </label>
+                                </div>
                                 <div className="w-full bg-gray-50">
                                     <Image
                                         src={p.image}
