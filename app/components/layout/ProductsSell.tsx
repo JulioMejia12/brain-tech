@@ -41,6 +41,7 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
     }, [])
 
     const products = bazarcitoProducts
+    const SHARE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.vercel.app'
 
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
     const [searchQuery, setSearchQuery] = useState<string>('')
@@ -71,17 +72,17 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
         const items = getSelectedItems()
         if (items.length === 0) return
 
-        const pageUrl = typeof window !== 'undefined' ? `${window.location.origin}/bazarcito` : ''
+        const firstProductUrl = `${SHARE_BASE_URL}/bazarcito/product/${items[0].id}`
         const productLines = items
             .map((product) => `- ${product.name} (${product.price})\n  ${product.description}`)
             .join('\n\n')
 
-        const text = `Te comparto estos productos:\n\n${productLines}\n\nMira más: ${pageUrl}`
+        const text = `Te comparto estos productos:\n\n${productLines}\n\nVer el primero aquí: ${firstProductUrl}`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
     }
 
     const handleShareProduct = (product: Product) => {
-        const pageUrl = typeof window !== 'undefined' ? `${window.location.origin}/bazarcito` : ''
+        const pageUrl = `${SHARE_BASE_URL}/bazarcito/product/${product.id}`
         const text = `Te comparto este producto: ${product.name}\nPrecio: ${product.price}\n${product.description}\nMira más: ${pageUrl}`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
     }

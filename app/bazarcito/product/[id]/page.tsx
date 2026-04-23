@@ -7,8 +7,9 @@ export async function generateStaticParams() {
     return bazarcitoProducts.map((product) => ({ id: product.id }))
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-    const product = getBazarcitoProductById(params.id)
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params
+    const product = getBazarcitoProductById(id)
     if (!product) {
         return {
             title: 'Producto no encontrado',
@@ -32,8 +33,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     }
 }
 
-const ProductPage = ({ params }: { params: { id: string } }) => {
-    const product = getBazarcitoProductById(params.id)
+const ProductPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params
+    const product = getBazarcitoProductById(id)
     if (!product) return notFound()
 
     return (
