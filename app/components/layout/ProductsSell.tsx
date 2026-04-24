@@ -15,13 +15,24 @@ type Props = {
     secondary: string
     textColor: string
     textColorLogo?: string
+    QuienesSomos?: string
+    promos?: string[]
+    children?: React.ReactNode
+    cellPhone?: string
 }
 
-const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) => {
-    const demo = [
-        'https://betterware.com.mx/cdn/shop/files/banner-cooler-mar26-mobile_900x.png?v=1774614976',
-        'https://betterware.com.mx/cdn/shop/files/vitrolux-abril26-mobile_3000x.png?v=1774611821',
-    ]
+const ProductsSell = ({
+    title,
+    primary,
+    secondary,
+    textColor,
+    bgColor,
+    QuienesSomos,
+    promos,
+    children,
+    cellPhone
+}: Props) => {
+
 
     const heroBgRef = useRef<HTMLDivElement | null>(null)
 
@@ -154,7 +165,7 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
                                                 className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap"
                                                 style={{ background: primary }}
                                                 onClick={() => window.open(
-                                                    `https://wa.me/5571906152?text=${encodeURIComponent(`Hola, quiero realizar el pedido de ${p.name} por ${p.price}. Por favor me pueden confirmar disponibilidad.`)}`,
+                                                    `https://wa.me/${cellPhone}?text=${encodeURIComponent(`Hola, quiero realizar el pedido de ${p.name} por ${p.price}. Por favor me pueden confirmar disponibilidad.`)}`,
                                                     '_blank'
                                                 )}
                                             >Pedir por WhatsApp</button>
@@ -173,36 +184,25 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
             </section>
 
             <div className="hidden md:block">
-                <FloatingWhatsApp whatsappNumber={'5571906152'} message={`Hola, quiero reservar en ${title}`} className="top-6 right-6 md:top-auto md:bottom-6 md:right-6 lg:bottom-8" />
+                <FloatingWhatsApp
+                    whatsappNumber={cellPhone}
+                    message={`Hola, quiero reservar en ${title}`}
+                    className="top-6 right-6 md:top-auto md:bottom-6 md:right-6 lg:bottom-8"
+                />
             </div>
             <section id="info" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Quienes somos</h2>
+                <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>¿Quiénes somos?</h2>
                 <p className="text-gray-700 text-base mb-2">
-                    Somos un equipo apasionado por ofrecer productos de calidad para el cuidado personal y el estilizado. Nuestro objetivo es brindar a nuestros clientes una experiencia de compra sencilla, segura y cercana, con atención personalizada y productos seleccionados cuidadosamente.
-                </p>
-                <p className="text-gray-700 text-base">
-                    Creemos en la importancia de sentirte bien contigo mismo y por eso trabajamos cada día para acercarte lo mejor en cuidado y estilo. ¡Gracias por confiar en nosotros!
+                    {QuienesSomos}
                 </p>
             </section>
             <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Promociones</h2>
-                <AdsCarousel images={demo} />
+                <AdsCarousel images={promos} />
             </section>
-            <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>¿Quieres vender nuestros productos?</h2>
-                <p className="text-gray-700 text-base mb-4">
-                    Si estás interesado en convertirte en distribuidor de  Betterware.
-                </p>
-                <button
-                    onClick={() => window.open('https://wa.me/5571906152?text=Hola,%20estoy%20interesado%20en%20vender%20sus%20productos', '_blank')}
-                    className="px-4 py-2 rounded text-white"
-                    style={{ background: primary }}
-                >
-                    Contáctanos por WhatsApp
-                </button>
-            </section>
+            {children}
             <Footer />
-            <MobileMenu primary={primary} whatsappNumber={'5571906152'} />
+            <MobileMenu primary={primary} whatsappNumber={cellPhone} />
         </div>
     )
 }

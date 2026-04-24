@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 
 interface AdsCarouselProps {
-    images: string[]
+    images?: string[]
     interval?: number
     className?: string
     showDots?: boolean
