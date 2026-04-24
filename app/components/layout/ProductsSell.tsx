@@ -96,6 +96,25 @@ const ProductsSell = ({ title, primary, secondary, textColor, bgColor }: Props) 
 
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-xl font-bold mb-4" style={{ color: secondary }}>Nuestros Productos</h2>
+                <div className="sm:hidden mb-4">
+                    <label className="block">
+                        <span className="sr-only">Buscar productos</span>
+                        <div className="relative">
+                            <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 10.5a7.5 7.5 0 0013.15 6.15z" />
+                                </svg>
+                            </span>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Buscar productos"
+                                className="w-full rounded-full border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 shadow-sm outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-200"
+                            />
+                        </div>
+                    </label>
+                </div>
                 <>
                     <div className="flex flex-col gap-3 mb-4">
                         <div className="flex gap-2 flex-wrap">
