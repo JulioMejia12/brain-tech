@@ -69,9 +69,9 @@ const ProductsSell = ({
     })
 
     const handleRequestProduct = (product: Product) => {
-        const pageUrl = `${typeof window !== 'undefined' ? window.location.origin : SHARE_BASE_URL}/bazarcito/product/${product.id}`
+        const pageUrl = `${SHARE_BASE_URL}/bazarcito/product/${product.id}`
         const text = `Hola, quiero realizar el pedido de ${product.name} por ${product.price}. Por favor me pueden confirmar disponibilidad.\n\n${pageUrl}`
-        window.open(`https://wa.me/${cellPhone}?text=${encodeURIComponent(text)}`, '_blank')
+        window.open(`https://api.whatsapp.com/send?phone=${cellPhone}&text=${encodeURIComponent(text)}`, '_blank')
     }
 
     const handleShareProduct = (product: Product) => {
