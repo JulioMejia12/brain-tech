@@ -6,8 +6,9 @@ import Footer from './Footer'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 import MobileMenu from './MobileMenu'
 import NavBar from './NavBar'
-import { bazarcitoProducts, type Product } from '../../lib/products'
+import { Product } from '@/app/lib/products'
 type Props = {
+    heroImage?: string
     logo?: string
     title?: string
     bgColor?: string
@@ -19,9 +20,12 @@ type Props = {
     promos?: string[]
     children?: React.ReactNode
     cellPhone?: string
+    products?: Product[]
 }
 
 const ProductsSell = ({
+    heroImage,
+    logo,
     title,
     primary,
     secondary,
@@ -30,7 +34,8 @@ const ProductsSell = ({
     QuienesSomos,
     promos,
     children,
-    cellPhone
+    cellPhone,
+    products: productsArray
 }: Props) => {
 
 
@@ -51,7 +56,7 @@ const ProductsSell = ({
         return () => window.removeEventListener('scroll', onScroll)
     }, [])
 
-    const products = bazarcitoProducts
+    const products = productsArray || []
     const SHARE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.vercel.app'
 
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
@@ -87,7 +92,7 @@ const ProductsSell = ({
                     title={title}
                     primary={primary}
                     textColor={textColor}
-                    logo=""
+                    logo={heroImage || logo}
                     textColorLogo="#fff"
                     query={searchQuery}
                     onQueryChange={(value) => setSearchQuery(value)}
@@ -97,7 +102,7 @@ const ProductsSell = ({
             <div className="block sm:hidden xs:block relative w-full overflow-hidden h-60 md:h-96" style={{ background: primary }}>
                 <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
                     <Image
-                        src="/bazar4.jpeg"
+                        src={heroImage || logo || '/placeholder-hero.png'}
                         alt="Hero"
                         fill
                         style={{ objectFit: 'cover', objectPosition: 'center' }}

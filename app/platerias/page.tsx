@@ -1,19 +1,20 @@
-import Barberias from "../components/layout/Barberias"
+import ProductsSell from "../components/layout/ProductsSell"
 import config from '../demo/plateria-config.json'
+import { bazarcitoProductsPlateria } from "../lib/products"
 
 const page = () => {
     return (
-        <Barberias
-            logo={config.logo}
-            title={config.name}
-            primary={config.primaryColor}
+        <ProductsSell
+            title='Plateria Toñito'
             secondary={config.secondaryColor}
+            primary={config.primaryColor}
             textColor={config.textColor}
+            bgColor={config.bgColor}
+            QuienesSomos="En plateria online, somos un equipo apasionado por conectar a los amantes de las compras con productos únicos y de calidad. Nuestra misión es ofrecer una plataforma fácil de usar donde los vendedores puedan mostrar sus productos y los compradores puedan descubrir tesoros escondidos. Creemos en el poder de la comunidad y en la importancia de apoyar a los pequeños negocios, por eso nos esforzamos por crear un espacio seguro y amigable para todos. ¡Únete a nosotros y descubre el bazarcito online donde cada compra es una experiencia especial!"
+            promos={config.images}
+            cellPhone={config.contact.phone}
             heroImage={config.heroImage}
-            whatsappNumber={config.contact?.phone}
-            about={config.about}
-            services={config.services}
-            images={config.images}
+            products={bazarcitoProductsPlateria}
         />
     )
 }

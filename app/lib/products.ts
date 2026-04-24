@@ -42,4 +42,23 @@ export const bazarcitoProducts: Product[] = [
     },
 ]
 
+export const bazarcitoProductsPlateria: Product[] = [
+    {
+        id: 'p1',
+        name: 'Anillo de Plata 925 con Circonia',
+        price: '$299.00',
+        image: 'https://cartiermx.vtexassets.com/arquivos/ids/163926/B4083451_1.jpg',
+        description: 'Anillo de plata 925 con circonia, elegante y sofisticado.',
+        category: 'plata',
+    },
+    {
+        id: 'p2',
+        name: 'Anillo de Plata 925 con Ónix',
+        price: '$1,300.00',
+        image: 'https://cartiermx.vtexassets.com/arquivos/ids/166565/B4096752_1.jpg',
+        description: 'Anillo de plata 925 con ónix, elegante y sofisticado.',
+        category: 'oro',
+    },
+]
+
 export const getBazarcitoProductById = (id: string) => bazarcitoProducts.find((product) => product.id === id)
