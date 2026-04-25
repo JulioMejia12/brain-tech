@@ -92,7 +92,7 @@ const ProductsSell = ({
                     title={title}
                     primary={primary}
                     textColor={textColor}
-                    logo={heroImage || logo}
+                    logo={logo}
                     textColorLogo="#fff"
                     query={searchQuery}
                     onQueryChange={(value) => setSearchQuery(value)}
@@ -102,7 +102,7 @@ const ProductsSell = ({
             <div className="block sm:hidden xs:block relative w-full overflow-hidden h-60 md:h-96" style={{ background: primary }}>
                 <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
                     <Image
-                        src={heroImage || logo || '/placeholder-hero.png'}
+                        src={logo || '/placeholder-hero.png'}
                         alt="Hero"
                         fill
                         style={{ objectFit: 'cover', objectPosition: 'center' }}
