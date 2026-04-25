@@ -102,7 +102,7 @@ const ProductsSell = ({
             <div className="block sm:hidden xs:block relative w-full overflow-hidden h-60 md:h-96" style={{ background: primary }}>
                 <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
                     <Image
-                        src={logo || '/placeholder-hero.png'}
+                        src={heroImage || '/placeholder-hero.png'}
                         alt="Hero"
                         fill
                         style={{ objectFit: 'cover', objectPosition: 'center' }}
