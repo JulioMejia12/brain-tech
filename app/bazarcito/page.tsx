@@ -2,8 +2,8 @@
 import ProductsSell from '../components/layout/ProductsSell'
 import { bazarcitoProducts } from '../lib/products';
 const promociones = [
-    '/banner.png',
-    '/banner2.png',
+    'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1777400663/banner_r6u0wi.png',
+    'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1777400530/samples/bike.jpg',
 ];
 
 const primary = '#ff81e3'
