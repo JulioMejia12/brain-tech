@@ -2,8 +2,8 @@
 import ProductsSell from '../components/layout/ProductsSell'
 import { bazarcitoProducts } from '../lib/products';
 const promociones = [
-    'https://betterware.com.mx/cdn/shop/files/banner-cooler-mar26-mobile_900x.png?v=1774614976',
-    'https://betterware.com.mx/cdn/shop/files/vitrolux-abril26-mobile_3000x.png?v=1774611821',
+    '/banner.png',
+    '/banner2.png',
 ];
 
 const primary = '#ff81e3'

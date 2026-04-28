@@ -37,8 +37,6 @@ const ProductsSell = ({
     cellPhone,
     products: productsArray
 }: Props) => {
-
-
     const heroBgRef = useRef<HTMLDivElement | null>(null)
 
     useEffect(() => {
