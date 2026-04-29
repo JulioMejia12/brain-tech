@@ -15,18 +15,23 @@ const ThemeContext = createContext<{
 } | null>(null);
 
 export function ThemeProvider({ children, defaultTheme = "system", enableSystem = true }: Props) {
-  const [theme, setThemeState] = useState<string | null>(null);
+  // Use a stable initial theme to avoid SSR/CSR mismatches. Default to 'light' when
+  // the configured default is 'system' because the server cannot detect the user's
+  // preferred color scheme.
+  const initial = defaultTheme === "dark" ? "dark" : "light";
+  const [theme, setThemeState] = useState<string>(initial);
 
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
+    // On the client adjust to stored or system preference.
+    const stored = localStorage.getItem("theme");
     if (stored) {
       setThemeState(stored);
       document.documentElement.classList.toggle("dark", stored === "dark");
       return;
     }
 
-    if (defaultTheme === "system" && enableSystem && typeof window !== "undefined") {
-      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (defaultTheme === "system" && enableSystem && window.matchMedia) {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       const t = prefersDark ? "dark" : "light";
       setThemeState(t);
       document.documentElement.classList.toggle("dark", t === "dark");
