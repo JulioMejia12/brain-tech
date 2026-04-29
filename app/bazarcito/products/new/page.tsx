@@ -53,7 +53,7 @@ export default function NewBazarcitoProductPage() {
                 throw new Error(body?.error || res.statusText || "Request failed")
             }
 
-            router.push("/bazarcito/products")
+            router.push("/bazarcito")
         } catch (err: any) {
             setError(err?.message || String(err))
         } finally {
