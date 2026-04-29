@@ -131,3 +131,31 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Server error', detail: String((err as any)?.message || err) }, { status: 500 })
     }
 }
+
+export async function GET(req: Request) {
+    try {
+        // Optional query params: ?category=cocina&limit=20&skip=0
+        const url = new URL(req.url)
+        const category = url.searchParams.get('category')
+        const limitParam = url.searchParams.get('limit')
+        const skipParam = url.searchParams.get('skip')
+
+        const take = limitParam ? Math.min(100, Number(limitParam) || 20) : 20
+        const skip = skipParam ? Math.max(0, Number(skipParam) || 0) : 0
+
+        const where = category ? { category: { name: category } } : undefined
+
+        const products = await prisma.product.findMany({
+            where,
+            include: { category: true },
+            orderBy: { createdAt: 'desc' },
+            take,
+            skip,
+        })
+
+        return NextResponse.json({ data: products })
+    } catch (err) {
+        console.error('Get products error:', (err as any)?.stack || err)
+        return NextResponse.json({ error: 'Failed to fetch products', detail: String((err as any)?.message || err) }, { status: 500 })
+    }
+}

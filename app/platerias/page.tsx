@@ -1,6 +1,21 @@
 import ProductsSell from "../components/layout/ProductsSell"
 import config from '../demo/plateria-config.json'
-import { bazarcitoProductsPlateria } from "../lib/products"
+
+async function fetchProductsForPlateria() {
+    const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const url = new URL('/api/bazarcito/products?category=plata', base).toString()
+    const res = await fetch(url)
+    if (!res.ok) return []
+    const body = await res.json()
+    return (body.data || []).map((it: any) => ({
+        id: String(it.id),
+        name: it.title || it.name || '',
+        price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
+        image: it.image || '/placeholder.png',
+        description: it.description || '',
+        category: it.category?.name || 'Otros',
+    }))
+}
 
 const page = () => {
     return (
@@ -14,7 +29,6 @@ const page = () => {
             promos={config.images}
             cellPhone={config.contact.phone}
             heroImage={config.heroImage}
-            products={bazarcitoProductsPlateria}
         />
     )
 }

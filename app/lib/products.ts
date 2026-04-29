@@ -7,58 +7,36 @@ export type Product = {
     category: string
 }
 
-export const bazarcitoProducts: Product[] = [
-    {
-        id: 'p1',
-        name: 'Vitro Bambú',
-        price: '$299.00',
-        image: 'https://betterware.com.mx/cdn/shop/files/26522-1-Vitro-Bambu-Betterware_1680x.jpg',
-        description: 'Sirve y disfruta de bebidas con la Maxi Vitro Bambú Betterware.',
-        category: 'Cocina',
-    },
-    {
-        id: 'p2',
-        name: 'Set Dispensa Vitrolux',
-        price: '$1,300.00',
-        image: 'https://betterware.com.mx/cdn/shop/files/26021-1-Set-Dispensa-Vitrolux-Betterware_1680x.jpg',
-        description: 'Organiza y protege hasta 20 pares de zapatos con la Modu Zapatera Moka Betterware.',
-        category: 'Cocina',
-    },
-    {
-        id: 'p3',
-        name: 'Modu Zapatera Moka',
-        price: '$1,200.00',
-        image: 'https://betterware.com.mx/cdn/shop/files/26301-1-Modu-Zapatera-Moka-Betterware_1680x.jpg',
-        description: 'Hidratación y fragancia suave.',
-        category: 'Recamara',
-    },
-    {
-        id: 'p4',
-        name: 'Mesa Lateral Harmony ( 2 Pzs)',
-        price: '$1,200.00',
-        image: 'https://betterware.com.mx/cdn/shop/files/25815-1-Mesa-Lateral-Harmony-Betterware_6fc9d19a-aeb3-473d-a064-4dd2cdd1189e_1680x.jpg',
-        description: 'Fijación media, acabado natural.',
-        category: 'Hogar',
-    },
-]
+const mapItemToProduct = (it: any): Product => ({
+    id: String(it.id),
+    name: it.title || it.name || '',
+    price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
+    image: it.image || '/placeholder.png',
+    description: it.description || '',
+    category: it.category?.name || 'Otros',
+})
 
-export const bazarcitoProductsPlateria: Product[] = [
-    {
-        id: 'p1',
-        name: 'Anillo de Plata 925 con Circonia',
-        price: '$299.00',
-        image: 'https://cartiermx.vtexassets.com/arquivos/ids/163926/B4083451_1.jpg',
-        description: 'Anillo de plata 925 con circonia, elegante y sofisticado.',
-        category: 'plata',
-    },
-    {
-        id: 'p2',
-        name: 'Anillo de Plata 925 con Ónix',
-        price: '$1,300.00',
-        image: 'https://cartiermx.vtexassets.com/arquivos/ids/166565/B4096752_1.jpg',
-        description: 'Anillo de plata 925 con ónix, elegante y sofisticado.',
-        category: 'oro',
-    },
-]
+export async function getBazarcitoProducts(category?: string): Promise<Product[]> {
+    const q = category ? `?category=${encodeURIComponent(category)}` : ''
+    const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const url = new URL(`/api/bazarcito/products${q}`, base).toString()
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) {
+        throw new Error(`Failed to fetch products: HTTP ${res.status}`)
+    }
+    const body = await res.json()
+    const items = body.data || []
+    return items.map(mapItemToProduct)
+}
 
-export const getBazarcitoProductById = (id: string) => bazarcitoProducts.find((product) => product.id === id)
+export async function getBazarcitoProductById(id: string): Promise<Product | undefined> {
+    if (!id) return undefined
+    const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const url = new URL(`/api/bazarcito/products/${encodeURIComponent(id)}`, base).toString()
+    const res = await fetch(url, { cache: 'no-store' })
+    if (res.status === 404) return undefined
+    if (!res.ok) throw new Error(`Failed to fetch product ${id}: HTTP ${res.status}`)
+    const body = await res.json()
+    const item = body.data || body
+    return item ? mapItemToProduct(item) : undefined
+}

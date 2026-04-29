@@ -1,6 +1,5 @@
 'use client'
 import ProductsSell from '../components/layout/ProductsSell'
-import { bazarcitoProducts } from '../lib/products';
 const promociones = [
     'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1777400663/banner_r6u0wi.png',
     'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1777400530/samples/bike.jpg',
@@ -24,7 +23,6 @@ const page = () => {
             promos={promociones}
             cellPhone={cell}
             heroImage="/bazar4.jpeg"
-            products={bazarcitoProducts}
         >
             <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>¿Quieres vender nuestros productos?</h2>

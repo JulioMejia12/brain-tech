@@ -1,5 +1,17 @@
 'use client'
 import { useMemo, useState, useEffect, useRef } from 'react'
+
+// Spinner simple
+function Spinner() {
+    return (
+        <div className="flex justify-center items-center py-8">
+            <svg className="animate-spin h-8 w-8 text-pink-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+        </div>
+    )
+}
 import AdsCarousel from '../../../components/AdsCarousel'
 import Image from 'next/image'
 import Footer from './Footer'
@@ -54,7 +66,9 @@ const ProductsSell = ({
         return () => window.removeEventListener('scroll', onScroll)
     }, [])
 
-    const products = productsArray || []
+    const [products, setProducts] = useState<Product[]>(productsArray || [])
+    const [loading, setLoading] = useState<boolean>(false)
+    const [fetchError, setFetchError] = useState<string | null>(null)
     const SHARE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.vercel.app'
 
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
@@ -64,6 +78,37 @@ const ProductsSell = ({
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))
         return ['Todos', ...Array.from(set)]
     }, [products])
+
+    useEffect(() => {
+        let mounted = true
+        async function load() {
+            setLoading(true)
+            setFetchError(null)
+            try {
+                const res = await fetch('/api/bazarcito/products')
+                if (!res.ok) throw new Error(`HTTP ${res.status}`)
+                const body = await res.json()
+                const items = body.data || []
+                // map backend product shape to frontend Product type
+                const mapped: Product[] = items.map((it: any) => ({
+                    id: String(it.id),
+                    name: it.title || it.name || '',
+                    price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
+                    image: it.image || '/placeholder.png',
+                    description: it.description || '',
+                    category: it.category?.name || 'Otros',
+                }))
+                if (mounted) setProducts(mapped)
+            } catch (e: any) {
+                console.error('Failed to load products', e)
+                if (mounted) setFetchError(String(e.message || e))
+            } finally {
+                if (mounted) setLoading(false)
+            }
+        }
+        load()
+        return () => { mounted = false }
+    }, [])
 
     const visible = products.filter((p) => {
         const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory
@@ -116,6 +161,7 @@ const ProductsSell = ({
 
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-xl font-bold mb-4" style={{ color: secondary }}>Nuestros Productos</h2>
+                {loading && <Spinner />}
                 <div className="sm:hidden mb-4">
                     <label className="block">
                         <span className="sr-only">Buscar productos</span>
