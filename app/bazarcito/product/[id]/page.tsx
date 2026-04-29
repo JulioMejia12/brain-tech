@@ -1,23 +1,23 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getBazarcitoProductById, bazarcitoProducts } from '../../../lib/products'
+import { getBazarcitoProductById, getBazarcitoProducts } from '../../../lib/products'
 import type { Metadata } from 'next'
 
 export async function generateStaticParams() {
-    return bazarcitoProducts.map((product) => ({ id: product.id }))
+    const products = await getBazarcitoProducts();
+    return products.map((product) => ({ id: product.id }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-    const { id } = await params
-    const product = getBazarcitoProductById(id)
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+    const { id } = params;
+    const product = await getBazarcitoProductById(id);
     if (!product) {
         return {
             title: 'Producto no encontrado',
             description: 'Producto no encontrado en Bazarcito',
-        }
+        };
     }
-
     return {
         title: product.name,
         description: product.description,
@@ -31,13 +31,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
                 },
             ],
         },
-    }
+    };
 }
 
-const ProductPage = async ({ params }: { params: Promise<{ id: string }> }) => {
-    const { id } = await params
-    const product = getBazarcitoProductById(id)
-    if (!product) return notFound()
+const ProductPage = async ({ params }: { params: { id: string } }) => {
+    const { id } = params;
+    const product = await getBazarcitoProductById(id);
+    if (!product) return notFound();
 
     return (
         <main className="min-h-screen bg-[#fff4fb] py-10">
@@ -64,7 +64,7 @@ const ProductPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                 </div>
             </div>
         </main>
-    )
+    );
 }
 
 export default ProductPage

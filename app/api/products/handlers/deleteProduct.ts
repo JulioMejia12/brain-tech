@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '../../../lib/prisma'
 
-export async function deleteProduct(req: Request, ctx: { params: { id: string } }) {
+export async function deleteProduct(req: NextRequest, ctx: any) {
     try {
         const idParam = ctx?.params?.id
         const id = Number(idParam)

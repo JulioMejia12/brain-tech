@@ -1,7 +1,7 @@
-import type { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { deleteProduct as productsDELETE } from '../../../products/handlers/deleteProduct'
 
-export async function DELETE(req: Request, ctx: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, ctx: any) {
     try {
         console.log('DELETE /api/bazarcito/products/[id] called with params:', ctx?.params)
         const resp = await productsDELETE(req, ctx)
