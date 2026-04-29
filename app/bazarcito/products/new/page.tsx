@@ -105,7 +105,6 @@ export default function NewBazarcitoProductPage() {
                         <input
                             type="file"
                             accept="image/*"
-                            capture="environment"
                             className="w-full"
                             onChange={(e) => {
                                 const f = e.target.files && e.target.files[0]
