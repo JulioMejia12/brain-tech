@@ -16,8 +16,8 @@ export async function generateStaticParams() {
     return products.map((product) => ({ id: product.id }));
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-    const { id } = params;
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
     const product = await getBazarcitoProductById(id);
     if (!product) {
         return {
@@ -58,10 +58,23 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     };
 }
 
-const ProductPage = async ({ params }: { params: { id: string } }) => {
-    const { id } = params;
+const ProductPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params;
+    console.log('ProductPage render for id=', id)
     const product = await getBazarcitoProductById(id);
-    if (!product) return notFound();
+    if (!product) {
+        const apiUrl = `${siteUrl}/api/bazarcito/products/${id}`
+        return (
+            <main className="min-h-screen flex items-center justify-center">
+                <div className="max-w-xl p-6 bg-white rounded-lg shadow">
+                    <h2 className="text-2xl font-bold mb-4">Producto no encontrado</h2>
+                    <p className="mb-2">No se encontró el producto con id {id}.</p>
+                    <p className="mb-4">Comprueba la API aquí: <a href={apiUrl} className="text-pink-600 underline">{apiUrl}</a></p>
+                    <p className="text-sm text-gray-500">Si debería existir, verifica que `DATABASE_URL` y `NEXT_PUBLIC_SITE_URL` estén correctamente configuradas y que el producto exista en la base de datos.</p>
+                </div>
+            </main>
+        )
+    }
 
     return (
         <main className="min-h-screen bg-[#fff4fb] py-10">

@@ -4,12 +4,32 @@ import { prisma } from '../../../../lib/prisma'
 
 export async function GET(req: NextRequest, ctx: any) {
     try {
-        const idParam = ctx?.params?.id
-        const isNumeric = /^\d+$/.test(String(idParam))
-        const where = isNumeric ? { id: Number(idParam) } : { id: String(idParam) }
+        // Extract id from route params when available, otherwise fall back to parsing the URL
+        let idParam = ctx?.params?.id
+        if (!idParam) {
+            try {
+                // NextRequest exposes nextUrl in Edge runtime; fallback to req.url for Node
+                idParam = req.nextUrl?.pathname?.split('/').pop() || new URL(req.url).pathname.split('/').pop()
+            } catch (e) {
+                console.warn('Could not parse id from req.url', e)
+            }
+        }
 
-        const product = await prisma.product.findUnique({ where: where as any, include: { category: true } })
-        if (!product) return NextResponse.json({ error: `Product with id=${idParam} not found` }, { status: 404 })
+        console.log('GET /api/bazarcito/products/[id] called with idParam=', idParam)
+
+        if (!idParam) {
+            return NextResponse.json({ error: 'Missing product id' }, { status: 400 })
+        }
+
+        const isNumeric = /^\d+$/.test(String(idParam))
+        if (!isNumeric) {
+            return NextResponse.json({ error: `Invalid product id: ${String(idParam)}` }, { status: 400 })
+        }
+
+        const numericId = Number(idParam)
+        const product = await prisma.product.findUnique({ where: { id: numericId }, include: { category: true } })
+        console.log('Lookup id=', numericId, 'found=', !!product)
+        if (!product) return NextResponse.json({ error: `Product with id=${numericId} not found` }, { status: 404 })
         return NextResponse.json({ data: product })
     } catch (err) {
         console.error('GET /api/bazarcito/products/[id] error:', (err as any)?.stack || err)
