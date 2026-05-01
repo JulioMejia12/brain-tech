@@ -4,8 +4,15 @@ import { notFound } from 'next/navigation'
 import { getBazarcitoProductById, getBazarcitoProducts } from '../../../lib/products'
 import type { Metadata } from 'next'
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.vercel.app'
+
+const toAbsoluteUrl = (value: string) => {
+    if (!value) return siteUrl
+    return value.startsWith('http') ? value : `${siteUrl}${value}`
+}
+
 export async function generateStaticParams() {
-    const products = await getBazarcitoProducts();
+    const products = (await getBazarcitoProducts()) || [];
     return products.map((product) => ({ id: product.id }));
 }
 
@@ -14,22 +21,39 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     const product = await getBazarcitoProductById(id);
     if (!product) {
         return {
+            metadataBase: new URL(siteUrl),
             title: 'Producto no encontrado',
             description: 'Producto no encontrado en Bazarcito',
         };
     }
+
+    const productUrl = `${siteUrl}/bazarcito/product/${product.id}`
+    const imageUrl = toAbsoluteUrl(product.image)
+
     return {
+        metadataBase: new URL(siteUrl),
         title: product.name,
         description: product.description,
         openGraph: {
+            type: 'website',
+            url: productUrl,
+            siteName: 'brain-tech-kappa',
             title: product.name,
             description: product.description,
             images: [
                 {
-                    url: product.image,
+                    url: imageUrl,
                     alt: product.name,
+                    width: 1200,
+                    height: 630,
                 },
             ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: product.name,
+            description: product.description,
+            images: [imageUrl],
         },
     };
 }
@@ -47,6 +71,7 @@ const ProductPage = async ({ params }: { params: { id: string } }) => {
                         src={product.image}
                         alt={product.name}
                         fill
+                        unoptimized
                         style={{ objectFit: 'cover' }}
                     />
                 </div>

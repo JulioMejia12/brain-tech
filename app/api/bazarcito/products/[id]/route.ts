@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { deleteProduct as productsDELETE } from '../../../products/handlers/deleteProduct'
+import { GET as productsGET } from '../../../products/[id]/route'
+
+export async function GET(req: Request, ctx: { params: { id: string } }) {
+    return (await productsGET(req, ctx)) as unknown as NextResponse
+}
 
 export async function DELETE(req: NextRequest, ctx: any) {
     try {

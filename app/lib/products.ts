@@ -49,8 +49,10 @@ export async function getBazarcitoProductById(id: string): Promise<Product | und
     // Server-side: read directly from database when possible
     if (typeof window === 'undefined') {
         try {
-            const numericId = Number(id)
-            const item = await prisma.product.findUnique({ where: { id: numericId } as any, include: { category: true } })
+            // Support numeric and string primary keys
+            const isNumeric = /^\d+$/.test(id)
+            const where = isNumeric ? { id: Number(id) } : { id }
+            const item = await prisma.product.findUnique({ where: where as any, include: { category: true } })
             return item ? mapItemToProduct(item) : undefined
         } catch (err) {
             console.error('Prisma get by id failed, falling back to HTTP fetch:', err)

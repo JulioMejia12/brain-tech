@@ -117,14 +117,15 @@ const ProductsSell = ({
     })
 
     const handleRequestProduct = (product: Product) => {
-        const pageUrl = `${SHARE_BASE_URL}/bazarcito/product/${product.id}`
-        const text = `Hola, quiero realizar el pedido de ${product.name} por ${product.price}. Por favor me pueden confirmar disponibilidad.\n\n${pageUrl}`
+        // Add a unique query param to force WhatsApp to re-scrape the product page OG tags
+        const pageUrl = `${SHARE_BASE_URL}/bazarcito/product/${product.id}?v=${Date.now()}`
+        const text = `${pageUrl}\n\nHola, quiero realizar el pedido de ${product.name} por ${product.price}. Por favor me pueden confirmar disponibilidad.`
         window.open(`https://api.whatsapp.com/send?phone=${cellPhone}&text=${encodeURIComponent(text)}`, '_blank')
     }
 
     const handleShareProduct = (product: Product) => {
-        const pageUrl = `${typeof window !== 'undefined' ? window.location.origin : SHARE_BASE_URL}/bazarcito/product/${product.id}`
-        const text = `Adquiere este producto: ${product.name}\nPrecio: ${product.price}\n${product.description}\nMira más productos entrando a mi aplicación: ${pageUrl}`
+        const pageUrl = `${typeof window !== 'undefined' ? window.location.origin : SHARE_BASE_URL}/bazarcito/product/${product.id}?v=${Date.now()}`
+        const text = `${pageUrl}\n\nAdquiere este producto: ${product.name}\nPrecio: ${product.price}\n${product.description}`
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
     }
 
