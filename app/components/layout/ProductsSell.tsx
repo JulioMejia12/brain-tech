@@ -89,16 +89,17 @@ const ProductsSell = ({
                 if (!res.ok) throw new Error(`HTTP ${res.status}`)
                 const body = await res.json()
                 const items = body.data || []
-                // map backend product shape to frontend Product type
-                const mapped: Product[] = items.map((it: any) => ({
+                // map backend product shape and include pieces if available
+                const mapped: any[] = items.map((it: any) => ({
                     id: String(it.id),
                     name: it.title || it.name || '',
                     price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
                     image: it.image || '/placeholder.png',
                     description: it.description || '',
                     category: it.category?.name || 'Otros',
+                    pieces: it.pieces ?? it.quantity ?? it.stock ?? null,
                 }))
-                if (mounted) setProducts(mapped)
+                if (mounted) setProducts(mapped as Product[])
             } catch (e: any) {
                 console.error('Failed to load products', e)
                 if (mounted) setFetchError(String(e.message || e))
@@ -116,16 +117,37 @@ const ProductsSell = ({
         return matchesCategory && matchesSearch
     })
 
+    const buildShareUrl = (product: Product) => {
+        const browserOrigin = typeof window !== 'undefined' ? window.location.origin : ''
+        const isLocalhost = browserOrigin.includes('localhost') || browserOrigin.includes('127.0.0.1')
+        const baseUrl = !browserOrigin || isLocalhost ? SHARE_BASE_URL : browserOrigin
+        const url = new URL(`/share/product/${product.id}`, baseUrl)
+        url.searchParams.set('utm_source', 'whatsapp')
+        url.searchParams.set('utm_medium', 'share')
+        url.searchParams.set('preview', String(Date.now()))
+        return url.toString()
+    }
+
     const handleRequestProduct = (product: Product) => {
-        // Add a unique query param to force WhatsApp to re-scrape the product page OG tags
-        const pageUrl = `${SHARE_BASE_URL}/bazarcito/product/${product.id}?v=${Date.now()}`
-        const text = `${pageUrl}\n\nHola, quiero realizar el pedido de ${product.name} por ${product.price}. Por favor me pueden confirmar disponibilidad.`
+        const pageUrl = buildShareUrl(product)
+        const text = [
+            pageUrl,
+            '',
+            `Hola, quiero realizar el pedido de ${product.name} por ${product.price}.`,
+            'Por favor me pueden confirmar disponibilidad.'
+        ].join('\n')
         window.open(`https://api.whatsapp.com/send?phone=${cellPhone}&text=${encodeURIComponent(text)}`, '_blank')
     }
 
     const handleShareProduct = (product: Product) => {
-        const pageUrl = `${typeof window !== 'undefined' ? window.location.origin : SHARE_BASE_URL}/bazarcito/product/${product.id}?v=${Date.now()}`
-        const text = `${pageUrl}\n\nAdquiere este producto: ${product.name}\nPrecio: ${product.price}\n${product.description}`
+        const pageUrl = buildShareUrl(product)
+        const text = [
+            pageUrl,
+            '',
+            `Producto: ${product.name}`,
+            `Precio: ${product.price}`,
+            product.description || 'Mira este producto en Bazarcito.'
+        ].join('\n')
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
     }
 
@@ -216,6 +238,7 @@ const ProductsSell = ({
                                     <div className="mt-3">
                                         <div className="flex flex-col gap-3 min-w-0">
                                             <div className="text-lg font-bold text-gray-900">{p.price}</div>
+                                            <div className="text-sm text-gray-500">Piezas: {(p as any).pieces ?? '—'}</div>
                                             <button
                                                 type="button"
                                                 className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap"

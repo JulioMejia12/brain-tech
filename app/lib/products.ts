@@ -3,7 +3,7 @@ import { prisma } from './prisma'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.vercel.app'
 
 const toAbsoluteImage = (img: any) => {
-    if (!img) return `${SITE_URL}/placeholder.png`
+    if (!img) return `${SITE_URL}/image.jpeg`
     const s = String(img)
     if (s.startsWith('http://') || s.startsWith('https://')) return s
     // ensure leading slash
