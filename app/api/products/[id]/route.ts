@@ -1,13 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { deleteProduct } from '../handlers/deleteProduct'
 import { prisma } from '../../../lib/prisma'
 
-export async function GET(_req: Request, ctx: { params: { id: string } }) {
+export async function GET(_req: NextRequest, ctx: any) {
     try {
         const idParam = ctx?.params?.id
-        const id = Number(idParam)
+        const isNumeric = /^\d+$/.test(String(idParam))
+        const id = isNumeric ? Number(idParam) : NaN
 
-        if (Number.isNaN(id)) {
+        if (isNumeric === false) {
             return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
         }
 
