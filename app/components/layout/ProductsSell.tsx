@@ -18,6 +18,8 @@ import Footer from './Footer'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 import MobileMenu from './MobileMenu'
 import NavBar from './NavBar'
+import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 import { Product } from '@/app/lib/products'
 type Props = {
     heroImage?: string
@@ -73,6 +75,15 @@ const ProductsSell = ({
 
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
     const [searchQuery, setSearchQuery] = useState<string>('')
+    const auth = useAuth()
+    const isAdmin = Boolean(auth.user?.role?.name && String(auth.user.role.name).toLowerCase() === 'admin')
+
+    // Edit modal state
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+    const [isModalOpen, setModalOpen] = useState(false)
+    const [editName, setEditName] = useState('')
+    const [editDescription, setEditDescription] = useState('')
+    const [editPieces, setEditPieces] = useState<number | ''>('')
 
     const categories = useMemo(() => {
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))
@@ -221,43 +232,122 @@ const ProductsSell = ({
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {visible.map((p) => (
-                            <div key={p.id} className="bg-white rounded-lg shadow overflow-hidden">
-                                <div className="w-full bg-gray-50">
-                                    <Image
-                                        src={p.image}
-                                        alt={p.name}
-                                        width={800}
-                                        height={600}
-                                        style={{ width: '100%', height: 'auto', objectFit: 'contain', objectPosition: 'center' }}
-                                    />
-                                </div>
-                                <div className="p-4">
-                                    <h3 className="font-semibold text-gray-900">{p.name}</h3>
-                                    <p className="text-sm text-gray-600 mt-1">{p.description}</p>
-                                    <div className="mt-3">
-                                        <div className="flex flex-col gap-3 min-w-0">
-                                            <div className="text-lg font-bold text-gray-900">{p.price}</div>
-                                            <div className="text-sm text-gray-500">Piezas: {(p as any).pieces ?? '—'}</div>
+                        {visible.map((p) => {
+                            return (
+                                <div key={p.id} className="relative bg-white rounded-lg shadow overflow-hidden">
+                                    <div className="w-full bg-gray-50">
+                                        <Image
+                                            src={p.image}
+                                            alt={p.name}
+                                            width={800}
+                                            height={600}
+                                            style={{ width: '100%', height: 'auto', objectFit: 'contain', objectPosition: 'center' }}
+                                        />
+                                    </div>
+                                    <div className="p-4">
+                                        {isAdmin && (
                                             <button
                                                 type="button"
-                                                className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap"
-                                                style={{ background: primary }}
-                                                onClick={() => handleRequestProduct(p)}
-                                            >Pedir por WhatsApp</button>
-                                            <button
-                                                type="button"
-                                                className="w-full px-4 py-2 rounded border border-gray-300 text-gray-800 text-sm md:text-base whitespace-nowrap hover:bg-gray-50"
-                                                onClick={() => handleShareProduct(p)}
-                                            >Compartir por WhatsApp</button>
+                                                onClick={() => {
+                                                    setEditingProduct(p)
+                                                    setEditName(p.name)
+                                                    setEditDescription(p.description || '')
+                                                    setEditPieces((p as any).pieces ?? '')
+                                                    setModalOpen(true)
+                                                }}
+                                                aria-label={`Editar ${p.name}`}
+                                                className="absolute top-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-pink-600 hover:bg-pink-700 transition"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-white">
+                                                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                                    <path d="M3 17a1 1 0 001 1h12a1 1 0 100-2H4a1 1 0 00-1 1z" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                        <h3 className="font-semibold text-gray-900">{p.name}</h3>
+                                        <p className="text-sm text-gray-600 mt-1">{p.description}</p>
+                                        <div className="mt-3">
+                                            <div className="flex flex-col gap-3 min-w-0">
+                                                <div className="text-lg font-bold text-gray-900">{p.price}</div>
+                                                <div className="text-sm text-gray-500">Piezas: {(p as any).pieces ?? '—'}</div>
+                                                <button
+                                                    type="button"
+                                                    className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap"
+                                                    style={{ background: primary }}
+                                                    onClick={() => handleRequestProduct(p)}
+                                                >Pedir por WhatsApp</button>
+                                                <button
+                                                    type="button"
+                                                    className="w-full px-4 py-2 rounded border border-gray-300 text-gray-800 text-sm md:text-base whitespace-nowrap hover:bg-gray-50"
+                                                    onClick={() => handleShareProduct(p)}
+                                                >Compartir por WhatsApp</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 </>
             </section>
+
+            {/* Edit Modal */}
+            {isModalOpen && editingProduct && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/40" onClick={() => setModalOpen(false)} />
+                    <div className="relative bg-white rounded-lg shadow-lg max-w-lg w-full mx-4 p-6 z-10">
+                        <h3 className="text-lg font-semibold mb-3">Editar producto</h3>
+                        <div className="space-y-3">
+                            <label className="block">
+                                <span className="text-sm text-gray-600">Nombre</span>
+                                <input value={editName} onChange={(e) => setEditName(e.target.value)} className="mt-1 w-full border rounded px-3 py-2" />
+                            </label>
+                            <label className="block">
+                                <span className="text-sm text-gray-600">Descripción</span>
+                                <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="mt-1 w-full border rounded px-3 py-2" rows={4} />
+                            </label>
+                            <label className="block">
+                                <span className="text-sm text-gray-600">Piezas</span>
+                                <input value={String(editPieces)} onChange={(e) => setEditPieces(e.target.value ? Number(e.target.value) : '')} className="mt-1 w-full border rounded px-3 py-2" />
+                            </label>
+                        </div>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <button onClick={() => setModalOpen(false)} className="px-4 py-2 rounded border">Cancelar</button>
+                            <button
+                                onClick={async () => {
+                                    if (!editingProduct) return
+                                    const payload: any = { name: editName, description: editDescription }
+                                    if (editPieces !== '') payload.pieces = editPieces
+                                    // try to call API; if fails, fallback to local update
+                                    try {
+                                        const res = await fetch(`/api/bazarcito/products/${editingProduct.id}`, {
+                                            method: 'PUT',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(payload),
+                                        })
+                                        if (res.ok) {
+                                            const body = await res.json()
+                                            const updated = body.data || null
+                                            if (updated) {
+                                                setProducts((prev) => prev.map((it) => (String(it.id) === String(updated.id) ? ({ ...it, name: updated.title || updated.name || editName, description: updated.description || editDescription, pieces: updated.pieces ?? editPieces }) as Product : it)))
+                                            }
+                                        } else {
+                                            // fallback: update local
+                                            setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: editName, description: editDescription, pieces: editPieces } : it)))
+                                        }
+                                    } catch (e) {
+                                        setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: editName, description: editDescription, pieces: editPieces } : it)))
+                                    } finally {
+                                        setModalOpen(false)
+                                        setEditingProduct(null)
+                                    }
+                                }}
+                                className="px-4 py-2 rounded bg-pink-600 text-white"
+                            >Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="hidden md:block">
                 <FloatingWhatsApp

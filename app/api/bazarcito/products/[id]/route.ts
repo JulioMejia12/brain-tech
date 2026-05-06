@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { deleteProduct as productsDELETE } from '../../../products/handlers/deleteProduct'
 import { prisma } from '../../../../lib/prisma'
+import { PUT as productsPUT } from '../../../products/[id]/route'
 
 export async function GET(req: NextRequest, ctx: any) {
     try {
@@ -45,5 +46,15 @@ export async function DELETE(req: NextRequest, ctx: any) {
     } catch (err) {
         console.error('Delegated DELETE error:', (err as any)?.stack || err)
         return NextResponse.json({ error: 'Server error in delegated handler', detail: String((err as any)?.message || err) }, { status: 500 })
+    }
+}
+
+export async function PUT(req: NextRequest, ctx: any) {
+    try {
+        const resp = await productsPUT(req as any, ctx)
+        return resp as unknown as NextResponse
+    } catch (err) {
+        console.error('Delegated PUT error:', (err as any)?.stack || err)
+        return NextResponse.json({ error: 'Server error in delegated PUT', detail: String((err as any)?.message || err) }, { status: 500 })
     }
 }

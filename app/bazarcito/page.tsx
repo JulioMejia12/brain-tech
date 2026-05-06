@@ -17,7 +17,7 @@ const page = () => {
             title='Bazarcito online'
             secondary={secondary}
             primary={primary}
-            textColor={textColor}
+            textColor={secondary}
             bgColor={bgColor}
             QuienesSomos="En Bazarcito Online, somos un equipo apasionado por conectar a los amantes de las compras con productos únicos y de calidad. Nuestra misión es ofrecer una plataforma fácil de usar donde los vendedores puedan mostrar sus productos y los compradores puedan descubrir tesoros escondidos. Creemos en el poder de la comunidad y en la importancia de apoyar a los pequeños negocios, por eso nos esforzamos por crear un espacio seguro y amigable para todos. ¡Únete a nosotros y descubre el bazarcito online donde cada compra es una experiencia especial!"
             promos={promociones}

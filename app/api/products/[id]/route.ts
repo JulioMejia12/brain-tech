@@ -29,3 +29,42 @@ export async function GET(req: NextRequest, ctx: any) {
 }
 
 export { deleteProduct as DELETE }
+
+export async function PUT(req: NextRequest, ctx: any) {
+    try {
+        let idParam = ctx?.params?.id
+        if (!idParam) {
+            try {
+                idParam = req.nextUrl?.pathname?.split('/').pop() || new URL(req.url).pathname.split('/').pop()
+            } catch (e) {
+                console.warn('Could not parse id from req.url for PUT', e)
+            }
+        }
+
+        if (!idParam) return NextResponse.json({ error: 'Missing product id' }, { status: 400 })
+        const isNumeric = /^\d+$/.test(String(idParam))
+        if (!isNumeric) return NextResponse.json({ error: `Invalid product id: ${String(idParam)}` }, { status: 400 })
+
+        const numericId = Number(idParam)
+        const body = await req.json().catch(() => ({})) as Record<string, unknown>
+
+        const data: any = {}
+        if (body.name) data.title = String(body.name)
+        if (body.price !== undefined) {
+            const parsed = Number(body.price)
+            if (!Number.isNaN(parsed)) data.price = parsed
+        }
+        if (body.pieces !== undefined) {
+            const parsed = Number(body.pieces as any)
+            if (!Number.isNaN(parsed)) data.stock = parsed
+        }
+
+        if (Object.keys(data).length === 0) return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+
+        const updated = await prisma.product.update({ where: { id: numericId }, data })
+        return NextResponse.json({ data: updated })
+    } catch (err) {
+        console.error('Update product error:', (err as any)?.stack || err)
+        return NextResponse.json({ error: 'Failed to update product', detail: String((err as any)?.message || err) }, { status: 500 })
+    }
+}

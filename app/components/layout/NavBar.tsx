@@ -1,5 +1,6 @@
-import React from 'react'
-
+"use client"
+import React, { useState } from 'react'
+import Avatar from './Avatar'
 type Props = {
     logo?: string
     title?: string
@@ -13,6 +14,9 @@ const NavBar = ({ logo, title, primary, textColor, textColorLogo, query = '', on
     const handleQueryChange = (value: string) => {
         if (onQueryChange) onQueryChange(value)
     }
+    const [localQuery, setLocalQuery] = useState<string>(query)
+    const normalized = String(textColor || '').trim().toLowerCase()
+    const inputColor = (normalized === '#fff' || normalized === 'white' || normalized === 'rgb(255,255,255)') ? '#111' : (textColor || '#111')
 
     return (
         <header className="shadow" style={{ background: primary }}>
@@ -35,16 +39,16 @@ const NavBar = ({ logo, title, primary, textColor, textColorLogo, query = '', on
 
                             <input
                                 type="text"
-                                value={query}
+                                value={localQuery}
                                 placeholder="Buscar productos por nombre"
-                                onChange={(e) => handleQueryChange(e.target.value)}
-                                className="pl-10 pr-10 py-2 rounded-full text-sm w-72 transition-shadow duration-200 focus:shadow-xl"
-                                style={{ color: textColor, background: 'rgba(255,255,255,0.95)', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
+                                onChange={(e) => { setLocalQuery(e.target.value); handleQueryChange(e.target.value) }}
+                                className="pl-10 pr-10 py-2 rounded-full text-sm w-72 transition-shadow duration-200 focus:shadow-xl placeholder-gray-500"
+                                style={{ color: inputColor, background: 'rgba(255,255,255,0.95)', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
                                 aria-label="Buscar productos"
                             />
 
-                            {query && (
-                                <button onClick={() => handleQueryChange('')} aria-label="Limpiar búsqueda" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800">
+                            {localQuery && (
+                                <button onClick={() => { setLocalQuery(''); handleQueryChange('') }} aria-label="Limpiar búsqueda" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                                     </svg>
@@ -54,6 +58,8 @@ const NavBar = ({ logo, title, primary, textColor, textColorLogo, query = '', on
                     </nav>
                 </div>
                 <div className="flex items-center gap-3">
+                    {/* Avatar / account menu */}
+                    <Avatar src="/logo.png" name="Cuenta" />
                 </div>
             </div>
         </header>
