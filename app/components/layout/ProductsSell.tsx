@@ -14,11 +14,11 @@ function Spinner() {
 }
 import AdsCarousel from '../../../components/AdsCarousel'
 import Image from 'next/image'
+import { FiTrash2 } from 'react-icons/fi'
 import Footer from './Footer'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 import MobileMenu from './MobileMenu'
 import NavBar from './NavBar'
-import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Product } from '@/app/lib/products'
 type Props = {
@@ -84,6 +84,7 @@ const ProductsSell = ({
     const [editName, setEditName] = useState('')
     const [editDescription, setEditDescription] = useState('')
     const [editPieces, setEditPieces] = useState<number | ''>('')
+    const [deletingIds, setDeletingIds] = useState<string[]>([])
 
     const categories = useMemo(() => {
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))
@@ -246,23 +247,52 @@ const ProductsSell = ({
                                     </div>
                                     <div className="p-4">
                                         {isAdmin && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setEditingProduct(p)
-                                                    setEditName(p.name)
-                                                    setEditDescription(p.description || '')
-                                                    setEditPieces((p as any).pieces ?? '')
-                                                    setModalOpen(true)
-                                                }}
-                                                aria-label={`Editar ${p.name}`}
-                                                className="absolute top-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-pink-600 hover:bg-pink-700 transition"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-white">
-                                                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                                                    <path d="M3 17a1 1 0 001 1h12a1 1 0 100-2H4a1 1 0 00-1 1z" />
-                                                </svg>
-                                            </button>
+                                            <div className="absolute top-3 right-3 flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditingProduct(p)
+                                                        setEditName(p.name)
+                                                        setEditDescription(p.description || '')
+                                                        setEditPieces((p as any).pieces ?? '')
+                                                        setModalOpen(true)
+                                                    }}
+                                                    aria-label={`Editar ${p.name}`}
+                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-pink-600 hover:bg-pink-700 transition"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-white">
+                                                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                                        <path d="M3 17a1 1 0 001 1h12a1 1 0 100-2H4a1 1 0 00-1 1z" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        const confirmDelete = confirm(`¿Eliminar ${p.name}? Esta acción no se puede deshacer.`)
+                                                        if (!confirmDelete) return
+                                                        try {
+                                                            setDeletingIds((prev) => [...prev, String(p.id)])
+                                                            const res = await fetch(`/api/bazarcito/products/${p.id}`, { method: 'DELETE' })
+                                                            if (res.ok || res.status === 204) {
+                                                                setProducts((prev) => prev.filter((it) => String(it.id) !== String(p.id)))
+                                                            } else {
+                                                                const body = await res.json().catch(() => ({}))
+                                                                console.error('Failed to delete product', body)
+                                                                alert(`No se pudo eliminar: ${body?.error || res.status}`)
+                                                            }
+                                                        } catch (e) {
+                                                            console.error('Delete error', e)
+                                                            alert('Error al eliminar el producto')
+                                                        } finally {
+                                                            setDeletingIds((prev) => prev.filter((id) => id !== String(p.id)))
+                                                        }
+                                                    }}
+                                                    aria-label={`Eliminar ${p.name}`}
+                                                    className={`inline-flex items-center justify-center w-9 h-9 rounded-full bg-red-600 hover:bg-red-700 transition ${deletingIds.includes(String(p.id)) ? 'opacity-60 pointer-events-none' : ''}`}
+                                                >
+                                                    <FiTrash2 className="w-5 h-5 text-white" />
+                                                </button>
+                                            </div>
                                         )}
                                         <h3 className="font-semibold text-gray-900">{p.name}</h3>
                                         <p className="text-sm text-gray-600 mt-1">{p.description}</p>
