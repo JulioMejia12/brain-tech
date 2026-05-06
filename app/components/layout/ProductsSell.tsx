@@ -19,8 +19,37 @@ import Footer from './Footer'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 import MobileMenu from './MobileMenu'
 import NavBar from './NavBar'
+import ConfirmModal from '../ui/ConfirmModal'
+import ToastMessage, { type ToastType } from '../ui/ToastMessage'
+import ButtonSpinner from '../ui/ButtonSpinner'
+import EditProductModal from '../ui/EditProductModal'
 import { useAuth } from '@/contexts/AuthContext'
 import { Product } from '@/app/lib/products'
+
+type ProductWithPieces = Product & {
+    pieces?: number | null
+}
+
+type ProductApiItem = {
+    id: string | number
+    title?: string
+    name?: string
+    price?: string | number
+    image?: string
+    description?: string
+    category?: {
+        name?: string
+    } | null
+    pieces?: number | null
+    quantity?: number | null
+    stock?: number | null
+}
+
+type ToastState = {
+    message: string
+    type: ToastType
+} | null
+
 type Props = {
     heroImage?: string
     logo?: string
@@ -68,7 +97,7 @@ const ProductsSell = ({
         return () => window.removeEventListener('scroll', onScroll)
     }, [])
 
-    const [products, setProducts] = useState<Product[]>(productsArray || [])
+    const [products, setProducts] = useState<ProductWithPieces[]>((productsArray || []) as ProductWithPieces[])
     const [loading, setLoading] = useState<boolean>(false)
     const [fetchError, setFetchError] = useState<string | null>(null)
     const SHARE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.vercel.app'
@@ -79,12 +108,15 @@ const ProductsSell = ({
     const isAdmin = Boolean(auth.user?.role?.name && String(auth.user.role.name).toLowerCase() === 'admin')
 
     // Edit modal state
-    const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+    const [editingProduct, setEditingProduct] = useState<ProductWithPieces | null>(null)
     const [isModalOpen, setModalOpen] = useState(false)
-    const [editName, setEditName] = useState('')
-    const [editDescription, setEditDescription] = useState('')
-    const [editPieces, setEditPieces] = useState<number | ''>('')
     const [deletingIds, setDeletingIds] = useState<string[]>([])
+    const [openingEditId, setOpeningEditId] = useState<string | null>(null)
+    const [savingProductId, setSavingProductId] = useState<string | null>(null)
+    const [requestingIds, setRequestingIds] = useState<string[]>([])
+    const [sharingIds, setSharingIds] = useState<string[]>([])
+    const [toast, setToast] = useState<ToastState>(null)
+    const [productPendingDelete, setProductPendingDelete] = useState<ProductWithPieces | null>(null)
 
     const categories = useMemo(() => {
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))
@@ -100,9 +132,9 @@ const ProductsSell = ({
                 const res = await fetch('/api/bazarcito/products')
                 if (!res.ok) throw new Error(`HTTP ${res.status}`)
                 const body = await res.json()
-                const items = body.data || []
+                const items = (body.data || []) as ProductApiItem[]
                 // map backend product shape and include pieces if available
-                const mapped: any[] = items.map((it: any) => ({
+                const mapped: ProductWithPieces[] = items.map((it) => ({
                     id: String(it.id),
                     name: it.title || it.name || '',
                     price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
@@ -111,10 +143,10 @@ const ProductsSell = ({
                     category: it.category?.name || 'Otros',
                     pieces: it.pieces ?? it.quantity ?? it.stock ?? null,
                 }))
-                if (mounted) setProducts(mapped as Product[])
-            } catch (e: any) {
+                if (mounted) setProducts(mapped)
+            } catch (e: unknown) {
                 console.error('Failed to load products', e)
-                if (mounted) setFetchError(String(e.message || e))
+                if (mounted) setFetchError(e instanceof Error ? e.message : String(e))
             } finally {
                 if (mounted) setLoading(false)
             }
@@ -140,27 +172,43 @@ const ProductsSell = ({
         return url.toString()
     }
 
-    const handleRequestProduct = (product: Product) => {
-        const pageUrl = buildShareUrl(product)
-        const text = [
-            pageUrl,
-            '',
-            `Hola, quiero realizar el pedido de ${product.name} por ${product.price}.`,
-            'Por favor me pueden confirmar disponibilidad.'
-        ].join('\n')
-        window.open(`https://api.whatsapp.com/send?phone=${cellPhone}&text=${encodeURIComponent(text)}`, '_blank')
+    const handleRequestProduct = async (product: Product) => {
+        const productId = String(product.id)
+        try {
+            setRequestingIds((prev) => [...prev, productId])
+            const pageUrl = buildShareUrl(product)
+            const text = [
+                pageUrl,
+                '',
+                `Hola, quiero realizar el pedido de ${product.name} por ${product.price}.`,
+                'Por favor me pueden confirmar disponibilidad.'
+            ].join('\n')
+            window.open(`https://api.whatsapp.com/send?phone=${cellPhone}&text=${encodeURIComponent(text)}`, '_blank')
+        } finally {
+            window.setTimeout(() => {
+                setRequestingIds((prev) => prev.filter((id) => id !== productId))
+            }, 400)
+        }
     }
 
-    const handleShareProduct = (product: Product) => {
-        const pageUrl = buildShareUrl(product)
-        const text = [
-            pageUrl,
-            '',
-            `Producto: ${product.name}`,
-            `Precio: ${product.price}`,
-            product.description || 'Mira este producto en Bazarcito.'
-        ].join('\n')
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+    const handleShareProduct = async (product: Product) => {
+        const productId = String(product.id)
+        try {
+            setSharingIds((prev) => [...prev, productId])
+            const pageUrl = buildShareUrl(product)
+            const text = [
+                pageUrl,
+                '',
+                `Producto: ${product.name}`,
+                `Precio: ${product.price}`,
+                product.description || 'Mira este producto en Bazarcito.'
+            ].join('\n')
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+        } finally {
+            window.setTimeout(() => {
+                setSharingIds((prev) => prev.filter((id) => id !== productId))
+            }, 400)
+        }
     }
 
     return (
@@ -197,6 +245,11 @@ const ProductsSell = ({
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-xl font-bold mb-4" style={{ color: secondary }}>Nuestros Productos</h2>
                 {loading && <Spinner />}
+                {fetchError && !loading && (
+                    <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {fetchError}
+                    </div>
+                )}
                 <div className="sm:hidden mb-4">
                     <label className="block">
                         <span className="sr-only">Buscar productos</span>
@@ -251,46 +304,36 @@ const ProductsSell = ({
                                                 <button
                                                     type="button"
                                                     onClick={() => {
+                                                        setOpeningEditId(String(p.id))
                                                         setEditingProduct(p)
-                                                        setEditName(p.name)
-                                                        setEditDescription(p.description || '')
-                                                        setEditPieces((p as any).pieces ?? '')
                                                         setModalOpen(true)
+                                                        window.setTimeout(() => setOpeningEditId((current) => (current === String(p.id) ? null : current)), 250)
                                                     }}
                                                     aria-label={`Editar ${p.name}`}
-                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-pink-600 hover:bg-pink-700 transition"
+                                                    disabled={openingEditId === String(p.id)}
+                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-pink-600 hover:bg-pink-700 transition disabled:opacity-60 disabled:pointer-events-none"
                                                 >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-white">
-                                                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                                                        <path d="M3 17a1 1 0 001 1h12a1 1 0 100-2H4a1 1 0 00-1 1z" />
-                                                    </svg>
+                                                    {openingEditId === String(p.id) ? (
+                                                        <ButtonSpinner className="h-5 w-5 text-white" />
+                                                    ) : (
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-white">
+                                                            <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                                            <path d="M3 17a1 1 0 001 1h12a1 1 0 100-2H4a1 1 0 00-1 1z" />
+                                                        </svg>
+                                                    )}
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={async () => {
-                                                        const confirmDelete = confirm(`¿Eliminar ${p.name}? Esta acción no se puede deshacer.`)
-                                                        if (!confirmDelete) return
-                                                        try {
-                                                            setDeletingIds((prev) => [...prev, String(p.id)])
-                                                            const res = await fetch(`/api/bazarcito/products/${p.id}`, { method: 'DELETE' })
-                                                            if (res.ok || res.status === 204) {
-                                                                setProducts((prev) => prev.filter((it) => String(it.id) !== String(p.id)))
-                                                            } else {
-                                                                const body = await res.json().catch(() => ({}))
-                                                                console.error('Failed to delete product', body)
-                                                                alert(`No se pudo eliminar: ${body?.error || res.status}`)
-                                                            }
-                                                        } catch (e) {
-                                                            console.error('Delete error', e)
-                                                            alert('Error al eliminar el producto')
-                                                        } finally {
-                                                            setDeletingIds((prev) => prev.filter((id) => id !== String(p.id)))
-                                                        }
-                                                    }}
+                                                    onClick={() => setProductPendingDelete(p)}
                                                     aria-label={`Eliminar ${p.name}`}
-                                                    className={`inline-flex items-center justify-center w-9 h-9 rounded-full bg-red-600 hover:bg-red-700 transition ${deletingIds.includes(String(p.id)) ? 'opacity-60 pointer-events-none' : ''}`}
+                                                    disabled={deletingIds.includes(String(p.id))}
+                                                    className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-red-600 hover:bg-red-700 transition disabled:opacity-60 disabled:pointer-events-none"
                                                 >
-                                                    <FiTrash2 className="w-5 h-5 text-white" />
+                                                    {deletingIds.includes(String(p.id)) ? (
+                                                        <ButtonSpinner className="h-5 w-5 text-white" />
+                                                    ) : (
+                                                        <FiTrash2 className="w-5 h-5 text-white" />
+                                                    )}
                                                 </button>
                                             </div>
                                         )}
@@ -299,18 +342,38 @@ const ProductsSell = ({
                                         <div className="mt-3">
                                             <div className="flex flex-col gap-3 min-w-0">
                                                 <div className="text-lg font-bold text-gray-900">{p.price}</div>
-                                                <div className="text-sm text-gray-500">Piezas: {(p as any).pieces ?? '—'}</div>
+                                                <div className="text-sm text-gray-500">Piezas: {p.pieces ?? '—'}</div>
                                                 <button
                                                     type="button"
-                                                    className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap"
+                                                    className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                                                     style={{ background: primary }}
+                                                    disabled={requestingIds.includes(String(p.id))}
                                                     onClick={() => handleRequestProduct(p)}
-                                                >Pedir por WhatsApp</button>
+                                                >
+                                                    {requestingIds.includes(String(p.id)) ? (
+                                                        <>
+                                                            <ButtonSpinner className="h-4 w-4 text-white" />
+                                                            <span>Abriendo...</span>
+                                                        </>
+                                                    ) : (
+                                                        'Pedir por WhatsApp'
+                                                    )}
+                                                </button>
                                                 <button
                                                     type="button"
-                                                    className="w-full px-4 py-2 rounded border border-gray-300 text-gray-800 text-sm md:text-base whitespace-nowrap hover:bg-gray-50"
+                                                    className="w-full px-4 py-2 rounded border border-gray-300 text-gray-800 text-sm md:text-base whitespace-nowrap hover:bg-gray-50 disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                                                    disabled={sharingIds.includes(String(p.id))}
                                                     onClick={() => handleShareProduct(p)}
-                                                >Compartir por WhatsApp</button>
+                                                >
+                                                    {sharingIds.includes(String(p.id)) ? (
+                                                        <>
+                                                            <ButtonSpinner className="h-4 w-4 text-gray-800" />
+                                                            <span>Abriendo...</span>
+                                                        </>
+                                                    ) : (
+                                                        'Compartir por WhatsApp'
+                                                    )}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -321,62 +384,93 @@ const ProductsSell = ({
                 </>
             </section>
 
-            {/* Edit Modal */}
-            {isModalOpen && editingProduct && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black/40" onClick={() => setModalOpen(false)} />
-                    <div className="relative bg-white rounded-lg shadow-lg max-w-lg w-full mx-4 p-6 z-10">
-                        <h3 className="text-lg font-semibold mb-3">Editar producto</h3>
-                        <div className="space-y-3">
-                            <label className="block">
-                                <span className="text-sm text-gray-600">Nombre</span>
-                                <input value={editName} onChange={(e) => setEditName(e.target.value)} className="mt-1 w-full border rounded px-3 py-2" />
-                            </label>
-                            <label className="block">
-                                <span className="text-sm text-gray-600">Descripción</span>
-                                <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="mt-1 w-full border rounded px-3 py-2" rows={4} />
-                            </label>
-                            <label className="block">
-                                <span className="text-sm text-gray-600">Piezas</span>
-                                <input value={String(editPieces)} onChange={(e) => setEditPieces(e.target.value ? Number(e.target.value) : '')} className="mt-1 w-full border rounded px-3 py-2" />
-                            </label>
-                        </div>
-                        <div className="mt-4 flex justify-end gap-2">
-                            <button onClick={() => setModalOpen(false)} className="px-4 py-2 rounded border">Cancelar</button>
-                            <button
-                                onClick={async () => {
-                                    if (!editingProduct) return
-                                    const payload: any = { name: editName, description: editDescription }
-                                    if (editPieces !== '') payload.pieces = editPieces
-                                    // try to call API; if fails, fallback to local update
-                                    try {
-                                        const res = await fetch(`/api/bazarcito/products/${editingProduct.id}`, {
-                                            method: 'PUT',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify(payload),
-                                        })
-                                        if (res.ok) {
-                                            const body = await res.json()
-                                            const updated = body.data || null
-                                            if (updated) {
-                                                setProducts((prev) => prev.map((it) => (String(it.id) === String(updated.id) ? ({ ...it, name: updated.title || updated.name || editName, description: updated.description || editDescription, pieces: updated.pieces ?? editPieces }) as Product : it)))
-                                            }
-                                        } else {
-                                            // fallback: update local
-                                            setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: editName, description: editDescription, pieces: editPieces } : it)))
-                                        }
-                                    } catch (e) {
-                                        setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: editName, description: editDescription, pieces: editPieces } : it)))
-                                    } finally {
-                                        setModalOpen(false)
-                                        setEditingProduct(null)
-                                    }
-                                }}
-                                className="px-4 py-2 rounded bg-pink-600 text-white"
-                            >Guardar</button>
-                        </div>
-                    </div>
-                </div>
+            <EditProductModal
+                isOpen={isModalOpen}
+                key={editingProduct?.id ?? 'none'}
+                product={editingProduct}
+                isSaving={Boolean(editingProduct) && savingProductId === String(editingProduct?.id)}
+                onCancel={() => {
+                    setModalOpen(false)
+                    setEditingProduct(null)
+                }}
+                onSave={async (payload) => {
+                    if (!editingProduct) return
+                    setSavingProductId(String(editingProduct.id))
+                    const normalizedPieces = payload.pieces ?? null
+                    // call API
+                    try {
+                        const res = await fetch(`/api/bazarcito/products/${editingProduct.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                        })
+                        if (res.ok) {
+                            const body = await res.json()
+                            const updated = body.data || null
+                            if (updated) {
+                                setProducts((prev) => prev.map((it) => (String(it.id) === String(updated.id) ? { ...it, name: updated.title || updated.name || payload.name, description: updated.description || payload.description, pieces: updated.pieces ?? normalizedPieces } : it)))
+                            }
+                            setToast({ message: 'Producto actualizado correctamente.', type: 'success' })
+                        } else {
+                            setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: payload.name, description: payload.description, pieces: normalizedPieces } : it)))
+                            setToast({ message: 'Producto actualizado localmente.', type: 'success' })
+                        }
+                    } catch (e) {
+                        console.error('Update error', e)
+                        setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: payload.name, description: payload.description, pieces: normalizedPieces } : it)))
+                        setToast({ message: 'No se pudo actualizar en el servidor; se aplicó localmente.', type: 'error' })
+                    } finally {
+                        setSavingProductId(null)
+                        setModalOpen(false)
+                        setEditingProduct(null)
+                    }
+                }}
+            />
+
+            <ConfirmModal
+                isOpen={Boolean(productPendingDelete)}
+                title="Eliminar producto"
+                description={(
+                    <>
+                        ¿Seguro que quieres eliminar <span className="font-semibold text-gray-900">{productPendingDelete?.name}</span>? Esta acción no se puede deshacer.
+                    </>
+                )}
+                confirmText="Eliminar"
+                cancelText="Cancelar"
+                variant="danger"
+                isLoading={productPendingDelete ? deletingIds.includes(String(productPendingDelete.id)) : false}
+                onCancel={() => setProductPendingDelete(null)}
+                onConfirm={async () => {
+                    const targetProduct = productPendingDelete
+                    if (!targetProduct) return
+                    const productId = String(targetProduct.id)
+                    try {
+                        setDeletingIds((prev) => [...prev, productId])
+                        const res = await fetch(`/api/bazarcito/products/${targetProduct.id}`, { method: 'DELETE' })
+                        if (res.ok || res.status === 204) {
+                            setProducts((prev) => prev.filter((it) => String(it.id) !== productId))
+                            setToast({ message: 'Producto eliminado correctamente.', type: 'success' })
+                            setProductPendingDelete(null)
+                        } else {
+                            const body = await res.json().catch(() => ({}))
+                            console.error('Failed to delete product', body)
+                            setToast({ message: `No se pudo eliminar: ${body?.error || res.status}`, type: 'error' })
+                        }
+                    } catch (e) {
+                        console.error('Delete error', e)
+                        setToast({ message: 'Error al eliminar el producto.', type: 'error' })
+                    } finally {
+                        setDeletingIds((prev) => prev.filter((id) => id !== productId))
+                    }
+                }}
+            />
+
+            {toast && (
+                <ToastMessage
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
             )}
 
             <div className="hidden md:block">
