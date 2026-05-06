@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Avatar from './Avatar'
 type Props = {
     logo?: string
@@ -15,6 +15,10 @@ const NavBar = ({ logo, title, primary, textColor, textColorLogo, query = '', on
         if (onQueryChange) onQueryChange(value)
     }
     const [localQuery, setLocalQuery] = useState<string>(query)
+
+    useEffect(() => {
+        setLocalQuery(query)
+    }, [query])
     const normalized = String(textColor || '').trim().toLowerCase()
     const inputColor = (normalized === '#fff' || normalized === 'white' || normalized === 'rgb(255,255,255)') ? '#111' : (textColor || '#111')
 

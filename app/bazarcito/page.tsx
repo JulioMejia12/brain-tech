@@ -1,5 +1,7 @@
-'use client'
+"use client"
+import { Suspense } from 'react'
 import ProductsSell from '../components/layout/ProductsSell'
+
 const promociones = [
     'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1777400663/banner_r6u0wi.png',
     'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1777400530/samples/bike.jpg',
@@ -7,37 +9,42 @@ const promociones = [
 
 const primary = '#ff81e3'
 const secondary = '#2e1227'
-const textColor = '#fff'
 const bgColor = '#ffb6ef'
 const cell = '5571906152'
 
+function BazarcitoPageFallback() {
+    return <div className="mx-auto max-w-4xl px-4 py-6 text-sm text-gray-600">Cargando productos...</div>
+}
+
 const page = () => {
     return (
-        <ProductsSell
-            title='Bazarcito online'
-            secondary={secondary}
-            primary={primary}
-            textColor={secondary}
-            bgColor={bgColor}
-            QuienesSomos="En Bazarcito Online, somos un equipo apasionado por conectar a los amantes de las compras con productos únicos y de calidad. Nuestra misión es ofrecer una plataforma fácil de usar donde los vendedores puedan mostrar sus productos y los compradores puedan descubrir tesoros escondidos. Creemos en el poder de la comunidad y en la importancia de apoyar a los pequeños negocios, por eso nos esforzamos por crear un espacio seguro y amigable para todos. ¡Únete a nosotros y descubre el bazarcito online donde cada compra es una experiencia especial!"
-            promos={promociones}
-            cellPhone={cell}
-            heroImage="/bazar4.jpeg"
-        >
-            <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>¿Quieres vender nuestros productos?</h2>
-                <p className="text-gray-700 text-base mb-4">
-                    Si estás interesado en convertirte en distribuidor de  Betterware.
-                </p>
-                <button
-                    onClick={() => window.open(`https://wa.me/${cell}?text=Hola,%20estoy%20interesado%20en%20vender%20sus%20productos`, '_blank')}
-                    className="px-4 py-2 rounded text-white"
-                    style={{ background: primary }}
-                >
-                    Contáctanos por WhatsApp
-                </button>
-            </section>
-        </ProductsSell>
+        <Suspense fallback={<BazarcitoPageFallback />}>
+            <ProductsSell
+                title='Bazarcito online'
+                secondary={secondary}
+                primary={primary}
+                textColor={secondary}
+                bgColor={bgColor}
+                QuienesSomos="En Bazarcito Online, somos un equipo apasionado por conectar a los amantes de las compras con productos únicos y de calidad. Nuestra misión es ofrecer una plataforma fácil de usar donde los vendedores puedan mostrar sus productos y los compradores puedan descubrir tesoros escondidos. Creemos en el poder de la comunidad y en la importancia de apoyar a los pequeños negocios, por eso nos esforzamos por crear un espacio seguro y amigable para todos. ¡Únete a nosotros y descubre el bazarcito online donde cada compra es una experiencia especial!"
+                promos={promociones}
+                cellPhone={cell}
+                heroImage="/bazar4.jpeg"
+            >
+                <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
+                    <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>¿Quieres vender nuestros productos?</h2>
+                    <p className="text-gray-700 text-base mb-4">
+                        Si estás interesado en convertirte en distribuidor de  Betterware.
+                    </p>
+                    <button
+                        onClick={() => window.open(`https://wa.me/${cell}?text=Hola,%20estoy%20interesado%20en%20vender%20sus%20productos`, '_blank')}
+                        className="px-4 py-2 rounded text-white"
+                        style={{ background: primary }}
+                    >
+                        Contáctanos por WhatsApp
+                    </button>
+                </section>
+            </ProductsSell>
+        </Suspense>
     )
 }
 

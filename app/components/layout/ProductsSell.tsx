@@ -1,5 +1,6 @@
 'use client'
 import { useMemo, useState, useEffect, useRef } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 // Spinner simple
 function Spinner() {
@@ -15,10 +16,8 @@ function Spinner() {
 import AdsCarousel from '../../../components/AdsCarousel'
 import Image from 'next/image'
 import { FiTrash2 } from 'react-icons/fi'
-import Footer from './Footer'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 import MobileMenu from './MobileMenu'
-import NavBar from './NavBar'
 import ConfirmModal from '../ui/ConfirmModal'
 import ToastMessage, { type ToastType } from '../ui/ToastMessage'
 import ButtonSpinner from '../ui/ButtonSpinner'
@@ -68,7 +67,6 @@ type Props = {
 
 const ProductsSell = ({
     heroImage,
-    logo,
     title,
     primary,
     secondary,
@@ -102,8 +100,22 @@ const ProductsSell = ({
     const [fetchError, setFetchError] = useState<string | null>(null)
     const SHARE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.vercel.app'
 
+    const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const searchQuery = searchParams.get('q')?.trim() ?? ''
+
+    const updateSearchQuery = (value: string) => {
+        const params = new URLSearchParams(searchParams.toString())
+        if (value.trim()) {
+            params.set('q', value)
+        } else {
+            params.delete('q')
+        }
+        router.replace(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false })
+    }
+
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
-    const [searchQuery, setSearchQuery] = useState<string>('')
     const auth = useAuth()
     const isAdmin = Boolean(auth.user?.role?.name && String(auth.user.role.name).toLowerCase() === 'admin')
 
@@ -214,7 +226,7 @@ const ProductsSell = ({
     return (
         <div style={{ background: bgColor }}>
             <div className="hidden sm:block">
-                <NavBar
+                {/* <NavBar
                     title={title}
                     primary={primary}
                     textColor={textColor}
@@ -222,7 +234,7 @@ const ProductsSell = ({
                     textColorLogo="#fff"
                     query={searchQuery}
                     onQueryChange={(value) => setSearchQuery(value)}
-                />
+                /> */}
             </div>
             {/* Hero con efecto parallax */}
             <div className="block sm:hidden xs:block relative w-full overflow-hidden h-60 md:h-96" style={{ background: primary }}>
@@ -262,7 +274,7 @@ const ProductsSell = ({
                             <input
                                 type="text"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => updateSearchQuery(e.target.value)}
                                 placeholder="Buscar productos"
                                 className="w-full rounded-full border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 shadow-sm outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-200"
                             />
@@ -491,7 +503,7 @@ const ProductsSell = ({
                 <AdsCarousel images={promos} />
             </section>
             {children}
-            <Footer />
+            {/* <Footer /> */}
             <MobileMenu primary={primary} whatsappNumber={cellPhone} />
         </div>
     )
