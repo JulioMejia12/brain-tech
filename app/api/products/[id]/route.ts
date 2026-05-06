@@ -2,16 +2,24 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { deleteProduct } from '../handlers/deleteProduct'
 import { prisma } from '../../../lib/prisma'
 
+async function getIdParam(ctx: any, req: NextRequest) {
+    const params = await ctx?.params
+    let idParam = params?.id
+
+    if (!idParam) {
+        try {
+            idParam = req.nextUrl?.pathname?.split('/').pop() || new URL(req.url).pathname.split('/').pop()
+        } catch (e) {
+            console.warn('Could not parse id from req.url', e)
+        }
+    }
+
+    return idParam
+}
+
 export async function GET(req: NextRequest, ctx: any) {
     try {
-        let idParam = ctx?.params?.id
-        if (!idParam) {
-            try {
-                idParam = req.nextUrl?.pathname?.split('/').pop() || new URL(req.url).pathname.split('/').pop()
-            } catch (e) {
-                console.warn('Could not parse id from req.url', e)
-            }
-        }
+        const idParam = await getIdParam(ctx, req)
 
         console.log('GET /api/products/[id] called with idParam=', idParam)
         if (!idParam) return NextResponse.json({ error: 'Missing product id' }, { status: 400 })
@@ -32,14 +40,7 @@ export { deleteProduct as DELETE }
 
 export async function PUT(req: NextRequest, ctx: any) {
     try {
-        let idParam = ctx?.params?.id
-        if (!idParam) {
-            try {
-                idParam = req.nextUrl?.pathname?.split('/').pop() || new URL(req.url).pathname.split('/').pop()
-            } catch (e) {
-                console.warn('Could not parse id from req.url for PUT', e)
-            }
-        }
+        const idParam = await getIdParam(ctx, req)
 
         if (!idParam) return NextResponse.json({ error: 'Missing product id' }, { status: 400 })
         const isNumeric = /^\d+$/.test(String(idParam))

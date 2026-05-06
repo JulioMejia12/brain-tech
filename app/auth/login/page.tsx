@@ -1,12 +1,12 @@
 "use client"
 import React, { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
     const router = useRouter()
     const auth = useAuth()
-    const searchParams = useSearchParams()
+    // read `next` from the browser URL at submit time to avoid using useSearchParams
     const [email, setEmail] = useState('')
     const [name, setName] = useState('')
     const [createIfNotExists, setCreateIfNotExists] = useState(true)
@@ -51,7 +51,7 @@ export default function LoginPage() {
             }
             setMessage(isRegister ? 'Registro completado' : 'Entrada exitosa')
             // redirect to provided `next` param or profile
-            const next = searchParams?.get('next')
+            const next = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null
             console.log('Login successful, redirecting to:', next || '/profile')
             router.push(next || '/profile')
         } catch (err: unknown) {

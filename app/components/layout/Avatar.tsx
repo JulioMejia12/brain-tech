@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 type MenuItem = {
     label: string
@@ -21,8 +21,17 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
     const ref = useRef<HTMLDivElement | null>(null)
     const auth = useAuth()
     const router = useRouter()
-    const pathname = usePathname()
-    const searchParams = useSearchParams()
+    const [currentPath, setCurrentPath] = useState('/')
+
+    useEffect(() => {
+        try {
+            const p = window.location.pathname || '/'
+            const s = window.location.search || ''
+            setCurrentPath(p + s)
+        } catch (e) {
+            setCurrentPath('/')
+        }
+    }, [])
 
     useEffect(() => {
         function onDoc(e: MouseEvent) {
@@ -33,7 +42,8 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
         return () => document.removeEventListener('click', onDoc)
     }, [])
 
-    const currentPath = (pathname ?? '/') + (searchParams?.toString() ? `?${searchParams.toString()}` : '')
+    // `currentPath` is populated on the client to avoid using next/navigation hooks
+    // during prerender which can cause build-time errors.
     let defaultItems: MenuItem[] = []
     if (auth?.user) {
         // show admin-only actions

@@ -3,7 +3,8 @@ import { prisma } from '../../../lib/prisma'
 
 export async function deleteProduct(req: NextRequest, ctx: any) {
     try {
-        const idParam = ctx?.params?.id
+        const params = await ctx?.params
+        const idParam = params?.id || req.nextUrl?.pathname?.split('/').pop() || new URL(req.url).pathname.split('/').pop()
         const id = Number(idParam)
         if (Number.isNaN(id)) {
             return NextResponse.json({ error: 'Invalid id' }, { status: 400 })
