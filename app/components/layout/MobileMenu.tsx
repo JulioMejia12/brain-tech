@@ -7,7 +7,7 @@ type Props = {
 }
 const MobileMenu = ({ primary, whatsappNumber, title }: Props) => {
     const [activeNav, setActiveNav] = useState<'home' | 'menu' | 'promos' | 'contact'>('home')
-    const [dotsOpen, setDotsOpen] = useState<boolean>(false)
+    // const [dotsOpen, setDotsOpen] = useState<boolean>(false)
 
     const openWhatsApp = (service?: string) => {
         const raw = whatsappNumber || ''
@@ -57,18 +57,6 @@ const MobileMenu = ({ primary, whatsappNumber, title }: Props) => {
                         </div>
                         <span>Contactame</span>
                     </button>
-
-                    <button aria-label="Más opciones" onClick={(e) => { e.stopPropagation(); setDotsOpen((s) => !s) }} className="absolute -top-2 right-0 p-1 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                    </button>
-
-                    {dotsOpen && (
-                        <div className="absolute -top-20 right-0 bg-white rounded-lg shadow-md p-2 z-50">
-                            <a href="/bazarcito/products/new" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded">Subir productos</a>
-                        </div>
-                    )}
                 </div>
             </div>
         </nav>
