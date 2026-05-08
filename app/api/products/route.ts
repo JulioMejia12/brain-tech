@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '../../lib/prisma'
 import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
+import { getPaginationParams } from '../_utils/route'
 
 type ProductInput = {
     title: string
@@ -137,11 +138,7 @@ export async function GET(req: Request) {
         // Optional query params: ?category=cocina&limit=20&skip=0
         const url = new URL(req.url)
         const category = url.searchParams.get('category')
-        const limitParam = url.searchParams.get('limit')
-        const skipParam = url.searchParams.get('skip')
-
-        const take = limitParam ? Math.min(100, Number(limitParam) || 20) : 20
-        const skip = skipParam ? Math.max(0, Number(skipParam) || 0) : 0
+        const { take, skip } = getPaginationParams(req)
 
         const where = category ? { category: { name: category } } : undefined
 

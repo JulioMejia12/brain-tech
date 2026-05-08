@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '../../lib/prisma'
+import { getPaginationParams } from '../_utils/route'
 
 type UserInput = {
     name?: string
@@ -62,11 +63,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
     try {
-        const url = new URL(req.url)
-        const limitParam = url.searchParams.get('limit')
-        const skipParam = url.searchParams.get('skip')
-        const take = limitParam ? Math.min(100, Number(limitParam) || 20) : 20
-        const skip = skipParam ? Math.max(0, Number(skipParam) || 0) : 0
+        const { take, skip } = getPaginationParams(req)
 
         const users = await prisma.user.findMany({ include: { role: true }, orderBy: { createdAt: 'desc' }, take, skip })
         return NextResponse.json({ data: users })

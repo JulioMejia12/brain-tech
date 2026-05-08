@@ -1,22 +1,15 @@
 import { prisma } from '@/app/lib/prisma'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getNumericRouteParam } from '../../_utils/route'
 
 export async function GET(req: NextRequest, ctx: any) {
     try {
-        let idParam = ctx?.params?.id
-        if (!idParam) {
-            try {
-                idParam = new URL(req.url).pathname.split('/').pop()
-            } catch (e) {
-                console.warn('Could not parse id from req.url', e)
-            }
+        const result = await getNumericRouteParam(ctx, 'id', req, 'user id')
+        if ('response' in result) {
+            return result.response
         }
 
-        if (!idParam) return NextResponse.json({ error: 'Missing user id' }, { status: 400 })
-        const isNumeric = /^\d+$/.test(String(idParam))
-        if (!isNumeric) return NextResponse.json({ error: `Invalid user id: ${String(idParam)}` }, { status: 400 })
-
-        const numericId = Number(idParam)
+        const numericId = result.value
         const user = await prisma.user.findUnique({ where: { id: numericId }, include: { role: true } })
         if (!user) return NextResponse.json({ error: `User with id=${numericId} not found` }, { status: 404 })
         return NextResponse.json({ data: user })
@@ -28,14 +21,12 @@ export async function GET(req: NextRequest, ctx: any) {
 
 export async function PUT(req: NextRequest, ctx: any) {
     try {
-        let idParam = ctx?.params?.id
-        if (!idParam) {
-            try { idParam = new URL(req.url).pathname.split('/').pop() } catch (e) { console.warn(e) }
+        const result = await getNumericRouteParam(ctx, 'id', req, 'user id')
+        if ('response' in result) {
+            return result.response
         }
-        if (!idParam) return NextResponse.json({ error: 'Missing user id' }, { status: 400 })
-        const isNumeric = /^\d+$/.test(String(idParam))
-        if (!isNumeric) return NextResponse.json({ error: `Invalid user id: ${String(idParam)}` }, { status: 400 })
-        const numericId = Number(idParam)
+
+        const numericId = result.value
 
         const body = await req.json()
         const { name, email, roleId, role } = body as any
@@ -73,14 +64,12 @@ export async function PUT(req: NextRequest, ctx: any) {
 
 export async function DELETE(req: NextRequest, ctx: any) {
     try {
-        let idParam = ctx?.params?.id
-        if (!idParam) {
-            try { idParam = new URL(req.url).pathname.split('/').pop() } catch (e) { console.warn(e) }
+        const result = await getNumericRouteParam(ctx, 'id', req, 'user id')
+        if ('response' in result) {
+            return result.response
         }
-        if (!idParam) return NextResponse.json({ error: 'Missing user id' }, { status: 400 })
-        const isNumeric = /^\d+$/.test(String(idParam))
-        if (!isNumeric) return NextResponse.json({ error: `Invalid user id: ${String(idParam)}` }, { status: 400 })
-        const numericId = Number(idParam)
+
+        const numericId = result.value
 
         try {
             await prisma.user.delete({ where: { id: numericId } })
