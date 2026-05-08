@@ -58,13 +58,11 @@ export async function getBazarcitoProductById(id: string): Promise<Product | und
     if (!id) return undefined
     // Server-side: read directly from database when possible
     if (typeof window === 'undefined') {
-        console.log('getBazarcitoProductById (server) id=', id)
         try {
             // Support numeric and string primary keys
             const isNumeric = /^\d+$/.test(id)
             const where = isNumeric ? { id: Number(id) } : { id }
             const item = await prisma.product.findUnique({ where: where as any, include: { category: true } })
-            console.log('Prisma lookup where=', where, 'found=', !!item)
             return item ? mapItemToProduct(item) : undefined
         } catch (err) {
             console.error('Prisma get by id failed, falling back to HTTP fetch:', err)
@@ -73,7 +71,6 @@ export async function getBazarcitoProductById(id: string): Promise<Product | und
 
     const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
     const url = new URL(`/api/bazarcito/products/${encodeURIComponent(id)}`, base).toString()
-    console.log('getBazarcitoProductById (client/fallback) fetching', url)
     const res = await fetch(url, { cache: 'no-store' })
     if (res.status === 404) return undefined
     if (!res.ok) throw new Error(`Failed to fetch product ${id}: HTTP ${res.status}`)

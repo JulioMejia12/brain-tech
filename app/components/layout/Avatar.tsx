@@ -47,9 +47,7 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
     let defaultItems: MenuItem[] = []
     if (auth?.user) {
         // show admin-only actions
-        console.log(auth.user?.role, 'checking if user is admin...')
         const isAdmin = String(auth.user?.role?.name || '').toLowerCase() === 'admin'
-        console.log('User role:', auth.user?.role?.name, 'isAdmin:', isAdmin)
         if (isAdmin) defaultItems.push({ label: 'Agregar productos', href: '/bazarcito/products/new' })
         defaultItems.push({ label: 'Cerrar sesión', href: '/logout' })
     } else {

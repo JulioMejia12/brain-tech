@@ -51,13 +51,11 @@ type ToastState = {
 
 type Props = {
     heroImage?: string
-    logo?: string
     title?: string
     bgColor?: string
     primary: string
     secondary: string
     textColor: string
-    textColorLogo?: string
     QuienesSomos?: string
     promos?: string[]
     children?: React.ReactNode
@@ -225,24 +223,24 @@ const ProductsSell = ({
 
     return (
         <div style={{ background: bgColor }}>
-            <div className="hidden sm:block">
-            </div>
-            {/* Hero con efecto parallax */}
             <div className="block sm:hidden xs:block relative w-full overflow-hidden h-60 md:h-96" style={{ background: primary }}>
                 <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
                     <Image
-                        src={'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1778198183/laptop-store_tbir4n.png'}
-                        alt="Hero"
+                        src={heroImage || 'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1778198183/laptop-store_tbir4n.png'}
+                        alt={title || 'Hero'}
                         fill
                         style={{ objectFit: 'cover', objectPosition: 'center' }}
                     />
                 </div>
-                {/* <div className="relative z-10 h-full flex items-center justify-center">
-                    <div className="text-center px-4">
-                        <h1 className="text-3xl md:text-4xl font-bold" style={{ color: textColor || '#160612' }}>{title}</h1>
-                        <p className="mt-2 text-sm md:text-base text-white/90" style={{ color: textColor }}>Explora todos nuestros productos</p>
+                <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
+                {title && (
+                    <div className="relative z-10 h-full flex items-center justify-center">
+                        <div className="text-center px-4">
+                            <h1 className="text-3xl md:text-4xl font-bold" style={{ color: textColor }}>{title}</h1>
+                            <p className="mt-2 text-sm md:text-base text-white/90" style={{ color: textColor }}>Explora todos nuestros productos</p>
+                        </div>
                     </div>
-                </div> */}
+                )}
             </div>
 
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">

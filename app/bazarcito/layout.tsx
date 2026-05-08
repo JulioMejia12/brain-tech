@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import { Suspense } from 'react'
 import BazarcitoNav from './BazarcitoNav'
 import Footer from '../components/layout/Footer'
 

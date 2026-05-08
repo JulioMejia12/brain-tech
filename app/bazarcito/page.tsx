@@ -16,19 +16,19 @@ function BazarcitoPageFallback() {
     return <div className="mx-auto max-w-4xl px-4 py-6 text-sm text-gray-600">Cargando productos...</div>
 }
 
-const page = () => {
+export default function BazarcitoPage() {
     return (
         <Suspense fallback={<BazarcitoPageFallback />}>
             <ProductsSell
                 title='Bazarcito online'
                 secondary={secondary}
                 primary={primary}
-                textColor={secondary}
+                textColor="#fff"
                 bgColor={bgColor}
                 QuienesSomos="En Bazarcito Online, somos un equipo apasionado por conectar a los amantes de las compras con productos únicos y de calidad. Nuestra misión es ofrecer una plataforma fácil de usar donde los vendedores puedan mostrar sus productos y los compradores puedan descubrir tesoros escondidos. Creemos en el poder de la comunidad y en la importancia de apoyar a los pequeños negocios, por eso nos esforzamos por crear un espacio seguro y amigable para todos. ¡Únete a nosotros y descubre el bazarcito online donde cada compra es una experiencia especial!"
                 promos={promociones}
                 cellPhone={cell}
-                heroImage="/bazar4.jpeg"
+                heroImage="https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1778198183/laptop-store_tbir4n.png"
             >
                 <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                     <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>¿Quieres vender nuestros productos?</h2>
@@ -47,5 +47,3 @@ const page = () => {
         </Suspense>
     )
 }
-
-export default page

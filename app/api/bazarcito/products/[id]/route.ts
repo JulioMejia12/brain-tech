@@ -1,7 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { deleteProduct as productsDELETE } from '../../../products/handlers/deleteProduct'
 import { prisma } from '../../../../lib/prisma'
-import { PUT as productsPUT } from '../../../products/[id]/route'
 
 async function getIdParam(ctx: any, req: NextRequest) {
     const params = await ctx?.params
@@ -40,8 +38,6 @@ export async function GET(req: NextRequest, ctx: any) {
     try {
         const idParam = await getIdParam(ctx, req)
 
-        console.log('GET /api/bazarcito/products/[id] called with idParam=', idParam)
-
         if (!idParam) {
             return NextResponse.json({ error: 'Missing product id' }, { status: 400 })
         }
@@ -53,7 +49,6 @@ export async function GET(req: NextRequest, ctx: any) {
 
         const numericId = Number(idParam)
         const product = await prisma.product.findUnique({ where: { id: numericId }, include: { category: true } })
-        console.log('Lookup id=', numericId, 'found=', !!product)
         if (!product) return NextResponse.json({ error: `Product with id=${numericId} not found` }, { status: 404 })
         return NextResponse.json({ data: product })
     } catch (err) {

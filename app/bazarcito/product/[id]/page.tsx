@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { getBazarcitoProductById, getBazarcitoProducts } from '../../../lib/products'
 import type { Metadata } from 'next'
 
@@ -60,7 +59,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 const ProductPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     const { id } = await params;
-    console.log('ProductPage render for id=', id)
     const product = await getBazarcitoProductById(id);
     if (!product) {
         const apiUrl = `${siteUrl}/api/bazarcito/products/${id}`
