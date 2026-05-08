@@ -1,4 +1,5 @@
 import plateriaConfig from '../demo/plateria-config.json'
+import type { Product } from './products'
 
 export type ProductsSellPageConfig = {
     title: string
@@ -12,6 +13,7 @@ export type ProductsSellPageConfig = {
     heroImage: string
     productsEndpoint: string
     productMutationBase: string
+    products?: Product[]
 }
 
 const bazarcitoPromos = [
@@ -43,6 +45,6 @@ export const plateriasProductsSellProps: ProductsSellPageConfig = {
     promos: plateriaConfig.images,
     cellPhone: plateriaConfig.contact.phone,
     heroImage: plateriaConfig.heroImage,
-    productsEndpoint: '/api/bazarcito/products?category=plata',
-    productMutationBase: '/api/bazarcito/products',
+    productsEndpoint: '/api/platerias/products',
+    productMutationBase: '/api/platerias/products',
 }

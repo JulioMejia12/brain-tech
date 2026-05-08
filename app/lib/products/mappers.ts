@@ -1,0 +1,29 @@
+import type { Product, ProductApiItem } from './types'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.vercel.app'
+
+export function toAbsoluteImage(img: unknown) {
+    if (!img) return `${SITE_URL}/image.jpeg`
+    const value = String(img)
+    if (value.startsWith('http://') || value.startsWith('https://')) return value
+    return value.startsWith('/') ? `${SITE_URL}${value}` : `${SITE_URL}/${value}`
+}
+
+export function formatProductPrice(price: string | number | undefined | null) {
+    if (typeof price === 'number') {
+        return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(price)
+    }
+
+    return String(price || '')
+}
+
+export function mapItemToProduct(item: ProductApiItem): Product {
+    return {
+        id: String(item.id),
+        name: item.title || item.name || '',
+        price: formatProductPrice(item.price),
+        image: toAbsoluteImage(item.image),
+        description: item.description || '',
+        category: item.category?.name || 'Otros',
+    }
+}
