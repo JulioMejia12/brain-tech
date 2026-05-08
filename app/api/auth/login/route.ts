@@ -1,5 +1,7 @@
 import { prisma } from '@/app/lib/prisma'
 import { NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+import { randomUUID } from 'crypto'
 
 type LoginBody = {
     email?: string
@@ -19,10 +21,15 @@ export async function POST(req: Request) {
 
             if (body.createIfNotExists) {
                 const name = body.name?.trim() || email.split('@')[0]
+                // Create a random password for users created via this endpoint (not used for OAuth flows).
+                const randomPassword = randomUUID()
+                const hashed = bcrypt.hashSync(randomPassword, 10)
+
                 const created = await prisma.user.create({
                     data: {
                         name,
                         email,
+                        password: hashed,
                         role: {
                             connectOrCreate: {
                                 where: { name: 'user' },

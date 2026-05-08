@@ -167,14 +167,53 @@ const ProductsSell = ({
             setFetchError(null)
             try {
                 const res = await fetch(resolvedProductsEndpoint)
-                if (!res.ok) throw new Error(`HTTP ${res.status}`)
-                const body = await res.json()
-                const items = (body.data || []) as ProductApiItem[]
-                const mapped: ProductWithPieces[] = items.map(mapProductApiItem)
-                if (mounted) setProducts(mapped)
+                let body: any = null
+                try {
+                    body = await res.json()
+                } catch (parseErr) {
+                    console.warn('Could not parse JSON from products endpoint', parseErr)
+                    body = null
+                }
+
+                let items: ProductApiItem[] = []
+
+                if (!res.ok) {
+                    const msg = body?.error || body?.warning || `HTTP ${res.status}`
+                    console.warn('Products endpoint returned non-ok status:', msg)
+                    if (mounted) setFetchError(String(msg))
+                    items = (body?.data || []) as ProductApiItem[]
+                } else {
+                    items = (body?.data || []) as ProductApiItem[]
+                }
+
+                // Validate and filter items: require id and a name/title and a price
+                const validItems = (items || []).filter((it) => {
+                    if (!it) return false
+                    const hasId = it.id !== undefined && it.id !== null && String(it.id).trim() !== ''
+                    const hasName = Boolean(it.title || it.name)
+                    const hasPrice = it.price !== undefined && it.price !== null && it.price !== ''
+                    return hasId && hasName && hasPrice
+                }) as ProductApiItem[]
+
+                if (mounted) {
+                    if (validItems.length === 0) {
+                        // If response was OK but no valid items, show friendly message
+                        if (res.ok) {
+                            setProducts([])
+                            setFetchError('No se encontraron productos')
+                        } else {
+                            setProducts([])
+                            // fetchError already set above for non-ok responses
+                        }
+                    } else {
+                        const mapped: ProductWithPieces[] = validItems.map(mapProductApiItem)
+                        setProducts(mapped)
+                        setFetchError(null)
+                    }
+                }
             } catch (e: unknown) {
                 console.error('Failed to load products', e)
-                if (mounted) setFetchError(e instanceof Error ? e.message : String(e))
+                if (mounted) setFetchError('No se pudieron cargar los productos')
             } finally {
                 if (mounted) setLoading(false)
             }

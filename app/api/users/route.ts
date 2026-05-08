@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '../../lib/prisma'
+import bcrypt from 'bcryptjs'
+import { randomUUID } from 'crypto'
 import { getPaginationParams } from '../_utils/route'
 
 type UserInput = {
@@ -21,12 +23,17 @@ export async function POST(req: Request) {
         // handle role: allow numeric roleId or role name (connectOrCreate)
         let created
         try {
+            // generate a random password and hash it to satisfy schema requirements
+            const randomPassword = randomUUID()
+            const hashed = bcrypt.hashSync(randomPassword, 10)
+
             if (role && typeof role === 'string') {
                 const roleName = role.trim()
                 created = await prisma.user.create({
                     data: {
                         name,
                         email,
+                        password: hashed,
                         role: {
                             connectOrCreate: {
                                 where: { name: roleName },
@@ -40,7 +47,7 @@ export async function POST(req: Request) {
                 // validate role exists
                 const r = await prisma.role.findUnique({ where: { id: Number(roleId) } })
                 if (!r) return NextResponse.json({ error: `Role with id=${roleId} not found` }, { status: 400 })
-                created = await prisma.user.create({ data: { name, email, role: { connect: { id: Number(roleId) } } }, include: { role: true } })
+                created = await prisma.user.create({ data: { name, email, password: hashed, role: { connect: { id: Number(roleId) } } }, include: { role: true } })
             } else {
                 // require role selection
                 return NextResponse.json({ error: 'Missing roleId or role name' }, { status: 400 })

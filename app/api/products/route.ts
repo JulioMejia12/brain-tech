@@ -9,6 +9,7 @@ type ProductInput = {
     price: number
     stock: number
     image: string
+    description?: string
     categoryId?: number
     category?: string
 }
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
             const formData = await req.formData()
             body = {
                 title: String(formData.get('title') || ''),
+                description: String(formData.get('description') || ''),
                 price: Number(formData.get('price')),
                 stock: Number(formData.get('stock')),
                 // category handled below
@@ -61,9 +63,10 @@ export async function POST(req: Request) {
         }
 
         const { title, price, stock, image, categoryId } = body
+        const description = typeof body.description === 'string' ? body.description : ''
 
-        if (!title || price == null || stock == null || !image || (categoryId == null && !body.category)) {
-            return NextResponse.json({ error: 'Missing required fields: include categoryId or category name' }, { status: 400 })
+        if (!title || price == null || stock == null || !image || (categoryId == null && !body.category) || !description) {
+            return NextResponse.json({ error: 'Missing required fields: include categoryId or category name and description' }, { status: 400 })
         }
 
         // Build category relation: accept numeric id or category name (string)
@@ -85,6 +88,7 @@ export async function POST(req: Request) {
                         price: Number(price),
                         stock: Number(stock),
                         image: body.image ?? image,
+                        description: description,
                         category: {
                             connectOrCreate: {
                                 where: { name: categoryName },
@@ -113,6 +117,7 @@ export async function POST(req: Request) {
                         price: Number(price),
                         stock: Number(stock),
                         image,
+                        description: description,
                         category: { connect: { id: Number(categoryIdNum) } },
                     },
                 })
@@ -135,9 +140,14 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
     try {
+        if (!process.env.DATABASE_URL) {
+            console.error('GET /api/products - missing DATABASE_URL')
+            return NextResponse.json({ error: 'Server misconfiguration: DATABASE_URL not set' }, { status: 500 })
+        }
+
         // Optional query params: ?category=cocina&limit=20&skip=0
         const url = new URL(req.url)
-        const category = url.searchParams.get('category')
+        const category = url.searchParams.get('category') || undefined
         const { take, skip } = getPaginationParams(req)
 
         const where = category ? { category: { name: category } } : undefined
@@ -151,8 +161,16 @@ export async function GET(req: Request) {
         })
 
         return NextResponse.json({ data: products })
-    } catch (err) {
-        console.error('Get products error:', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Failed to fetch products', detail: String((err as any)?.message || err) }, { status: 500 })
+    } catch (err: any) {
+        const msg = String(err?.message || err)
+        console.error('Get products error:', err?.stack || err)
+
+        // If DB is unreachable, return an empty list instead of a 500 to keep the frontend usable.
+        if (msg.includes('P1001') || msg.toLowerCase().includes('could not connect') || msg.toLowerCase().includes('connect')) {
+            console.warn('Database unreachable, returning empty product list to client:', msg)
+            return NextResponse.json({ data: [], warning: 'Database unreachable, returning empty list' }, { status: 200 })
+        }
+
+        return NextResponse.json({ error: 'Failed to fetch products', detail: msg }, { status: 500 })
     }
 }

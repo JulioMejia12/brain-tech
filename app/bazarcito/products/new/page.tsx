@@ -10,6 +10,7 @@ export default function NewBazarcitoProductPage() {
     const [image, setImage] = useState("")
     const [category, setCategory] = useState("")
     const [imageFile, setImageFile] = useState<File | null>(null)
+    const [description, setDescription] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -23,6 +24,7 @@ export default function NewBazarcitoProductPage() {
             if (imageFile) {
                 const form = new FormData()
                 form.append('title', title)
+                form.append('description', description)
                 form.append('price', String(price))
                 form.append('stock', String(stock))
                 form.append('category', category.trim())
@@ -35,6 +37,7 @@ export default function NewBazarcitoProductPage() {
             } else {
                 const payload = {
                     title,
+                    description,
                     price: Number(price),
                     stock: Number(stock),
                     image,
@@ -138,6 +141,18 @@ export default function NewBazarcitoProductPage() {
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descripción</label>
+                        <textarea
+                            className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Breve descripción del producto"
+                            rows={4}
+                            required
+                        />
                     </div>
 
                     <div className="sm:col-span-2">
