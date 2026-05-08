@@ -27,7 +27,7 @@ export default function BazarcitoNav() {
             primary="#ff81e3"
             textColor="#fff"
             textColorLogo="#fff"
-            title="Bazarcito"
+            title="Bazarcito online"
             query={query}
             onQueryChange={handleQueryChange}
         />

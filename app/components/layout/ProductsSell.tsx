@@ -226,32 +226,23 @@ const ProductsSell = ({
     return (
         <div style={{ background: bgColor }}>
             <div className="hidden sm:block">
-                {/* <NavBar
-                    title={title}
-                    primary={primary}
-                    textColor={textColor}
-                    logo={logo}
-                    textColorLogo="#fff"
-                    query={searchQuery}
-                    onQueryChange={(value) => setSearchQuery(value)}
-                /> */}
             </div>
             {/* Hero con efecto parallax */}
             <div className="block sm:hidden xs:block relative w-full overflow-hidden h-60 md:h-96" style={{ background: primary }}>
                 <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
                     <Image
-                        src={heroImage || '/placeholder-hero.png'}
+                        src={'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1778198183/laptop-store_tbir4n.png'}
                         alt="Hero"
                         fill
                         style={{ objectFit: 'cover', objectPosition: 'center' }}
                     />
                 </div>
-                <div className="relative z-10 h-full flex items-center justify-center">
+                {/* <div className="relative z-10 h-full flex items-center justify-center">
                     <div className="text-center px-4">
                         <h1 className="text-3xl md:text-4xl font-bold" style={{ color: textColor || '#160612' }}>{title}</h1>
                         <p className="mt-2 text-sm md:text-base text-white/90" style={{ color: textColor }}>Explora todos nuestros productos</p>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
@@ -503,7 +494,6 @@ const ProductsSell = ({
                 <AdsCarousel images={promos} />
             </section>
             {children}
-            {/* <Footer /> */}
             <MobileMenu primary={primary} whatsappNumber={cellPhone} />
         </div>
     )
