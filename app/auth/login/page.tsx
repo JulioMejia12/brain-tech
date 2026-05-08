@@ -2,6 +2,24 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { apiFetch } from '@/app/services/api'
+
+type AuthResponse = {
+    error?: string
+    token?: string
+    user?: {
+        id: number
+        name?: string
+        email: string
+        role?: { id: number; name: string }
+    }
+    data?: {
+        id: number
+        name?: string
+        email: string
+        role?: { id: number; name: string }
+    }
+}
 
 export default function LoginPage() {
     const router = useRouter()
@@ -15,6 +33,23 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const [message, setMessage] = useState<string | null>(null)
 
+    const getNextPath = () => {
+        if (typeof window === 'undefined') return '/profile'
+        return new URLSearchParams(window.location.search).get('next') || '/profile'
+    }
+
+    const persistToken = (token?: string) => {
+        if (!token) return false
+
+        try {
+            localStorage.setItem('token', token)
+            return true
+        } catch (error) {
+            console.warn('Failed to save token to localStorage', error)
+            return false
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setMessage(null)
@@ -24,53 +59,39 @@ export default function LoginPage() {
         try {
             let res
             if (isRegister) {
-                // create user via /api/users (role 'user')
-                res = await fetch('/api/users', {
+                res = await apiFetch('/api/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, role: 'user', password }),
                 })
             } else {
-                res = await fetch('/api/auth/login', {
+                res = await apiFetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, name, createIfNotExists, password }),
                 })
             }
 
-            const body = await res.json()
+            const body = (await res.json()) as AuthResponse
             if (!res.ok) {
                 setMessage(body?.error || 'Error en el servidor')
                 setLoading(false)
                 return
             }
 
-            // If API returned a token, save it
-            if (body?.token) {
-                try {
-                    localStorage.setItem('token', body.token)
-                } catch (e) {
-                    console.warn('Failed to save token to localStorage', e)
-                }
-            }
-
-            // Normalize user payload from different endpoints
             const user = body?.user ?? body?.data
             if (user) {
                 try { auth.login(user) } catch (e) { console.warn(e) }
             }
 
-            if (!isRegister && !body?.token) {
+            if (!isRegister && !persistToken(body?.token)) {
                 setMessage('Login exitoso pero no se recibió token')
                 setLoading(false)
                 return
             }
 
             setMessage(isRegister ? 'Registro completado' : 'Entrada exitosa')
-            // redirect to provided `next` param or profile
-            const next = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null
-            console.log('Login successful, redirecting to:', next || '/profile')
-            router.push(next || '/profile')
+            router.push(getNextPath())
         } catch (err: unknown) {
             let msg = 'Error desconocido'
             try {

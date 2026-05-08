@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '../../../lib/prisma'
-import { getNumericRouteParam } from '../../_utils/route'
+import { getNumericRouteParam, type RouteContext } from '../../_utils/route'
+import { errorMessage, jsonError, logError, toError } from '../../_utils/http'
 
 type DeleteProductOptions = {
     deleteCloudinaryImage?: boolean
@@ -48,7 +49,7 @@ async function maybeDeleteCloudinaryImage(imageUrl: string | null | undefined) {
     }
 }
 
-export async function deleteProduct(req: NextRequest, ctx: any, options: DeleteProductOptions = {}) {
+export async function deleteProduct(req: NextRequest, ctx: RouteContext, options: DeleteProductOptions = {}) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'product id')
         if ('response' in result) {
@@ -60,7 +61,7 @@ export async function deleteProduct(req: NextRequest, ctx: any, options: DeleteP
         if (options.deleteCloudinaryImage) {
             try {
                 const product = await prisma.product.findUnique({ where: { id } })
-                await maybeDeleteCloudinaryImage((product as any)?.image)
+                await maybeDeleteCloudinaryImage(product?.image)
             } catch (error) {
                 console.warn('Could not attempt Cloudinary delete:', error)
             }
@@ -68,17 +69,18 @@ export async function deleteProduct(req: NextRequest, ctx: any, options: DeleteP
 
         try {
             await prisma.product.delete({ where: { id } })
-        } catch (e: any) {
-            if (e?.code === 'P2025') {
-                return NextResponse.json({ error: `Product with id=${id} not found` }, { status: 404 })
+        } catch (error: unknown) {
+            const prismaError = toError(error)
+            if (prismaError?.code === 'P2025') {
+                return jsonError(`Product with id=${id} not found`, 404)
             }
-            console.error('Prisma delete error:', e?.stack || e)
-            return NextResponse.json({ error: 'Database error', detail: String(e?.message || e) }, { status: 500 })
+            logError('Prisma delete error:', error)
+            return jsonError('Database error', 500, errorMessage(error))
         }
 
         return new NextResponse(null, { status: 204 })
-    } catch (err) {
-        console.error('Delete product outer error:', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Server error', detail: String((err as any)?.message || err) }, { status: 500 })
+    } catch (error: unknown) {
+        logError('Delete product outer error:', error)
+        return jsonError('Server error', 500, errorMessage(error))
     }
 }

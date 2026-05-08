@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-type RequestLike = Request | NextRequest
+export type RequestLike = Request | NextRequest
 
-type RouteParams = Record<string, string | undefined>
+export type RouteParams = Record<string, string | undefined>
 
-type RouteContext = {
+export type RouteContext = {
     params?: Promise<RouteParams> | RouteParams
 } | undefined
 

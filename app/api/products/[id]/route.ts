@@ -1,9 +1,18 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { deleteProduct } from '../handlers/deleteProduct'
 import { prisma } from '../../../lib/prisma'
-import { getNumericRouteParam } from '../../_utils/route'
+import { getNumericRouteParam, type RouteContext } from '../../_utils/route'
+import { errorMessage, jsonError, logError } from '../../_utils/http'
 
-export async function GET(req: NextRequest, ctx: any) {
+type UpdateProductBody = {
+    name?: string
+    title?: string
+    price?: number | string
+    pieces?: number | string
+    stock?: number | string
+}
+
+export async function GET(req: NextRequest, ctx: RouteContext) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'product id')
         if ('response' in result) {
@@ -12,17 +21,17 @@ export async function GET(req: NextRequest, ctx: any) {
 
         const numericId = result.value
         const product = await prisma.product.findUnique({ where: { id: numericId }, include: { category: true } })
-        if (!product) return NextResponse.json({ error: `Product with id=${numericId} not found` }, { status: 404 })
+        if (!product) return jsonError(`Product with id=${numericId} not found`, 404)
         return NextResponse.json({ data: product })
-    } catch (err) {
-        console.error('Get product by id error:', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Failed to fetch product', detail: String((err as any)?.message || err) }, { status: 500 })
+    } catch (error: unknown) {
+        logError('Get product by id error:', error)
+        return jsonError('Failed to fetch product', 500, errorMessage(error))
     }
 }
 
 export { deleteProduct as DELETE }
 
-export async function PUT(req: NextRequest, ctx: any) {
+export async function PUT(req: NextRequest, ctx: RouteContext) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'product id')
         if ('response' in result) {
@@ -30,25 +39,26 @@ export async function PUT(req: NextRequest, ctx: any) {
         }
 
         const numericId = result.value
-        const body = await req.json().catch(() => ({})) as Record<string, unknown>
+        const body = await req.json().catch(() => ({})) as UpdateProductBody
 
-        const data: any = {}
-        if (body.name) data.title = String(body.name)
+        const data: { title?: string; price?: number; stock?: number } = {}
+        if (body.name || body.title) data.title = String(body.name || body.title)
         if (body.price !== undefined) {
             const parsed = Number(body.price)
             if (!Number.isNaN(parsed)) data.price = parsed
         }
-        if (body.pieces !== undefined) {
-            const parsed = Number(body.pieces as any)
+        const stockSource = body.pieces ?? body.stock
+        if (stockSource !== undefined) {
+            const parsed = Number(stockSource)
             if (!Number.isNaN(parsed)) data.stock = parsed
         }
 
-        if (Object.keys(data).length === 0) return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+        if (Object.keys(data).length === 0) return jsonError('No valid fields to update', 400)
 
         const updated = await prisma.product.update({ where: { id: numericId }, data })
         return NextResponse.json({ data: updated })
-    } catch (err) {
-        console.error('Update product error:', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Failed to update product', detail: String((err as any)?.message || err) }, { status: 500 })
+    } catch (error: unknown) {
+        logError('Update product error:', error)
+        return jsonError('Failed to update product', 500, errorMessage(error))
     }
 }

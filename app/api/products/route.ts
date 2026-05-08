@@ -3,6 +3,7 @@ import { prisma } from '../../lib/prisma'
 import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
 import { getPaginationParams } from '../_utils/route'
+import { errorMessage, jsonError, logError } from '../_utils/http'
 
 type ProductInput = {
     title: string
@@ -16,7 +17,6 @@ type ProductInput = {
 
 export async function POST(req: Request) {
     try {
-        // Support both JSON (image is a URL) and multipart/form-data (image file upload)
         let body: Partial<ProductInput> = {}
         let uploadedImageUrl: string | null = null
 
@@ -32,22 +32,21 @@ export async function POST(req: Request) {
                 category: typeof formData.get('category') === 'string' ? String(formData.get('category')) : undefined,
             }
 
-            const file = formData.get('imageFile') as any
-            if (file && typeof file.arrayBuffer === 'function') {
+            const file = formData.get('imageFile')
+            if (file instanceof File && typeof file.arrayBuffer === 'function') {
                 const arrayBuffer = await file.arrayBuffer()
                 const buffer = Buffer.from(arrayBuffer)
 
-                // configure cloudinary from env
                 try {
                     cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
                 } catch (e) {
                     console.error('Cloudinary config error:', e)
                 }
 
-                // upload buffer via upload_stream
                 uploadedImageUrl = await new Promise<string>((resolve, reject) => {
-                    const uploadStream = cloudinary.v2.uploader.upload_stream({ folder: 'bazarcito' }, (error: any, result: any) => {
+                    const uploadStream = cloudinary.v2.uploader.upload_stream({ folder: 'bazarcito' }, (error, result) => {
                         if (error) return reject(error)
+                        if (!result?.secure_url) return reject(new Error('Cloudinary upload did not return secure_url'))
                         return resolve(result.secure_url)
                     })
                     Readable.from(buffer).pipe(uploadStream)
@@ -57,7 +56,6 @@ export async function POST(req: Request) {
             body = (await req.json()) as Partial<ProductInput>
         }
 
-        // If we uploaded an image from multipart, use that URL before validation
         if (uploadedImageUrl) {
             body.image = uploadedImageUrl
         }
@@ -69,11 +67,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing required fields: include categoryId or category name and description' }, { status: 400 })
         }
 
-        // Build category relation: accept numeric id or category name (string)
         const categoryIdNum = categoryId != null ? Number(categoryId) : null
         const categoryName = typeof body.category === 'string' && body.category.trim() !== '' ? body.category.trim() : null
 
-        // If we uploaded an image from multipart, use that URL
         if (uploadedImageUrl) {
             body.image = uploadedImageUrl
         }
@@ -81,7 +77,6 @@ export async function POST(req: Request) {
         let created = null
         try {
             if (categoryName) {
-                // connectOrCreate by category name (creates category if it doesn't exist)
                 created = await prisma.product.create({
                     data: {
                         title,
@@ -98,17 +93,16 @@ export async function POST(req: Request) {
                     },
                 })
             } else {
-                // numeric id path: validate existence first
                 let categoryExists = null
                 try {
                     categoryExists = await prisma.category.findUnique({ where: { id: Number(categoryIdNum) } })
-                } catch (e: any) {
-                    console.error('Prisma findUnique error:', e?.stack || e)
-                    return NextResponse.json({ error: 'Database error during category lookup', detail: String(e?.message || e) }, { status: 500 })
+                } catch (error: unknown) {
+                    logError('Prisma findUnique error:', error)
+                    return jsonError('Database error during category lookup', 500, errorMessage(error))
                 }
 
                 if (!categoryExists) {
-                    return NextResponse.json({ error: `Category with id=${categoryIdNum} not found` }, { status: 400 })
+                    return jsonError(`Category with id=${categoryIdNum} not found`, 400)
                 }
 
                 created = await prisma.product.create({
@@ -122,19 +116,19 @@ export async function POST(req: Request) {
                     },
                 })
             }
-        } catch (e: any) {
-            console.error('Prisma create error:', e?.stack || e)
-            const msg = String(e?.message || e)
+        } catch (error: unknown) {
+            logError('Prisma create error:', error)
+            const msg = errorMessage(error)
             if (msg.includes('insecure transport') || msg.includes('Connections using insecure transport')) {
-                return NextResponse.json({ error: 'Database connection rejected insecure transport (SSL required). Update your DATABASE_URL to use TLS/SSL.', detail: msg }, { status: 502 })
+                return jsonError('Database connection rejected insecure transport (SSL required). Update your DATABASE_URL to use TLS/SSL.', 502, msg)
             }
-            return NextResponse.json({ error: 'Database error during product creation', detail: msg }, { status: 500 })
+            return jsonError('Database error during product creation', 500, msg)
         }
 
         return NextResponse.json(created, { status: 201 })
-    } catch (err) {
-        console.error('Create product error (outer):', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Server error', detail: String((err as any)?.message || err) }, { status: 500 })
+    } catch (error: unknown) {
+        logError('Create product error (outer):', error)
+        return jsonError('Server error', 500, errorMessage(error))
     }
 }
 
@@ -145,7 +139,6 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: 'Server misconfiguration: DATABASE_URL not set' }, { status: 500 })
         }
 
-        // Optional query params: ?category=cocina&limit=20&skip=0
         const url = new URL(req.url)
         const category = url.searchParams.get('category') || undefined
         const { take, skip } = getPaginationParams(req)
@@ -161,16 +154,15 @@ export async function GET(req: Request) {
         })
 
         return NextResponse.json({ data: products })
-    } catch (err: any) {
-        const msg = String(err?.message || err)
-        console.error('Get products error:', err?.stack || err)
+    } catch (error: unknown) {
+        const msg = errorMessage(error)
+        logError('Get products error:', error)
 
-        // If DB is unreachable, return an empty list instead of a 500 to keep the frontend usable.
         if (msg.includes('P1001') || msg.toLowerCase().includes('could not connect') || msg.toLowerCase().includes('connect')) {
             console.warn('Database unreachable, returning empty product list to client:', msg)
             return NextResponse.json({ data: [], warning: 'Database unreachable, returning empty list' }, { status: 200 })
         }
 
-        return NextResponse.json({ error: 'Failed to fetch products', detail: msg }, { status: 500 })
+        return jsonError('Failed to fetch products', 500, msg)
     }
 }

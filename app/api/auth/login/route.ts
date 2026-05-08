@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { randomUUID } from 'crypto'
+import { findUserByEmail, getJwtSecret, normalizeEmail, toPublicUser } from '../../_utils/auth'
+import { errorMessage, jsonError, logError } from '../../_utils/http'
 
 type LoginBody = {
     email?: string
@@ -14,35 +16,29 @@ type LoginBody = {
 export async function POST(req: Request) {
     try {
         const body = (await req.json()) as LoginBody
-        const rawEmail = body?.email?.trim()
-        const email = rawEmail?.toLowerCase()
+        const email = normalizeEmail(body?.email)
         const password = body?.password
-        if (!email) return NextResponse.json({ error: 'Missing email' }, { status: 400 })
+        if (!email) return jsonError('Missing email', 400)
 
         try {
-            // If a password is provided, perform normal email/password login
             if (typeof password === 'string') {
-                const user = await prisma.user.findFirst({
-                    where: {
-                        OR: rawEmail && rawEmail !== email ? [{ email }, { email: rawEmail }] : [{ email }],
-                    },
-                    include: { role: true },
-                })
+                const user = await findUserByEmail(email)
                 if (!user) {
-                    return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+                    return jsonError('Usuario no encontrado', 404)
                 }
 
                 if (!user.password) {
-                    return NextResponse.json({ error: 'Usuario no tiene password' }, { status: 400 })
+                    return jsonError('Usuario no tiene password', 400)
                 }
 
                 const validPassword = await bcrypt.compare(password, user.password)
                 if (!validPassword) {
-                    return NextResponse.json({ error: 'Password incorrecto' }, { status: 401 })
+                    return jsonError('Password incorrecto', 401)
                 }
 
-                if (!process.env.JWT_SECRET) {
-                    return NextResponse.json({ error: 'JWT_SECRET no configurado' }, { status: 500 })
+                const jwtSecret = getJwtSecret()
+                if (!jwtSecret) {
+                    return jsonError('JWT_SECRET no configurado', 500)
                 }
 
                 const token = jwt.sign(
@@ -50,28 +46,17 @@ export async function POST(req: Request) {
                         userId: user.id,
                         role: user.role,
                     },
-                    process.env.JWT_SECRET!,
+                    jwtSecret,
                     { expiresIn: '7d' }
                 )
 
                 return NextResponse.json({
                     token,
-                    user: {
-                        id: user.id,
-                        name: user.name,
-                        email: user.email,
-                        role: user.role,
-                    },
+                    user: toPublicUser(user),
                 })
             }
 
-            // Otherwise keep existing behavior (lookup or createIfNotExists flow)
-            const user = await prisma.user.findFirst({
-                where: {
-                    OR: rawEmail && rawEmail !== email ? [{ email }, { email: rawEmail }] : [{ email }],
-                },
-                include: { role: true },
-            })
+            const user = await findUserByEmail(email)
             if (user) return NextResponse.json({ data: user })
 
             if (body.createIfNotExists) {
@@ -96,13 +81,13 @@ export async function POST(req: Request) {
                 return NextResponse.json({ data: created }, { status: 201 })
             }
 
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
-        } catch (e: any) {
-            console.error('Login handler DB error:', e?.stack || e)
-            return NextResponse.json({ error: 'Database error', detail: String(e?.message || e) }, { status: 500 })
+            return jsonError('User not found', 404)
+        } catch (error: unknown) {
+            logError('Login handler DB error:', error)
+            return jsonError('Database error', 500, errorMessage(error))
         }
-    } catch (err: any) {
-        console.error('Login route error:', err?.stack || err)
-        return NextResponse.json({ error: 'Server error', detail: String(err?.message || err) }, { status: 500 })
+    } catch (error: unknown) {
+        logError('Login route error:', error)
+        return jsonError('Server error', 500, errorMessage(error))
     }
 }

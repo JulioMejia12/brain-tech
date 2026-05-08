@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { prisma } from '../../lib/prisma'
 import bcrypt from 'bcryptjs'
 import { getPaginationParams } from '../_utils/route'
+import { findUserByEmail, normalizeEmail, toPublicUser } from '../_utils/auth'
+import { errorMessage, jsonError, logError } from '../_utils/http'
 
 type UserInput = {
     name?: string
@@ -14,23 +16,22 @@ type UserInput = {
 export async function POST(req: Request) {
     try {
         const body = (await req.json()) as UserInput
-        const email: string | undefined = body?.email?.toLowerCase?.().trim?.() || body?.email
+        const email = normalizeEmail(body?.email)
         const password: string | undefined = body?.password
         const name: string | undefined = body?.name
 
         if (!email || !password) {
-            return NextResponse.json({ error: 'Campos requeridos' }, { status: 400 })
+            return jsonError('Campos requeridos', 400)
         }
 
         try {
-            const existing = await prisma.user.findUnique({ where: { email } })
+            const existing = await findUserByEmail(email)
             if (existing) {
-                return NextResponse.json({ error: 'Usuario ya existe' }, { status: 400 })
+                return jsonError('Usuario ya existe', 400)
             }
         } catch (e: unknown) {
-            const error = e as Error & { stack?: string }
-            console.error('Prisma lookup error:', error?.stack || error)
-            return NextResponse.json({ error: 'Database error', detail: String(error?.message || error) }, { status: 500 })
+            logError('Prisma lookup error:', e)
+            return jsonError('Database error', 500, errorMessage(e))
         }
 
         try {
@@ -48,22 +49,21 @@ export async function POST(req: Request) {
                         },
                     },
                 },
+                include: { role: true },
             })
 
-            return NextResponse.json({ message: 'Usuario creado', user }, { status: 201 })
+            return NextResponse.json({ message: 'Usuario creado', user: toPublicUser(user) }, { status: 201 })
         } catch (e: unknown) {
-            const error = e as Error & { stack?: string }
-            console.error('Prisma create user error:', error?.stack || error)
-            const msg = String(error?.message || error)
+            logError('Prisma create user error:', e)
+            const msg = errorMessage(e)
             if (msg.includes('Unique constraint') || msg.includes('Unique')) {
-                return NextResponse.json({ error: 'Email already in use' }, { status: 409 })
+                return jsonError('Email already in use', 409)
             }
-            return NextResponse.json({ error: 'Error servidor' }, { status: 500 })
+            return jsonError('Error servidor', 500)
         }
-    } catch (err: unknown) {
-        const error = err as Error & { stack?: string }
-        console.error('Create user error (outer):', error?.stack || error)
-        return NextResponse.json({ error: 'Error servidor' }, { status: 500 })
+    } catch (error: unknown) {
+        logError('Create user error (outer):', error)
+        return jsonError('Error servidor', 500)
     }
 }
 
@@ -72,10 +72,9 @@ export async function GET(req: Request) {
         const { take, skip } = getPaginationParams(req)
 
         const users = await prisma.user.findMany({ include: { role: true }, orderBy: { createdAt: 'desc' }, take, skip })
-        return NextResponse.json({ data: users })
-    } catch (err: unknown) {
-        const error = err as Error & { stack?: string }
-        console.error('Get users error:', error?.stack || error)
-        return NextResponse.json({ error: 'Failed to fetch users', detail: String(error?.message || error) }, { status: 500 })
+        return NextResponse.json({ data: users.map(toPublicUser) })
+    } catch (error: unknown) {
+        logError('Get users error:', error)
+        return jsonError('Failed to fetch users', 500, errorMessage(error))
     }
 }

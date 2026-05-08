@@ -1,8 +1,17 @@
 import { prisma } from '@/app/lib/prisma'
 import { NextResponse, type NextRequest } from 'next/server'
-import { getNumericRouteParam } from '../../_utils/route'
+import { getNumericRouteParam, type RouteContext } from '../../_utils/route'
+import { errorMessage, jsonError, logError } from '../../_utils/http'
+import { normalizeEmail, toPublicUser } from '../../_utils/auth'
 
-export async function GET(req: NextRequest, ctx: any) {
+type UpdateUserBody = {
+    name?: string
+    email?: string
+    roleId?: number
+    role?: string
+}
+
+export async function GET(req: NextRequest, ctx: RouteContext) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'user id')
         if ('response' in result) {
@@ -11,15 +20,15 @@ export async function GET(req: NextRequest, ctx: any) {
 
         const numericId = result.value
         const user = await prisma.user.findUnique({ where: { id: numericId }, include: { role: true } })
-        if (!user) return NextResponse.json({ error: `User with id=${numericId} not found` }, { status: 404 })
-        return NextResponse.json({ data: user })
-    } catch (err) {
-        console.error('Get user by id error:', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Failed to fetch user', detail: String((err as any)?.message || err) }, { status: 500 })
+        if (!user) return jsonError(`User with id=${numericId} not found`, 404)
+        return NextResponse.json({ data: toPublicUser(user) })
+    } catch (error: unknown) {
+        logError('Get user by id error:', error)
+        return jsonError('Failed to fetch user', 500, errorMessage(error))
     }
 }
 
-export async function PUT(req: NextRequest, ctx: any) {
+export async function PUT(req: NextRequest, ctx: RouteContext) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'user id')
         if ('response' in result) {
@@ -28,13 +37,23 @@ export async function PUT(req: NextRequest, ctx: any) {
 
         const numericId = result.value
 
-        const body = await req.json()
-        const { name, email, roleId, role } = body as any
+        const body = (await req.json()) as UpdateUserBody
+        const { name, email, roleId, role } = body
 
-        // prepare update data
-        const data: any = {}
+        const data: {
+            name?: string
+            email?: string
+            role?: {
+                connect?: { id: number }
+                connectOrCreate?: {
+                    where: { name: string }
+                    create: { name: string }
+                }
+            }
+        } = {}
+
         if (name) data.name = name
-        if (email) data.email = email
+        if (email) data.email = normalizeEmail(email)
 
         try {
             if (role && typeof role === 'string') {
@@ -47,22 +66,22 @@ export async function PUT(req: NextRequest, ctx: any) {
             }
 
             const updated = await prisma.user.update({ where: { id: numericId }, data, include: { role: true } })
-            return NextResponse.json({ data: updated })
-        } catch (e: any) {
-            console.error('Update user error:', e?.stack || e)
-            const msg = String(e?.message || e)
+            return NextResponse.json({ data: toPublicUser(updated) })
+        } catch (error: unknown) {
+            logError('Update user error:', error)
+            const msg = errorMessage(error)
             if (msg.includes('Unique constraint failed') || msg.includes('Unique')) {
-                return NextResponse.json({ error: 'Email already in use' }, { status: 409 })
+                return jsonError('Email already in use', 409)
             }
-            return NextResponse.json({ error: 'Database error', detail: msg }, { status: 500 })
+            return jsonError('Database error', 500, msg)
         }
-    } catch (err) {
-        console.error('PUT user outer error:', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Server error', detail: String((err as any)?.message || err) }, { status: 500 })
+    } catch (error: unknown) {
+        logError('PUT user outer error:', error)
+        return jsonError('Server error', 500, errorMessage(error))
     }
 }
 
-export async function DELETE(req: NextRequest, ctx: any) {
+export async function DELETE(req: NextRequest, ctx: RouteContext) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'user id')
         if ('response' in result) {
@@ -74,16 +93,16 @@ export async function DELETE(req: NextRequest, ctx: any) {
         try {
             await prisma.user.delete({ where: { id: numericId } })
             return NextResponse.json({ success: true })
-        } catch (e: any) {
-            console.error('Delete user error:', e?.stack || e)
-            const msg = String(e?.message || e)
+        } catch (error: unknown) {
+            logError('Delete user error:', error)
+            const msg = errorMessage(error)
             if (msg.includes('Record to delete does not exist')) {
-                return NextResponse.json({ error: `User with id=${numericId} not found` }, { status: 404 })
+                return jsonError(`User with id=${numericId} not found`, 404)
             }
-            return NextResponse.json({ error: 'Database error', detail: msg }, { status: 500 })
+            return jsonError('Database error', 500, msg)
         }
-    } catch (err) {
-        console.error('DELETE user outer error:', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Server error', detail: String((err as any)?.message || err) }, { status: 500 })
+    } catch (error: unknown) {
+        logError('DELETE user outer error:', error)
+        return jsonError('Server error', 500, errorMessage(error))
     }
 }
