@@ -44,11 +44,28 @@ export default function LoginPage() {
                 setLoading(false)
                 return
             }
-            const user = body?.data
+
+            // If API returned a token, save it
+            if (body?.token) {
+                try {
+                    localStorage.setItem('token', body.token)
+                } catch (e) {
+                    console.warn('Failed to save token to localStorage', e)
+                }
+            }
+
+            // Normalize user payload from different endpoints
+            const user = body?.user ?? body?.data
             if (user) {
-                // store in auth context
                 try { auth.login(user) } catch (e) { console.warn(e) }
             }
+
+            if (!isRegister && !body?.token) {
+                setMessage('Login exitoso pero no se recibió token')
+                setLoading(false)
+                return
+            }
+
             setMessage(isRegister ? 'Registro completado' : 'Entrada exitosa')
             // redirect to provided `next` param or profile
             const next = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('next') : null

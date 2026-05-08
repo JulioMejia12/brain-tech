@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 
 type User = {
     id: number
-    name: string
+    name?: string
     email: string
     role?: { id: number; name: string }
 }
@@ -42,7 +42,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const setUser = (u: User | null) => setUserState(u)
     const login = (u: User) => setUserState(u)
-    const logout = () => setUserState(null)
+    const logout = () => {
+        setUserState(null)
+        try {
+            localStorage.removeItem('token')
+        } catch (e) {
+            console.warn('Failed to remove token from localStorage', e)
+        }
+    }
 
     return (
         <AuthContext.Provider value={{ user, setUser, login, logout }}>

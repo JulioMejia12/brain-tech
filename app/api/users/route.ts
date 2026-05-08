@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '../../lib/prisma'
 import bcrypt from 'bcryptjs'
-import { randomUUID } from 'crypto'
 import { getPaginationParams } from '../_utils/route'
 
 type UserInput = {
     name?: string
     email?: string
+    password?: string
     roleId?: number
     role?: string
 }
@@ -14,57 +14,56 @@ type UserInput = {
 export async function POST(req: Request) {
     try {
         const body = (await req.json()) as UserInput
-        const { name, email, roleId, role } = body
+        const email: string | undefined = body?.email?.toLowerCase?.().trim?.() || body?.email
+        const password: string | undefined = body?.password
+        const name: string | undefined = body?.name
 
-        if (!name || !email) {
-            return NextResponse.json({ error: 'Missing required fields: name and email' }, { status: 400 })
+        if (!email || !password) {
+            return NextResponse.json({ error: 'Campos requeridos' }, { status: 400 })
         }
 
-        // handle role: allow numeric roleId or role name (connectOrCreate)
-        let created
         try {
-            // generate a random password and hash it to satisfy schema requirements
-            const randomPassword = randomUUID()
-            const hashed = bcrypt.hashSync(randomPassword, 10)
+            const existing = await prisma.user.findUnique({ where: { email } })
+            if (existing) {
+                return NextResponse.json({ error: 'Usuario ya existe' }, { status: 400 })
+            }
+        } catch (e: unknown) {
+            const error = e as Error & { stack?: string }
+            console.error('Prisma lookup error:', error?.stack || error)
+            return NextResponse.json({ error: 'Database error', detail: String(error?.message || error) }, { status: 500 })
+        }
 
-            if (role && typeof role === 'string') {
-                const roleName = role.trim()
-                created = await prisma.user.create({
-                    data: {
-                        name,
-                        email,
-                        password: hashed,
-                        role: {
-                            connectOrCreate: {
-                                where: { name: roleName },
-                                create: { name: roleName },
-                            },
+        try {
+            const hashedPassword = await bcrypt.hash(password, 10)
+
+            const user = await prisma.user.create({
+                data: {
+                    name: name?.trim() || email.split('@')[0],
+                    email,
+                    password: hashedPassword,
+                    role: {
+                        connectOrCreate: {
+                            where: { name: 'user' },
+                            create: { name: 'user' },
                         },
                     },
-                    include: { role: true },
-                })
-            } else if (roleId != null) {
-                // validate role exists
-                const r = await prisma.role.findUnique({ where: { id: Number(roleId) } })
-                if (!r) return NextResponse.json({ error: `Role with id=${roleId} not found` }, { status: 400 })
-                created = await prisma.user.create({ data: { name, email, password: hashed, role: { connect: { id: Number(roleId) } } }, include: { role: true } })
-            } else {
-                // require role selection
-                return NextResponse.json({ error: 'Missing roleId or role name' }, { status: 400 })
-            }
-        } catch (e: any) {
-            console.error('Prisma create user error:', e?.stack || e)
-            const msg = String(e?.message || e)
-            if (msg.includes('Unique constraint failed') || msg.includes('Unique')) {
+                },
+            })
+
+            return NextResponse.json({ message: 'Usuario creado', user }, { status: 201 })
+        } catch (e: unknown) {
+            const error = e as Error & { stack?: string }
+            console.error('Prisma create user error:', error?.stack || error)
+            const msg = String(error?.message || error)
+            if (msg.includes('Unique constraint') || msg.includes('Unique')) {
                 return NextResponse.json({ error: 'Email already in use' }, { status: 409 })
             }
-            return NextResponse.json({ error: 'Database error', detail: msg }, { status: 500 })
+            return NextResponse.json({ error: 'Error servidor' }, { status: 500 })
         }
-
-        return NextResponse.json({ data: created }, { status: 201 })
-    } catch (err) {
-        console.error('Create user error (outer):', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Server error', detail: String((err as any)?.message || err) }, { status: 500 })
+    } catch (err: unknown) {
+        const error = err as Error & { stack?: string }
+        console.error('Create user error (outer):', error?.stack || error)
+        return NextResponse.json({ error: 'Error servidor' }, { status: 500 })
     }
 }
 
@@ -74,8 +73,9 @@ export async function GET(req: Request) {
 
         const users = await prisma.user.findMany({ include: { role: true }, orderBy: { createdAt: 'desc' }, take, skip })
         return NextResponse.json({ data: users })
-    } catch (err) {
-        console.error('Get users error:', (err as any)?.stack || err)
-        return NextResponse.json({ error: 'Failed to fetch users', detail: String((err as any)?.message || err) }, { status: 500 })
+    } catch (err: unknown) {
+        const error = err as Error & { stack?: string }
+        console.error('Get users error:', error?.stack || error)
+        return NextResponse.json({ error: 'Failed to fetch users', detail: String(error?.message || error) }, { status: 500 })
     }
 }
