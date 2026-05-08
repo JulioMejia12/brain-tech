@@ -23,7 +23,7 @@ import ToastMessage, { type ToastType } from '../ui/ToastMessage'
 import ButtonSpinner from '../ui/ButtonSpinner'
 import EditProductModal from '../ui/EditProductModal'
 import { useAuth } from '@/contexts/AuthContext'
-import { Product } from '@/app/lib/products'
+import type { Product } from '@/app/lib/products'
 
 type ProductWithPieces = Product & {
     pieces?: number | null
@@ -61,6 +61,22 @@ type Props = {
     children?: React.ReactNode
     cellPhone?: string
     products?: Product[]
+    productsEndpoint?: string
+    productMutationBase?: string
+}
+
+const DEFAULT_PRODUCTS_ENDPOINT = '/api/bazarcito/products'
+
+function mapProductApiItem(it: ProductApiItem): ProductWithPieces {
+    return {
+        id: String(it.id),
+        name: it.title || it.name || '',
+        price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
+        image: it.image || '/placeholder.png',
+        description: it.description || '',
+        category: it.category?.name || 'Otros',
+        pieces: it.pieces ?? it.quantity ?? it.stock ?? null,
+    }
 }
 
 const ProductsSell = ({
@@ -74,9 +90,13 @@ const ProductsSell = ({
     promos,
     children,
     cellPhone,
-    products: productsArray
+    products: productsArray,
+    productsEndpoint,
+    productMutationBase,
 }: Props) => {
     const heroBgRef = useRef<HTMLDivElement | null>(null)
+    const resolvedProductsEndpoint = productsEndpoint || DEFAULT_PRODUCTS_ENDPOINT
+    const resolvedProductMutationBase = productMutationBase || resolvedProductsEndpoint.split('?')[0]
 
     useEffect(() => {
         const onScroll = () => {
@@ -134,25 +154,23 @@ const ProductsSell = ({
     }, [products])
 
     useEffect(() => {
+        if (productsArray) {
+            setProducts(productsArray as ProductWithPieces[])
+            setLoading(false)
+            setFetchError(null)
+            return
+        }
+
         let mounted = true
         async function load() {
             setLoading(true)
             setFetchError(null)
             try {
-                const res = await fetch('/api/bazarcito/products')
+                const res = await fetch(resolvedProductsEndpoint)
                 if (!res.ok) throw new Error(`HTTP ${res.status}`)
                 const body = await res.json()
                 const items = (body.data || []) as ProductApiItem[]
-                // map backend product shape and include pieces if available
-                const mapped: ProductWithPieces[] = items.map((it) => ({
-                    id: String(it.id),
-                    name: it.title || it.name || '',
-                    price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
-                    image: it.image || '/placeholder.png',
-                    description: it.description || '',
-                    category: it.category?.name || 'Otros',
-                    pieces: it.pieces ?? it.quantity ?? it.stock ?? null,
-                }))
+                const mapped: ProductWithPieces[] = items.map(mapProductApiItem)
                 if (mounted) setProducts(mapped)
             } catch (e: unknown) {
                 console.error('Failed to load products', e)
@@ -163,7 +181,7 @@ const ProductsSell = ({
         }
         load()
         return () => { mounted = false }
-    }, [])
+    }, [productsArray, resolvedProductsEndpoint])
 
     const visible = products.filter((p) => {
         const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory
@@ -400,7 +418,7 @@ const ProductsSell = ({
                     const normalizedPieces = payload.pieces ?? null
                     // call API
                     try {
-                        const res = await fetch(`/api/bazarcito/products/${editingProduct.id}`, {
+                        const res = await fetch(`${resolvedProductMutationBase}/${editingProduct.id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload),
@@ -447,7 +465,7 @@ const ProductsSell = ({
                     const productId = String(targetProduct.id)
                     try {
                         setDeletingIds((prev) => [...prev, productId])
-                        const res = await fetch(`/api/bazarcito/products/${targetProduct.id}`, { method: 'DELETE' })
+                        const res = await fetch(`${resolvedProductMutationBase}/${targetProduct.id}`, { method: 'DELETE' })
                         if (res.ok || res.status === 204) {
                             setProducts((prev) => prev.filter((it) => String(it.id) !== productId))
                             setToast({ message: 'Producto eliminado correctamente.', type: 'success' })

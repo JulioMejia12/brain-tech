@@ -1,4 +1,3 @@
-"use client"
 import { Suspense } from 'react'
 import ProductsSell from '../components/layout/ProductsSell'
 
@@ -29,19 +28,23 @@ export default function BazarcitoPage() {
                 promos={promociones}
                 cellPhone={cell}
                 heroImage="https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1778198183/laptop-store_tbir4n.png"
+                productsEndpoint="/api/bazarcito/products"
+                productMutationBase="/api/bazarcito/products"
             >
                 <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                     <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>¿Quieres vender nuestros productos?</h2>
                     <p className="text-gray-700 text-base mb-4">
                         Si estás interesado en convertirte en distribuidor de  Betterware.
                     </p>
-                    <button
-                        onClick={() => window.open(`https://wa.me/${cell}?text=Hola,%20estoy%20interesado%20en%20vender%20sus%20productos`, '_blank')}
+                    <a
+                        href={`https://wa.me/${cell}?text=Hola,%20estoy%20interesado%20en%20vender%20sus%20productos`}
+                        target="_blank"
+                        rel="noreferrer"
                         className="px-4 py-2 rounded text-white"
                         style={{ background: primary }}
                     >
                         Contáctanos por WhatsApp
-                    </button>
+                    </a>
                 </section>
             </ProductsSell>
         </Suspense>
