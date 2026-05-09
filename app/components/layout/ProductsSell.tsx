@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 // Spinner simple
@@ -67,6 +67,17 @@ type Props = {
 
 const DEFAULT_PRODUCTS_ENDPOINT = '/api/bazarcito/products'
 
+function getOptimizedHeroImage(src?: string) {
+    const fallback = 'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto:best,f_auto,dpr_auto,c_fit,w_1600/v1778198183/laptop-store_tbir4n.png'
+    if (!src) return fallback
+
+    if (src.includes('/upload/')) {
+        return src.replace('/upload/', '/upload/q_auto:best,f_auto,dpr_auto,c_fit,w_1600/')
+    }
+
+    return src
+}
+
 function mapProductApiItem(it: ProductApiItem): ProductWithPieces {
     return {
         id: String(it.id),
@@ -84,7 +95,6 @@ const ProductsSell = ({
     title,
     primary,
     secondary,
-    textColor,
     bgColor,
     QuienesSomos,
     promos,
@@ -94,24 +104,8 @@ const ProductsSell = ({
     productsEndpoint,
     productMutationBase,
 }: Props) => {
-    const heroBgRef = useRef<HTMLDivElement | null>(null)
     const resolvedProductsEndpoint = productsEndpoint || DEFAULT_PRODUCTS_ENDPOINT
     const resolvedProductMutationBase = productMutationBase || resolvedProductsEndpoint.split('?')[0]
-
-    useEffect(() => {
-        const onScroll = () => {
-            const el = heroBgRef.current
-            if (!el) return
-            const rect = el.getBoundingClientRect()
-            const speed = 0.3
-            const y = -rect.top * speed
-            el.style.transform = `translateY(${y}px)`
-        }
-
-        onScroll()
-        window.addEventListener('scroll', onScroll, { passive: true })
-        return () => window.removeEventListener('scroll', onScroll)
-    }, [])
 
     const [products, setProducts] = useState<ProductWithPieces[]>((productsArray || []) as ProductWithPieces[])
     const [loading, setLoading] = useState<boolean>(false)
@@ -147,6 +141,7 @@ const ProductsSell = ({
     const [sharingIds, setSharingIds] = useState<string[]>([])
     const [toast, setToast] = useState<ToastState>(null)
     const [productPendingDelete, setProductPendingDelete] = useState<ProductWithPieces | null>(null)
+    const resolvedHeroImage = getOptimizedHeroImage(heroImage)
 
     const categories = useMemo(() => {
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))
@@ -167,7 +162,7 @@ const ProductsSell = ({
             setFetchError(null)
             try {
                 const res = await fetch(resolvedProductsEndpoint)
-                let body: any = null
+                let body: { error?: string; warning?: string; data?: ProductApiItem[] } | null = null
                 try {
                     body = await res.json()
                 } catch (parseErr) {
@@ -280,24 +275,27 @@ const ProductsSell = ({
 
     return (
         <div style={{ background: bgColor }}>
-            <div className="block sm:hidden xs:block relative w-full overflow-hidden h-60 md:h-96" style={{ background: primary }}>
-                <div ref={heroBgRef} className="absolute inset-0 will-change-transform" style={{ transform: 'translateY(0px)' }}>
+            <div className="block sm:hidden xs:block relative w-full overflow-hidden bg-white" style={{ background: primary }}>
+                <div className="relative mx-auto flex min-h-[360px] items-center justify-center px-4 py-4">
                     <Image
-                        src={heroImage || 'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1778198183/laptop-store_tbir4n.png'}
+                        src={resolvedHeroImage}
                         alt={title || 'Hero'}
-                        fill
-                        style={{ objectFit: 'cover', objectPosition: 'center' }}
+                        width={800}
+                        height={800}
+                        priority
+                        quality={100}
+                        sizes="100vw"
+                        className="h-auto max-h-[520px] w-full object-contain object-center"
                     />
                 </div>
-                <div className="absolute inset-0 bg-black/25" aria-hidden="true" />
-                {title && (
+                {/* {title && (
                     <div className="relative z-10 h-full flex items-center justify-center">
                         <div className="text-center px-4">
                             <h1 className="text-3xl md:text-4xl font-bold" style={{ color: textColor }}>{title}</h1>
                             <p className="mt-2 text-sm md:text-base text-white/90" style={{ color: textColor }}>Explora todos nuestros productos</p>
                         </div>
                     </div>
-                )}
+                )} */}
             </div>
 
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">

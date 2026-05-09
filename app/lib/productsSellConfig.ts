@@ -30,7 +30,7 @@ export const bazarcitoProductsSellProps: ProductsSellPageConfig = {
     QuienesSomos: 'En Bazarcito Online, somos un equipo apasionado por conectar a los amantes de las compras con productos únicos y de calidad. Nuestra misión es ofrecer una plataforma fácil de usar donde los vendedores puedan mostrar sus productos y los compradores puedan descubrir tesoros escondidos. Creemos en el poder de la comunidad y en la importancia de apoyar a los pequeños negocios, por eso nos esforzamos por crear un espacio seguro y amigable para todos. ¡Únete a nosotros y descubre el bazarcito online donde cada compra es una experiencia especial!',
     promos: bazarcitoPromos,
     cellPhone: '5571906152',
-    heroImage: 'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto/f_auto/v1778198183/laptop-store_tbir4n.png',
+    heroImage: 'https://res.cloudinary.com/ddfj0omil/image/upload/v1778286297/bazarcito_ftyipo.png',
     productsEndpoint: '/api/bazarcito/products',
     productMutationBase: '/api/bazarcito/products',
 }

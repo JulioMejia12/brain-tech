@@ -29,7 +29,7 @@ export default function BazarcitoNav() {
             textColorLogo="#fff"
             title="Bazarcito online"
             query={query}
-            logo={'/bazarcito.png'}
+            logo={'/logoBazar.png'}
             onQueryChange={handleQueryChange}
         />
     )
