@@ -21,7 +21,7 @@ import MobileMenu from './MobileMenu'
 import ConfirmModal from '../ui/ConfirmModal'
 import ToastMessage, { type ToastType } from '../ui/ToastMessage'
 import ButtonSpinner from '../ui/ButtonSpinner'
-import EditProductModal from '../ui/EditProductModal'
+import EditProductModal from '@/app/components/ui/EditProductModal'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Product } from '@/app/lib/products'
 
@@ -449,31 +449,59 @@ const ProductsSell = ({
                     setModalOpen(false)
                     setEditingProduct(null)
                 }}
-                onSave={async (payload) => {
+                onSave={async (payload: any) => {
                     if (!editingProduct) return
                     setSavingProductId(String(editingProduct.id))
                     const normalizedPieces = payload.pieces ?? null
                     // call API
                     try {
-                        const res = await fetch(`${resolvedProductMutationBase}/${editingProduct.id}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload),
-                        })
+                        let res: Response
+                        // if imageFile provided, send multipart/form-data so the server can upload it
+                        if ((payload as any).imageFile) {
+                            const form = new FormData()
+                            form.append('title', String(payload.name ?? editingProduct.name))
+                            if (payload.description !== undefined) form.append('description', String(payload.description))
+                            if (payload.price !== undefined) form.append('price', String(payload.price))
+                            if (payload.stock !== undefined) form.append('stock', String(payload.stock))
+                            if (payload.pieces !== undefined) form.append('pieces', String(payload.pieces))
+                            if (payload.category) form.append('category', String(payload.category))
+                            const file = (payload as any).imageFile as File
+                            form.append('imageFile', file)
+
+                            res = await fetch(`${resolvedProductMutationBase}/${editingProduct.id}`, {
+                                method: 'PUT',
+                                body: form,
+                            })
+                        } else {
+                            res = await fetch(`${resolvedProductMutationBase}/${editingProduct.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload),
+                            })
+                        }
                         if (res.ok) {
                             const body = await res.json()
                             const updated = body.data || null
                             if (updated) {
-                                setProducts((prev) => prev.map((it) => (String(it.id) === String(updated.id) ? { ...it, name: updated.title || updated.name || payload.name, description: updated.description || payload.description, pieces: updated.pieces ?? normalizedPieces } : it)))
+                                setProducts((prev) => prev.map((it) => {
+                                    if (String(it.id) !== String(updated.id)) return it
+                                    const newName = String(updated.title || updated.name || payload.name || it.name)
+                                    const newDescription = String(updated.description ?? payload.description ?? it.description ?? '')
+                                    const newPieces = updated.pieces ?? updated.stock ?? normalizedPieces ?? it.pieces
+                                    const newImage = String(updated.image ?? it.image ?? '')
+                                    const newCategory = String((updated.category && (updated.category.name || updated.category)) || payload.category || it.category || '')
+                                    const newPrice = (updated.price !== undefined && updated.price !== null) ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(updated.price)) : (payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price)
+                                    return { ...it, name: newName, description: newDescription, pieces: newPieces, image: newImage, category: newCategory, price: newPrice }
+                                }))
                             }
                             setToast({ message: 'Producto actualizado correctamente.', type: 'success' })
                         } else {
-                            setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: payload.name, description: payload.description, pieces: normalizedPieces } : it)))
+                            setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: String(payload.name ?? it.name), description: String(payload.description ?? it.description), pieces: normalizedPieces ?? it.pieces, image: String(it.image), category: String(payload.category ?? it.category), price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price } : it)))
                             setToast({ message: 'Producto actualizado localmente.', type: 'success' })
                         }
                     } catch (e) {
                         console.error('Update error', e)
-                        setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: payload.name, description: payload.description, pieces: normalizedPieces } : it)))
+                        setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: String(payload.name ?? it.name), description: String(payload.description ?? it.description), pieces: normalizedPieces ?? it.pieces, image: String(it.image), category: String(payload.category ?? it.category), price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price } : it)))
                         setToast({ message: 'No se pudo actualizar en el servidor; se aplicó localmente.', type: 'error' })
                     } finally {
                         setSavingProductId(null)
