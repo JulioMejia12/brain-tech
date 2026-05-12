@@ -2,12 +2,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { isPlateriasCategoryName } from '@/app/api/_utils/catalog'
 import { errorMessage, jsonError, logError } from '@/app/api/_utils/http'
-import type { RouteContext } from '../../../_utils/route'
+// use a loose context type for Next.js route handlers to avoid mismatches
 import { getNumericRouteParam } from '../../../_utils/route'
 import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
 
-export async function GET(req: NextRequest, ctx: RouteContext) {
+export async function GET(req: NextRequest, ctx: any) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'product id')
         if ('response' in result) {
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     }
 }
 
-export async function DELETE(req: NextRequest, ctx: RouteContext) {
+export async function DELETE(req: NextRequest, ctx: any) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'product id')
         if ('response' in result) {
@@ -46,7 +46,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
     }
 }
 
-export async function PUT(req: NextRequest, ctx: RouteContext) {
+export async function PUT(req: NextRequest, ctx: any) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'product id')
         if ('response' in result) {
@@ -58,7 +58,10 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
             return jsonError(`Product with id=${result.value} not found`, 404)
         }
 
-        const body = (await req.json().catch(() => ({}))) as {
+        // Parse body depending on content type. Don't call req.json() before formData.
+        const contentType = req.headers.get('content-type') || ''
+        let uploadedImageUrl: string | null = null
+        const body = {} as {
             name?: string
             title?: string
             price?: number | string
@@ -67,48 +70,65 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
             description?: string
             category?: string | number
             categoryId?: number
+            details?: any
         }
 
-        // support multipart/form-data for image upload
-        const contentType = req.headers.get('content-type') || ''
-        let uploadedImageUrl: string | null = null
         if (contentType.includes('multipart/form-data')) {
             const formData = await req.formData()
-            // override body with form values if provided
             const fdTitle = formData.get('title') || formData.get('name')
             const fdDescription = formData.get('description')
             const fdPrice = formData.get('price')
             const fdStock = formData.get('stock')
             const fdPieces = formData.get('pieces')
             const fdCategory = formData.get('category')
+            const fdDetails = formData.get('details')
 
             if (fdTitle) body.title = String(fdTitle)
             if (fdPrice) body.price = String(fdPrice as any)
             if (fdStock) body.stock = String(fdStock as any)
             if (fdPieces) body.pieces = String(fdPieces as any)
+            if (fdDescription) body.description = String(fdDescription)
+            if (typeof fdCategory === 'string') body.category = fdCategory
+            if (fdDetails) {
+                try {
+                    const parsed = typeof fdDetails === 'string' ? JSON.parse(fdDetails) : JSON.parse(String(fdDetails))
+                        ; (body as any).details = parsed
+                } catch (e) {
+                    // ignore parse errors
+                }
+            }
 
             const file = formData.get('imageFile')
             if (file instanceof File && typeof file.arrayBuffer === 'function') {
                 const arrayBuffer = await file.arrayBuffer()
                 const buffer = Buffer.from(arrayBuffer)
-                try {
-                    cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
-                } catch (e) {
-                    console.error('Cloudinary config error:', e)
+                if (!process.env.CLOUDINARY_URL) {
+                    console.error('CLOUDINARY_URL not set; cannot upload image')
+                    return jsonError('Server misconfiguration: CLOUDINARY_URL not set', 500, 'CLOUDINARY_URL not configured')
                 }
 
-                uploadedImageUrl = await new Promise<string>((resolve, reject) => {
-                    const uploadStream = cloudinary.v2.uploader.upload_stream({ folder: 'bazarcito' }, (error, result) => {
-                        if (error) return reject(error)
-                        if (!result?.secure_url) return reject(new Error('Cloudinary upload did not return secure_url'))
-                        return resolve(result.secure_url)
+                try {
+                    cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
+                    uploadedImageUrl = await new Promise<string>((resolve, reject) => {
+                        const uploadStream = cloudinary.v2.uploader.upload_stream({ folder: 'bazarcito' }, (error, result) => {
+                            if (error) return reject(error)
+                            if (!result?.secure_url) return reject(new Error('Cloudinary upload did not return secure_url'))
+                            return resolve(result.secure_url)
+                        })
+                        Readable.from(buffer).pipe(uploadStream)
                     })
-                    Readable.from(buffer).pipe(uploadStream)
-                })
+                } catch (e: any) {
+                    console.error('Cloudinary upload error:', e)
+                    return jsonError('Image upload failed', 500, String(e?.message || e))
+                }
             }
+        } else {
+            // non-multipart: parse JSON body
+            const parsed = (await req.json().catch(() => ({}))) as any
+            Object.assign(body, parsed)
         }
 
-        const data: { title?: string; price?: number; stock?: number; description?: string; image?: string; category?: any } = {}
+        const data: { title?: string; price?: number; stock?: number; description?: string; image?: string; category?: any; details?: { label: string; value: string }[] } = {}
         if (body.name || body.title) data.title = String(body.name || body.title)
         if (body.price !== undefined) {
             const parsed = Number(body.price)
@@ -124,6 +144,14 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
         if (uploadedImageUrl) data.image = uploadedImageUrl
 
         if (body.description !== undefined) data.description = String(body.description)
+        if ((body as any).details !== undefined) {
+            try {
+                const detailsRaw = (body as any).details
+                data['details'] = Array.isArray(detailsRaw) ? detailsRaw.map((d: any) => ({ label: String(d?.label ?? ''), value: String(d?.value ?? '') })) : undefined
+            } catch (e) {
+                // ignore invalid details
+            }
+        }
 
         // category handling: support category name or categoryId
         const url = new URL(req.url)

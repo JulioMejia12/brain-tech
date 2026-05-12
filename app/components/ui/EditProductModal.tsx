@@ -13,6 +13,7 @@ type EditPayload = {
     stock?: number | null
     category?: string
     imageFile?: File | null
+    details?: { label: string; value: string }[]
 }
 
 type Props = {
@@ -37,6 +38,7 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
     const [price, setPrice] = useState<number | ''>(() => parsePrice(product?.price))
     const [stock, setStock] = useState<number | ''>(() => product?.pieces ?? '')
     const [category, setCategory] = useState<string>(() => product?.category ?? '')
+    const [details, setDetails] = useState<{ label: string; value: string }[]>(() => product?.details ?? [{ label: '', value: '' }])
 
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string>(() => product?.image ?? '')
@@ -52,10 +54,19 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
         setPrice(parsePrice(product?.price))
         setStock(product?.pieces ?? '')
         setCategory(product?.category ?? '')
+        setDetails(product?.details ?? [{ label: '', value: '' }])
         setImageFile(null)
         setPreviewUrl(product?.image ?? '')
         setFileError(null)
     }, [product, isOpen])
+
+    const addDetail = () => setDetails((d) => [...d, { label: '', value: '' }])
+    const updateDetail = (idx: number, key: 'label' | 'value', val: string) => setDetails((prev) => {
+        const next = prev.slice()
+        next[idx] = { ...next[idx], [key]: val }
+        return next
+    })
+    const removeDetail = (idx: number) => setDetails((prev) => prev.filter((_, i) => i !== idx))
 
     const onChooseFile = (file?: File | null) => {
         if (!file) {
@@ -91,9 +102,9 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
     if (!isOpen || !product) return null
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 overflow-auto flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
-            <div className="relative bg-white rounded-lg shadow-lg max-w-lg w-full mx-4 p-6 z-10">
+            <div className="relative bg-white rounded-lg shadow-lg max-w-lg w-full mx-auto p-6 z-10 max-h-[90vh] overflow-y-auto">
                 <h3 className="text-lg font-semibold mb-3 text-gray-800">Editar producto</h3>
 
                 <div className="space-y-3">
@@ -142,6 +153,39 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                         <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="ej. cocina" className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500" />
                     </label>
 
+                    <div>
+                        <span className="text-sm text-gray-600">Detalles</span>
+                        <div className="mt-2 space-y-2">
+                            {details.map((d, idx) => (
+                                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                                    <input
+                                        className="col-span-11 sm:col-span-5 mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500"
+                                        placeholder="Etiqueta"
+                                        value={d.label}
+                                        onChange={(e) => updateDetail(idx, 'label', e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeDetail(idx)}
+                                        aria-label={`Eliminar detalle ${idx + 1}`}
+                                        className="col-span-1 sm:col-span-1 text-red-500 flex items-center justify-center"
+                                    >
+                                        ✕
+                                    </button>
+                                    <input
+                                        className="col-span-12 sm:col-span-6 mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500"
+                                        placeholder="Valor"
+                                        value={d.value}
+                                        onChange={(e) => updateDetail(idx, 'value', e.target.value)}
+                                    />
+                                </div>
+                            ))}
+                            <div>
+                                <button type="button" onClick={addDetail} className="text-sm text-green-600">Agregar detalle</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <label className="block">
                         <span className="text-sm text-gray-600">Piezas</span>
                         <input value={String(pieces)} onChange={(e) => setPieces(e.target.value ? Number(e.target.value) : '')} className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500" />
@@ -158,6 +202,8 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                             if (stock !== '') payload.stock = Number(stock)
                             if (category) payload.category = category
                             if (imageFile) payload.imageFile = imageFile
+                            const filtered = details.filter(d => (d.label && d.label.trim() !== '') || (d.value && d.value.trim() !== ''))
+                            if (filtered.length) payload.details = filtered
                             await onSave(payload)
                         }}
                         disabled={isSaving || Boolean(fileError)}

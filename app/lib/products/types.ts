@@ -5,6 +5,7 @@ export type Product = {
     image: string
     description: string
     category: string
+    details?: { label: string; value: string }[]
 }
 
 export type ProductApiItem = {
@@ -17,4 +18,5 @@ export type ProductApiItem = {
     category?: {
         name?: string | null
     } | null
+    details?: any
 }

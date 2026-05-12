@@ -25,5 +25,6 @@ export function mapItemToProduct(item: ProductApiItem): Product {
         image: toAbsoluteImage(item.image),
         description: item.description || '',
         category: item.category?.name || 'Otros',
+        details: Array.isArray((item as any).details) ? (item as any).details.map((d: any) => ({ label: String(d?.label ?? ''), value: String(d?.value ?? '') })) : undefined,
     }
 }

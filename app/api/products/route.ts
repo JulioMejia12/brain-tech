@@ -13,6 +13,7 @@ type ProductInput = {
     description?: string
     categoryId?: number
     category?: string
+    details?: { label: string; value: string }[]
 }
 
 export async function POST(req: Request) {
@@ -32,25 +33,40 @@ export async function POST(req: Request) {
                 category: typeof formData.get('category') === 'string' ? String(formData.get('category')) : undefined,
             }
 
+            const fdDetails = formData.get('details')
+            if (fdDetails) {
+                try {
+                    const parsed = typeof fdDetails === 'string' ? JSON.parse(fdDetails) : JSON.parse(String(fdDetails))
+                        ; (body as any).details = Array.isArray(parsed) ? parsed : []
+                } catch (e) {
+                    // ignore parse errors and leave details undefined
+                }
+            }
+
             const file = formData.get('imageFile')
             if (file instanceof File && typeof file.arrayBuffer === 'function') {
                 const arrayBuffer = await file.arrayBuffer()
                 const buffer = Buffer.from(arrayBuffer)
 
-                try {
-                    cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
-                } catch (e) {
-                    console.error('Cloudinary config error:', e)
+                if (!process.env.CLOUDINARY_URL) {
+                    console.error('CLOUDINARY_URL not set; cannot upload image')
+                    return NextResponse.json({ error: 'Server misconfiguration: CLOUDINARY_URL not set' }, { status: 500 })
                 }
 
-                uploadedImageUrl = await new Promise<string>((resolve, reject) => {
-                    const uploadStream = cloudinary.v2.uploader.upload_stream({ folder: 'bazarcito' }, (error, result) => {
-                        if (error) return reject(error)
-                        if (!result?.secure_url) return reject(new Error('Cloudinary upload did not return secure_url'))
-                        return resolve(result.secure_url)
+                try {
+                    cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
+                    uploadedImageUrl = await new Promise<string>((resolve, reject) => {
+                        const uploadStream = cloudinary.v2.uploader.upload_stream({ folder: 'bazarcito' }, (error, result) => {
+                            if (error) return reject(error)
+                            if (!result?.secure_url) return reject(new Error('Cloudinary upload did not return secure_url'))
+                            return resolve(result.secure_url)
+                        })
+                        Readable.from(buffer).pipe(uploadStream)
                     })
-                    Readable.from(buffer).pipe(uploadStream)
-                })
+                } catch (e: any) {
+                    console.error('Cloudinary upload error:', e)
+                    return NextResponse.json({ error: `Image upload failed: ${String(e?.message || e)}` }, { status: 500 })
+                }
             }
         } else {
             body = (await req.json()) as Partial<ProductInput>
@@ -60,7 +76,7 @@ export async function POST(req: Request) {
             body.image = uploadedImageUrl
         }
 
-        const { title, price, stock, image, categoryId } = body
+        const { title, price, stock, image, categoryId, details } = body
         const description = typeof body.description === 'string' ? body.description : ''
 
         if (!title || price == null || stock == null || !image || (categoryId == null && !body.category) || !description) {
@@ -84,6 +100,7 @@ export async function POST(req: Request) {
                         stock: Number(stock),
                         image: body.image ?? image,
                         description: description,
+                        details: Array.isArray(details) ? details : [],
                         category: {
                             connectOrCreate: {
                                 where: { name: categoryName },
@@ -112,6 +129,7 @@ export async function POST(req: Request) {
                         stock: Number(stock),
                         image,
                         description: description,
+                        details: Array.isArray(details) ? details : [],
                         category: { connect: { id: Number(categoryIdNum) } },
                     },
                 })

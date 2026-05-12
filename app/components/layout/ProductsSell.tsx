@@ -85,6 +85,7 @@ function mapProductApiItem(it: ProductApiItem): ProductWithPieces {
         price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
         image: it.image || '/placeholder.png',
         description: it.description || '',
+        details: Array.isArray((it as any).details) ? (it as any).details.map((d: any) => ({ label: String(d?.label ?? ''), value: String(d?.value ?? '') })) : undefined,
         category: it.category?.name || 'Otros',
         pieces: it.pieces ?? it.quantity ?? it.stock ?? null,
     }
@@ -239,12 +240,16 @@ const ProductsSell = ({
         try {
             setRequestingIds((prev) => [...prev, productId])
             const pageUrl = buildShareUrl(product)
-            const text = [
-                pageUrl,
-                '',
-                `Hola, quiero realizar el pedido de ${product.name} por ${product.price}.`,
-                'Por favor me pueden confirmar disponibilidad.'
-            ].join('\n')
+            const detailsText = (product as any).details && Array.isArray((product as any).details) && (product as any).details.length
+                ? (product as any).details
+                    .filter((d: any) => (d?.label && String(d.label).trim() !== '') || (d?.value && String(d.value).trim() !== ''))
+                    .map((d: any) => `• ${d.label}: ${d.value}`)
+                    .join('\n')
+                : ''
+            const textParts = [pageUrl, '', `Hola, quiero realizar el pedido de ${product.name} por ${product.price}.`]
+            if (detailsText) textParts.push('', detailsText)
+            textParts.push('', 'Por favor me pueden confirmar disponibilidad.')
+            const text = textParts.join('\n')
             window.open(`https://api.whatsapp.com/send?phone=${cellPhone}&text=${encodeURIComponent(text)}`, '_blank')
         } finally {
             window.setTimeout(() => {
@@ -258,13 +263,15 @@ const ProductsSell = ({
         try {
             setSharingIds((prev) => [...prev, productId])
             const pageUrl = buildShareUrl(product)
-            const text = [
-                pageUrl,
-                '',
-                `Producto: ${product.name}`,
-                `Precio: ${product.price}`,
-                product.description || 'Mira este producto en Bazarcito.'
-            ].join('\n')
+            const detailsText = (product as any).details && Array.isArray((product as any).details) && (product as any).details.length
+                ? (product as any).details
+                    .filter((d: any) => (d?.label && String(d.label).trim() !== '') || (d?.value && String(d.value).trim() !== ''))
+                    .map((d: any) => `• ${d.label}: ${d.value}`)
+                    .join('\n')
+                : ''
+            const textParts = [pageUrl, '', `Producto: ${product.name}`, `Precio: ${product.price}`, product.description || 'Mira este producto en Bazarcito.']
+            if (detailsText) textParts.push('', detailsText)
+            const text = textParts.join('\n')
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
         } finally {
             window.setTimeout(() => {
@@ -395,6 +402,13 @@ const ProductsSell = ({
                                         )}
                                         <h3 className="font-semibold text-gray-900">{p.name}</h3>
                                         <p className="text-sm text-gray-600 mt-1">{p.description}</p>
+                                        {p.details && p.details.length > 0 && (
+                                            <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                                                {p.details.slice(0, 3).map((d, i) => (
+                                                    <li key={i}><span className="font-semibold">{d.label}:</span> {d.value}</li>
+                                                ))}
+                                            </ul>
+                                        )}
                                         <div className="mt-3">
                                             <div className="flex flex-col gap-3 min-w-0">
                                                 <div className="text-lg font-bold text-gray-900">{p.price}</div>
@@ -464,6 +478,7 @@ const ProductsSell = ({
                             if (payload.price !== undefined) form.append('price', String(payload.price))
                             if (payload.stock !== undefined) form.append('stock', String(payload.stock))
                             if (payload.pieces !== undefined) form.append('pieces', String(payload.pieces))
+                            if (payload.details !== undefined) form.append('details', JSON.stringify(payload.details))
                             if (payload.category) form.append('category', String(payload.category))
                             const file = (payload as any).imageFile as File
                             form.append('imageFile', file)
@@ -488,10 +503,11 @@ const ProductsSell = ({
                                     const newName = String(updated.title || updated.name || payload.name || it.name)
                                     const newDescription = String(updated.description ?? payload.description ?? it.description ?? '')
                                     const newPieces = updated.pieces ?? updated.stock ?? normalizedPieces ?? it.pieces
+                                    const newDetails = (updated as any).details ?? payload.details ?? it.details
                                     const newImage = String(updated.image ?? it.image ?? '')
                                     const newCategory = String((updated.category && (updated.category.name || updated.category)) || payload.category || it.category || '')
                                     const newPrice = (updated.price !== undefined && updated.price !== null) ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(updated.price)) : (payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price)
-                                    return { ...it, name: newName, description: newDescription, pieces: newPieces, image: newImage, category: newCategory, price: newPrice }
+                                    return { ...it, name: newName, description: newDescription, pieces: newPieces, details: newDetails, image: newImage, category: newCategory, price: newPrice }
                                 }))
                             }
                             setToast({ message: 'Producto actualizado correctamente.', type: 'success' })

@@ -11,6 +11,7 @@ export default function NewBazarcitoProductPage() {
     const [category, setCategory] = useState("")
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [description, setDescription] = useState("")
+    const [details, setDetails] = useState<{ label: string; value: string }[]>([{ label: "", value: "" }])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -21,10 +22,12 @@ export default function NewBazarcitoProductPage() {
 
         try {
             let res: Response
+            const filteredDetails = details.filter(d => d.label.trim() !== "" || d.value.trim() !== "")
             if (imageFile) {
                 const form = new FormData()
                 form.append('title', title)
                 form.append('description', description)
+                form.append('details', JSON.stringify(filteredDetails))
                 form.append('price', String(price))
                 form.append('stock', String(stock))
                 form.append('category', category.trim())
@@ -38,6 +41,7 @@ export default function NewBazarcitoProductPage() {
                 const payload = {
                     title,
                     description,
+                    details: filteredDetails,
                     price: Number(price),
                     stock: Number(stock),
                     image,
@@ -63,6 +67,16 @@ export default function NewBazarcitoProductPage() {
             setLoading(false)
         }
     }
+
+    const addDetail = () => setDetails((d) => [...d, { label: "", value: "" }])
+    const updateDetail = (idx: number, key: "label" | "value", val: string) => {
+        setDetails((prev) => {
+            const next = prev.slice()
+            next[idx] = { ...next[idx], [key]: val }
+            return next
+        })
+    }
+    const removeDetail = (idx: number) => setDetails((prev) => prev.filter((_, i) => i !== idx))
 
     return (
         <main className="max-w-4xl mx-auto p-6">
@@ -164,6 +178,38 @@ export default function NewBazarcitoProductPage() {
                             placeholder="ej. cocina"
                             required
                         />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Detalles</label>
+                        <div className="space-y-2">
+                            {details.map((d, idx) => (
+                                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                                    <input
+                                        className="col-span-5 p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100"
+                                        placeholder="Etiqueta"
+                                        value={d.label}
+                                        onChange={(e) => updateDetail(idx, "label", e.target.value)}
+                                    />
+                                    <input
+                                        className="col-span-6 p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100"
+                                        placeholder="Valor"
+                                        value={d.value}
+                                        onChange={(e) => updateDetail(idx, "value", e.target.value)}
+                                    />
+                                    <button type="button" onClick={() => removeDetail(idx)} className="col-span-1 text-red-500 hover:text-red-600">✕</button>
+                                </div>
+                            ))}
+
+                            <div>
+                                <button type="button" onClick={addDetail} className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                                    </svg>
+                                    Agregar detalle
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="sm:col-span-2 flex items-center justify-between mt-2">

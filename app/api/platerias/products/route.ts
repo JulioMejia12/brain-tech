@@ -66,6 +66,7 @@ export async function POST(req: Request) {
             category?: string
             pieces?: number | string | null
             stock?: number | string | null
+            details?: Array<{ label?: string; value?: string }> | null
         } | null
 
         const title = body?.name?.trim() || body?.title?.trim()
@@ -75,6 +76,12 @@ export async function POST(req: Request) {
         const image = body?.image?.trim() || '/joya.jpeg'
         const description = body?.description?.trim() || ''
         const categoryName = toPlateriasCategoryName(body?.category)
+        const details = Array.isArray(body?.details)
+            ? body.details.map((detail) => ({
+                label: String(detail?.label ?? ''),
+                value: String(detail?.value ?? ''),
+            }))
+            : []
 
         if (!title || Number.isNaN(price)) {
             return jsonError('Nombre y precio son requeridos', 400)
@@ -87,6 +94,7 @@ export async function POST(req: Request) {
                 stock: Number.isNaN(stock) ? 0 : stock,
                 image,
                 description,
+                details,
                 category: {
                     connectOrCreate: {
                         where: { name: categoryName },

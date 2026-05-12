@@ -91,6 +91,19 @@ const ProductPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                     <p className="text-xl font-semibold text-pink-600 mb-4">{product.price}</p>
                     <p className="text-gray-700 leading-7 mb-4">{product.description}</p>
                     <p className="text-sm text-gray-500 mb-4">Categoría: {product.category}</p>
+                    {product.details && product.details.length > 0 && (
+                        <div className="mb-4">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Detalles</h4>
+                            <ul className="text-sm text-gray-600 space-y-1">
+                                {product.details.map((d, i) => (
+                                    <li key={i} className="flex gap-2">
+                                        <span className="font-semibold">{d.label}:</span>
+                                        <span>{d.value}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                     <Link
                         href="/bazarcito"
                         className="inline-block mt-3 text-sm font-semibold text-pink-600 hover:text-pink-800"
