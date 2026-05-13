@@ -12,7 +12,6 @@ type EditPayload = {
     price?: number | null
     stock?: number | null
     category?: string
-    imageFile?: File | null
     details?: { label: string; value: string }[]
 }
 
@@ -40,11 +39,7 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
     const [category, setCategory] = useState<string>(() => product?.category ?? '')
     const [details, setDetails] = useState<{ label: string; value: string }[]>(() => product?.details ?? [{ label: '', value: '' }])
 
-    const [imageFile, setImageFile] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string>(() => product?.image ?? '')
-    const [fileError, setFileError] = useState<string | null>(null)
-
-    const MAX_SIZE = 5 * 1024 * 1024
 
     useEffect(() => {
         // reset internal state when opening a different product
@@ -55,9 +50,7 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
         setStock(product?.pieces ?? '')
         setCategory(product?.category ?? '')
         setDetails(product?.details ?? [{ label: '', value: '' }])
-        setImageFile(null)
         setPreviewUrl(product?.image ?? '')
-        setFileError(null)
     }, [product, isOpen])
 
     const addDetail = () => setDetails((d) => [...d, { label: '', value: '' }])
@@ -68,36 +61,7 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
     })
     const removeDetail = (idx: number) => setDetails((prev) => prev.filter((_, i) => i !== idx))
 
-    const onChooseFile = (file?: File | null) => {
-        if (!file) {
-            setImageFile(null)
-            setPreviewUrl(product?.image ?? '')
-            setFileError(null)
-            return
-        }
-
-        if (file.size > MAX_SIZE) {
-            setImageFile(null)
-            setPreviewUrl(product?.image ?? '')
-            setFileError('Imagen demasiado grande. Máx 5 MB.')
-            return
-        }
-
-        setFileError(null)
-        setImageFile(file)
-        try {
-            const url = URL.createObjectURL(file)
-            setPreviewUrl(url)
-        } catch {
-            setPreviewUrl(product?.image ?? '')
-        }
-    }
-
-    const removeImage = () => {
-        setImageFile(null)
-        setPreviewUrl(product?.image ?? '')
-        setFileError(null)
-    }
+    // image upload handled in promotions form only
 
     if (!isOpen || !product) return null
 
@@ -127,20 +91,12 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
 
                     <label className="block">
                         <span className="text-sm text-gray-600">Imagen</span>
-                        <div className="mt-1 flex items-center gap-3">
-                            <label className="inline-block bg-white text-gray-800 border rounded px-3 py-2 cursor-pointer text-sm">
-                                Choose File
-                                <input type="file" accept="image/*" className="hidden" onChange={(e) => onChooseFile(e.target.files?.[0] ?? null)} />
-                            </label>
+                        <div className="mt-1">
                             {previewUrl && (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={previewUrl} alt="preview" className="w-20 h-20 object-cover rounded-md border" />
                             )}
-                            {imageFile && (
-                                <button type="button" onClick={removeImage} className="text-sm text-red-600">Quitar imagen</button>
-                            )}
                         </div>
-                        {fileError && <p className="mt-2 text-sm text-red-600">{fileError}</p>}
                     </label>
 
                     <label className="block">
@@ -201,12 +157,12 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                             if (price !== '') payload.price = Number(price)
                             if (stock !== '') payload.stock = Number(stock)
                             if (category) payload.category = category
-                            if (imageFile) payload.imageFile = imageFile
+                            // image upload disabled here; promotions form handles promotion images
                             const filtered = details.filter(d => (d.label && d.label.trim() !== '') || (d.value && d.value.trim() !== ''))
                             if (filtered.length) payload.details = filtered
                             await onSave(payload)
                         }}
-                        disabled={isSaving || Boolean(fileError)}
+                        disabled={isSaving}
                         className="px-4 py-2 rounded bg-pink-600 text-white disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                     >
                         {isSaving ? (

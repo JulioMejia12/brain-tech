@@ -184,6 +184,7 @@ type PromotionItem = {
   name: string;
   description: string;
   specialPrice?: string;
+  image?: string;
 };
 
 const PROMOTIONS_STORAGE_KEY = "braintech-promotions";
@@ -611,6 +612,11 @@ export default function BusinessPanel() {
                   <ul className="mt-2 space-y-2">
                     {promotions.map((promo) => (
                       <li key={promo.id} className="rounded-lg border border-[#111827]/10 bg-[#F9FAFB] p-2 dark:border-[#FFFFFF]/10 dark:bg-[#1E293B]">
+                        {(promo as any).image ? (
+                          <div className="mb-2 w-full h-24 overflow-hidden rounded">
+                            <img src={(promo as any).image} alt={promo.name} className="w-full h-full object-cover" />
+                          </div>
+                        ) : null}
                         <p className="text-sm font-bold text-[#111827]/90 dark:text-[#FFFFFF]">{promo.name}</p>
                         <p className="text-xs text-[#111827]/70 dark:text-[#FFFFFF]/70">{promo.description}</p>
                         {promo.specialPrice && (

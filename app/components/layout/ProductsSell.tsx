@@ -57,7 +57,7 @@ type Props = {
     secondary: string
     textColor: string
     QuienesSomos?: string
-    promos?: string[]
+    promos?: Array<string | { id?: string | number; image?: string }>
     children?: React.ReactNode
     cellPhone?: string
     products?: Product[]

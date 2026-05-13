@@ -1,32 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import fs from 'fs/promises'
-import path from 'path'
 import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
-
-const DATA_FILE = path.resolve(process.cwd(), 'data', 'promotions.json')
-
-async function readPromotions() {
-    try {
-        const raw = await fs.readFile(DATA_FILE, 'utf-8')
-        return JSON.parse(raw || '[]')
-    } catch {
-        return []
-    }
-}
-
-async function writePromotions(items: any[]) {
-    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true })
-    await fs.writeFile(DATA_FILE, JSON.stringify(items, null, 2), 'utf-8')
-}
+import { prisma } from '@/app/lib/prisma'
 
 export async function PUT(req: NextRequest, ctx: any) {
     try {
         const params = await ctx?.params
         const id = Number(params?.id)
+
         const contentType = req.headers.get('content-type') || ''
         let body: any = {}
         let uploadedImageUrl: string | null = null
+        let uploadedImagePublicId: string | null = null
 
         if (contentType.includes('multipart/form-data')) {
             const form = await req.formData()
@@ -34,22 +19,28 @@ export async function PUT(req: NextRequest, ctx: any) {
             body.description = String(form.get('description') || '')
             body.specialPrice = String(form.get('specialPrice') || '')
 
+            const imageFiles = form.getAll('imageFile') || []
+            if (imageFiles.length > 1) {
+                return NextResponse.json({ error: 'Solo se permite una imagen' }, { status: 400 })
+            }
             const file = form.get('imageFile')
             if (file instanceof File && typeof file.arrayBuffer === 'function') {
                 const buffer = Buffer.from(await file.arrayBuffer())
                 if (process.env.CLOUDINARY_URL) {
                     try {
                         cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
-                        uploadedImageUrl = await new Promise<string>((resolve, reject) => {
+                        const uploadResult = await new Promise<any>((resolve, reject) => {
                             const uploadStream = cloudinary.v2.uploader.upload_stream({ folder: 'promotions' }, (error, result) => {
                                 if (error) return reject(error)
-                                if (!result?.secure_url) return reject(new Error('Missing secure_url'))
-                                resolve(result.secure_url)
+                                if (!result) return reject(new Error('Missing upload result'))
+                                resolve(result)
                             })
                             Readable.from(buffer).pipe(uploadStream)
                         })
-                    } catch (e) {
-                        console.error('Cloudinary upload failed', e)
+                        uploadedImageUrl = uploadResult.secure_url
+                        uploadedImagePublicId = uploadResult.public_id
+                    } catch (err) {
+                        console.error('Cloudinary upload failed', err)
                     }
                 }
             }
@@ -57,24 +48,44 @@ export async function PUT(req: NextRequest, ctx: any) {
             body = await req.json().catch(() => ({}))
         }
 
-        const items = await readPromotions()
-        const idParam = params?.id
-        const idNum = Number(idParam)
-        const idx = items.findIndex((p: any) => String(p.id) === String(idParam) || (Number.isFinite(idNum) && Number(p.id) === idNum))
-        if (idx === -1) {
-            console.warn('Promotion id not found for PUT:', { idParam, itemsIds: items.map((i: any) => i.id) })
-            return NextResponse.json({ error: 'Not found' }, { status: 404 })
+        const prismaAny = prisma as any
+        const existing = await prismaAny.promotion.findUnique({ where: { id } })
+        if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+        const updateData: any = {}
+        if (body.name !== undefined) {
+            const trimmed = String(body.name || '').trim()
+            if (!trimmed) return NextResponse.json({ error: 'El campo name no puede estar vacío' }, { status: 400 })
+            updateData.name = trimmed
+        }
+        if (body.description !== undefined) updateData.description = String(body.description || '').trim()
+        if (body.specialPrice !== undefined) {
+            const sp = String(body.specialPrice || '').trim()
+            if (!sp) return NextResponse.json({ error: 'El campo specialPrice no puede estar vacío' }, { status: 400 })
+            updateData.specialPrice = sp
+        }
+        if (uploadedImageUrl) {
+            // If there's an existing image, delete it from Cloudinary
+            try {
+                const prismaAny = prisma as any
+                if (existing.imagePublicId && process.env.CLOUDINARY_URL) {
+                    cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
+                    cloudinary.v2.uploader.destroy(existing.imagePublicId, (err: unknown, res: unknown) => {
+                        if (err) console.warn('Failed to remove previous Cloudinary image:', err)
+                    })
+                }
+            } catch (e) {
+                console.warn('Error removing previous Cloudinary image:', e)
+            }
+            updateData.image = uploadedImageUrl
+            updateData.imagePublicId = uploadedImagePublicId || null
+        } else if (body.image !== undefined) updateData.image = String(body.image || '').trim()
+
+        if (Object.keys(updateData).length === 0) {
+            return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
         }
 
-        const current = items[idx]
-        const updated = { ...current }
-        if (body.name) updated.name = body.name
-        if (body.description) updated.description = body.description
-        if (body.specialPrice) updated.specialPrice = body.specialPrice
-        if (uploadedImageUrl) updated.image = uploadedImageUrl
-
-        items[idx] = updated
-        await writePromotions(items)
+        const updated = await prismaAny.promotion.update({ where: { id }, data: updateData })
         return NextResponse.json({ data: updated })
     } catch (e) {
         console.error('Update promotion error', e)
@@ -82,36 +93,44 @@ export async function PUT(req: NextRequest, ctx: any) {
     }
 }
 
+export async function GET(req: NextRequest, ctx: any) {
+    try {
+        const params = await ctx?.params
+        const id = Number(params?.id)
+        const prismaAny = prisma as any
+        const item = await prismaAny.promotion.findUnique({ where: { id } })
+        if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+        return NextResponse.json({ data: item })
+    } catch (e) {
+        console.error('Get promotion by id error', e)
+        return NextResponse.json({ error: 'Failed to fetch promotion' }, { status: 500 })
+    }
+}
+
 export async function DELETE(req: NextRequest, ctx: any) {
     try {
         const params = await ctx?.params
-        const idParam = params?.id
-        const idNum = Number(idParam)
-        const items = await readPromotions()
-        const filtered = items.filter((p: any) => !(String(p.id) === String(idParam) || (Number.isFinite(idNum) && Number(p.id) === idNum)))
-        if (filtered.length === items.length) {
-            console.warn('Promotion id not found for DELETE, attempting loose match:', { idParam, itemsIds: items.map((i: any) => i.id) })
-            // Try a loose match (endsWith or digit-only equality) as fallback
-            const digitsOnly = (s: any) => String(s).replace(/\D/g, '')
-            const looseIdx = items.findIndex((p: any) => {
-                try {
-                    if (String(p.id).endsWith(String(idParam))) return true
-                    if (digitsOnly(p.id) === digitsOnly(idParam)) return true
-                } catch (e) {
-                    return false
-                }
-                return false
-            })
-            if (looseIdx !== -1) {
-                console.warn('Loose match found, deleting id at index', looseIdx, 'id=', items[looseIdx].id)
-                items.splice(looseIdx, 1)
-                await writePromotions(items)
-                return new NextResponse(null, { status: 204 })
-            }
+        const id = Number(params?.id)
+        const prismaAny = prisma as any
+        const existing = await prismaAny.promotion.findUnique({ where: { id } })
+        if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-            return NextResponse.json({ error: 'Not found' }, { status: 404 })
+        // remove image from Cloudinary if present
+        try {
+            if (existing.imagePublicId && process.env.CLOUDINARY_URL) {
+                cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
+                await new Promise<void>((resolve) => {
+                    cloudinary.v2.uploader.destroy(existing.imagePublicId, (err: unknown) => {
+                        if (err) console.warn('Failed to remove Cloudinary image on delete:', err)
+                        resolve()
+                    })
+                })
+            }
+        } catch (e) {
+            console.warn('Error deleting Cloudinary image:', e)
         }
-        await writePromotions(filtered)
+
+        await prismaAny.promotion.delete({ where: { id } })
         return new NextResponse(null, { status: 204 })
     } catch (e) {
         console.error('Delete promotion error', e)

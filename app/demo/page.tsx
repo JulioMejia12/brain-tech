@@ -19,6 +19,7 @@ type PromotionItem = {
   name: string;
   description: string;
   specialPrice?: string;
+  image?: string;
 };
 
 const PROMOTIONS_STORAGE_KEY = "braintech-promotions";
@@ -265,6 +266,11 @@ export default function Page() {
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   {promotions.map((promotion) => (
                     <div key={promotion.id} className="rounded-2xl border border-[#16A34A]/20 bg-[#16A34A]/8 px-3 py-2 text-sm font-semibold text-[#166534] dark:border-[#F59E0B]/30 dark:bg-[#F59E0B]/15 dark:text-[#FCD34D]">
+                      {promotion.image ? (
+                        <div className="mb-2 w-full h-28 overflow-hidden rounded-lg">
+                          <img src={promotion.image} alt={promotion.name} className="w-full h-full object-cover" />
+                        </div>
+                      ) : null}
                       <p className="font-bold">{promotion.name}</p>
                       <p className="mt-1 text-xs font-medium text-[#111827]/80 dark:text-[#FFFFFF]/80">{promotion.description}</p>
                       {promotion.specialPrice && (

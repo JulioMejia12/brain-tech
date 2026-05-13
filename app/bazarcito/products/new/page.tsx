@@ -9,7 +9,6 @@ export default function NewBazarcitoProductPage() {
     const [stock, setStock] = useState<number | "">("")
     const [image, setImage] = useState("")
     const [category, setCategory] = useState("")
-    const [imageFile, setImageFile] = useState<File | null>(null)
     const [description, setDescription] = useState("")
     const [details, setDetails] = useState<{ label: string; value: string }[]>([{ label: "", value: "" }])
     const [loading, setLoading] = useState(false)
@@ -23,37 +22,21 @@ export default function NewBazarcitoProductPage() {
         try {
             let res: Response
             const filteredDetails = details.filter(d => d.label.trim() !== "" || d.value.trim() !== "")
-            if (imageFile) {
-                const form = new FormData()
-                form.append('title', title)
-                form.append('description', description)
-                form.append('details', JSON.stringify(filteredDetails))
-                form.append('price', String(price))
-                form.append('stock', String(stock))
-                form.append('category', category.trim())
-                form.append('imageFile', imageFile)
-
-                res = await fetch('/api/bazarcito/products', {
-                    method: 'POST',
-                    body: form,
-                })
-            } else {
-                const payload = {
-                    title,
-                    description,
-                    details: filteredDetails,
-                    price: Number(price),
-                    stock: Number(stock),
-                    image,
-                    category: category.trim(),
-                }
-
-                res = await fetch('/api/bazarcito/products', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                })
+            const payload = {
+                title,
+                description,
+                details: filteredDetails,
+                price: Number(price),
+                stock: Number(stock),
+                image,
+                category: category.trim(),
             }
+
+            res = await fetch('/api/bazarcito/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
 
             if (!res.ok) {
                 const body = await res.json().catch(() => ({}))
@@ -118,43 +101,13 @@ export default function NewBazarcitoProductPage() {
                     </div>
 
                     <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Imagen</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Imagen (URL)</label>
                         <input
-                            type="file"
-                            accept="image/*"
-                            className="w-full"
-                            onChange={(e) => {
-                                const f = e.target.files && e.target.files[0]
-                                if (!f) {
-                                    setImageFile(null)
-                                    setImage("")
-                                    return
-                                }
-                                // validate size <= 5MB
-                                const max = 5 * 1024 * 1024
-                                if (f.size > max) {
-                                    setError('Imagen demasiado grande. Máx 5 MB.')
-                                    setImageFile(null)
-                                    setImage("")
-                                    return
-                                }
-
-                                setError(null)
-                                setImageFile(f)
-                                setImage(URL.createObjectURL(f))
-                            }}
+                            className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100"
+                            value={image}
+                            onChange={(e) => setImage(e.target.value)}
+                            placeholder="URL de la imagen (opcional)"
                         />
-
-                        {imageFile && (
-                            <div className="mt-3 flex items-center gap-3">
-                                <img src={image} alt="preview" className="w-32 h-32 object-cover rounded-md" />
-                                <div>
-                                    <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{imageFile.name}</div>
-                                    <div className="text-xs text-gray-500">{Math.round(imageFile.size / 1024)} KB</div>
-                                    <button type="button" className="mt-2 text-sm text-red-500" onClick={() => { setImageFile(null); setImage("") }}>Quitar imagen</button>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     <div className="sm:col-span-2">

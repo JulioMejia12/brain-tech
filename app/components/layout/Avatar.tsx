@@ -49,6 +49,7 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
         // show admin-only actions
         const isAdmin = String(auth.user?.role?.name || '').toLowerCase() === 'admin'
         if (isAdmin) defaultItems.push({ label: 'Agregar productos', href: '/bazarcito/products/new' })
+        if (isAdmin) defaultItems.push({ label: 'Crear promociones', href: '/bazarcito/promotions/new' })
         defaultItems.push({ label: 'Cerrar sesión', href: '/logout' })
     } else {
         defaultItems = [{ label: 'Iniciar sesión', href: `/auth/login?next=${encodeURIComponent(currentPath)}` }]

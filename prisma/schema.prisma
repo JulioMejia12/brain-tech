@@ -45,6 +45,16 @@ model Product {
   createdAt   DateTime @default(now())
 }
 
+model Promotion {
+  id          Int @id @default(autoincrement())
+  name        String
+  description String
+  specialPrice String
+  image       String
+  imagePublicId String?
+  createdAt   DateTime @default(now())
+}
+
 model Category {
   id        Int @id @default(autoincrement())
   name      String @unique
