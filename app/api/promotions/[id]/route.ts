@@ -22,8 +22,8 @@ async function writePromotions(items: any[]) {
 
 export async function PUT(req: NextRequest, ctx: any) {
     try {
-        const paramsResolved = await ctx?.params
-        const id = Number(paramsResolved?.id)
+        const params = await ctx?.params
+        const id = Number(params?.id)
         const contentType = req.headers.get('content-type') || ''
         let body: any = {}
         let uploadedImageUrl: string | null = null
@@ -58,7 +58,7 @@ export async function PUT(req: NextRequest, ctx: any) {
         }
 
         const items = await readPromotions()
-        const idParam = paramsResolved?.id
+        const idParam = params?.id
         const idNum = Number(idParam)
         const idx = items.findIndex((p: any) => String(p.id) === String(idParam) || (Number.isFinite(idNum) && Number(p.id) === idNum))
         if (idx === -1) {
@@ -84,8 +84,8 @@ export async function PUT(req: NextRequest, ctx: any) {
 
 export async function DELETE(req: NextRequest, ctx: any) {
     try {
-        const paramsResolved = await ctx?.params
-        const idParam = paramsResolved?.id
+        const params = await ctx?.params
+        const idParam = params?.id
         const idNum = Number(idParam)
         const items = await readPromotions()
         const filtered = items.filter((p: any) => !(String(p.id) === String(idParam) || (Number.isFinite(idNum) && Number(p.id) === idNum)))

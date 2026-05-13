@@ -2,12 +2,45 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 import { isPlateriasCategoryName } from '@/app/api/_utils/catalog'
 import { errorMessage, jsonError, logError } from '@/app/api/_utils/http'
-// use a loose context type for Next.js route handlers to avoid mismatches
+import type { RouteContext } from '../../../_utils/route'
 import { getNumericRouteParam } from '../../../_utils/route'
 import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
 
-export async function GET(req: NextRequest, ctx: any) {
+type ProductDetailInput = {
+    label?: string
+    value?: string
+}
+
+type ProductRequestBody = {
+    name?: string
+    title?: string
+    price?: number | string
+    pieces?: number | string
+    stock?: number | string
+    description?: string
+    category?: string | number
+    categoryId?: number
+    details?: ProductDetailInput[]
+}
+
+type ProductUpdateData = {
+    title?: string
+    price?: number
+    stock?: number
+    description?: string
+    image?: string
+    category?: {
+        connectOrCreate?: {
+            where: { name: string }
+            create: { name: string }
+        }
+        connect?: { id: number }
+    }
+    details?: { label: string; value: string }[]
+}
+
+export async function GET(req: NextRequest, ctx: RouteContext) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'product id')
         if ('response' in result) {
@@ -26,7 +59,7 @@ export async function GET(req: NextRequest, ctx: any) {
     }
 }
 
-export async function DELETE(req: NextRequest, ctx: any) {
+export async function DELETE(req: NextRequest, ctx: RouteContext) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'product id')
         if ('response' in result) {
@@ -46,7 +79,7 @@ export async function DELETE(req: NextRequest, ctx: any) {
     }
 }
 
-export async function PUT(req: NextRequest, ctx: any) {
+export async function PUT(req: NextRequest, ctx: RouteContext) {
     try {
         const result = await getNumericRouteParam(ctx, 'id', req, 'product id')
         if ('response' in result) {
@@ -61,17 +94,7 @@ export async function PUT(req: NextRequest, ctx: any) {
         // Parse body depending on content type. Don't call req.json() before formData.
         const contentType = req.headers.get('content-type') || ''
         let uploadedImageUrl: string | null = null
-        const body = {} as {
-            name?: string
-            title?: string
-            price?: number | string
-            pieces?: number | string
-            stock?: number | string
-            description?: string
-            category?: string | number
-            categoryId?: number
-            details?: any
-        }
+        const body: ProductRequestBody = {}
 
         if (contentType.includes('multipart/form-data')) {
             const formData = await req.formData()
@@ -84,16 +107,16 @@ export async function PUT(req: NextRequest, ctx: any) {
             const fdDetails = formData.get('details')
 
             if (fdTitle) body.title = String(fdTitle)
-            if (fdPrice) body.price = String(fdPrice as any)
-            if (fdStock) body.stock = String(fdStock as any)
-            if (fdPieces) body.pieces = String(fdPieces as any)
+            if (fdPrice) body.price = String(fdPrice)
+            if (fdStock) body.stock = String(fdStock)
+            if (fdPieces) body.pieces = String(fdPieces)
             if (fdDescription) body.description = String(fdDescription)
             if (typeof fdCategory === 'string') body.category = fdCategory
             if (fdDetails) {
                 try {
-                    const parsed = typeof fdDetails === 'string' ? JSON.parse(fdDetails) : JSON.parse(String(fdDetails))
-                        ; (body as any).details = parsed
-                } catch (e) {
+                    const parsed: unknown = typeof fdDetails === 'string' ? JSON.parse(fdDetails) : JSON.parse(String(fdDetails))
+                    body.details = Array.isArray(parsed) ? parsed as ProductDetailInput[] : undefined
+                } catch {
                     // ignore parse errors
                 }
             }
@@ -117,18 +140,18 @@ export async function PUT(req: NextRequest, ctx: any) {
                         })
                         Readable.from(buffer).pipe(uploadStream)
                     })
-                } catch (e: any) {
-                    console.error('Cloudinary upload error:', e)
-                    return jsonError('Image upload failed', 500, String(e?.message || e))
+                } catch (error: unknown) {
+                    console.error('Cloudinary upload error:', error)
+                    return jsonError('Image upload failed', 500, errorMessage(error))
                 }
             }
         } else {
             // non-multipart: parse JSON body
-            const parsed = (await req.json().catch(() => ({}))) as any
+            const parsed = (await req.json().catch(() => ({}))) as ProductRequestBody
             Object.assign(body, parsed)
         }
 
-        const data: { title?: string; price?: number; stock?: number; description?: string; image?: string; category?: any; details?: { label: string; value: string }[] } = {}
+        const data: ProductUpdateData = {}
         if (body.name || body.title) data.title = String(body.name || body.title)
         if (body.price !== undefined) {
             const parsed = Number(body.price)
@@ -144,11 +167,11 @@ export async function PUT(req: NextRequest, ctx: any) {
         if (uploadedImageUrl) data.image = uploadedImageUrl
 
         if (body.description !== undefined) data.description = String(body.description)
-        if ((body as any).details !== undefined) {
+        if (body.details !== undefined) {
             try {
-                const detailsRaw = (body as any).details
-                data['details'] = Array.isArray(detailsRaw) ? detailsRaw.map((d: any) => ({ label: String(d?.label ?? ''), value: String(d?.value ?? '') })) : undefined
-            } catch (e) {
+                const detailsRaw = body.details
+                data.details = Array.isArray(detailsRaw) ? detailsRaw.map((d) => ({ label: String(d?.label ?? ''), value: String(d?.value ?? '') })) : undefined
+            } catch {
                 // ignore invalid details
             }
         }
@@ -156,8 +179,8 @@ export async function PUT(req: NextRequest, ctx: any) {
         // category handling: support category name or categoryId
         const url = new URL(req.url)
         const fdCategoryQuery = url.searchParams.get('category') || undefined
-        const categoryName = fdCategoryQuery ?? (body as any).category ?? undefined
-        const categoryId = (body as any).categoryId ?? undefined
+        const categoryName = fdCategoryQuery ?? body.category ?? undefined
+        const categoryId = body.categoryId ?? undefined
         if (typeof categoryName === 'string' && categoryName.trim() !== '') {
             data.category = {
                 connectOrCreate: {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/app/lib/prisma'
 import { fromPlateriasCategoryName, plateriasWhereClause, toPlateriasCategoryName } from '@/app/api/_utils/catalog'
 import { errorMessage, jsonError, logError } from '@/app/api/_utils/http'
@@ -19,6 +20,11 @@ function serializePlateriasProduct(product: {
             name: fromPlateriasCategoryName(product.category.name),
         },
     }
+}
+
+type PlateriaDetailInput = {
+    label?: string
+    value?: string
 }
 
 export async function GET(req: Request) {
@@ -66,7 +72,7 @@ export async function POST(req: Request) {
             category?: string
             pieces?: number | string | null
             stock?: number | string | null
-            details?: Array<{ label?: string; value?: string }> | null
+            details?: PlateriaDetailInput[] | null
         } | null
 
         const title = body?.name?.trim() || body?.title?.trim()
@@ -76,7 +82,7 @@ export async function POST(req: Request) {
         const image = body?.image?.trim() || '/joya.jpeg'
         const description = body?.description?.trim() || ''
         const categoryName = toPlateriasCategoryName(body?.category)
-        const details = Array.isArray(body?.details)
+        const details: Prisma.InputJsonValue = Array.isArray(body?.details)
             ? body.details.map((detail) => ({
                 label: String(detail?.label ?? ''),
                 value: String(detail?.value ?? ''),
@@ -87,25 +93,35 @@ export async function POST(req: Request) {
             return jsonError('Nombre y precio son requeridos', 400)
         }
 
-        const createdProduct = await prisma.product.create({
-            data: {
-                title,
-                price,
-                stock: Number.isNaN(stock) ? 0 : stock,
-                image,
-                description,
-                details,
-                category: {
-                    connectOrCreate: {
-                        where: { name: categoryName },
-                        create: { name: categoryName },
-                    },
+        const createData = {
+            title,
+            price,
+            stock: Number.isNaN(stock) ? 0 : stock,
+            image,
+            description,
+            details,
+            category: {
+                connectOrCreate: {
+                    where: { name: categoryName },
+                    create: { name: categoryName },
                 },
             },
+        } as unknown as Prisma.ProductCreateInput
+
+        const createdProduct = await prisma.product.create({
+            data: createData,
+        })
+
+        const createdProductWithCategory = await prisma.product.findUnique({
+            where: { id: createdProduct.id },
             include: { category: true },
         })
 
-        return NextResponse.json({ data: serializePlateriasProduct(createdProduct) }, { status: 201 })
+        if (!createdProductWithCategory) {
+            return jsonError('Failed to load created platerias product', 500)
+        }
+
+        return NextResponse.json({ data: serializePlateriasProduct(createdProductWithCategory) }, { status: 201 })
     } catch (error: unknown) {
         logError('Create platerias product error:', error)
         return jsonError('Failed to create platerias product', 500, errorMessage(error))

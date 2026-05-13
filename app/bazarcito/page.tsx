@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { FiCheckCircle } from 'react-icons/fi'
 import ProductsSell from '../components/layout/ProductsSell'
 import ProductsLoading from '../components/ui/ProductsLoading'
 import { bazarcitoProductsSellProps } from '../lib/productsSellConfig'
@@ -8,10 +9,29 @@ export default function BazarcitoPage() {
         <Suspense fallback={<ProductsLoading />}>
             <ProductsSell {...bazarcitoProductsSellProps}>
                 <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                    <h2 className="text-2xl font-bold mb-4" style={{ color: bazarcitoProductsSellProps.secondary }}>¿Quieres vender nuestros productos?</h2>
-                    <p className="text-gray-700 text-base mb-4">
-                        Si estás interesado en convertirte en distribuidor de  Betterware.
+                    <h2 className="text-2xl font-bold mb-4" style={{ color: bazarcitoProductsSellProps.secondary }}>Conviértete en Asociado Betterware</h2>
+                    <p className="text-gray-700 text-base mb-2 font-semibold">
+                        Empieza a vender productos Betterware y genera ingresos extra con horarios flexibles y apoyo de nuestro equipo.
+
                     </p>
+                    <ul className="text-gray-700 text-base mb-4 space-y-2">
+                        <li className="flex items-start gap-2">
+                            <FiCheckCircle className="mt-0.5 shrink-0 text-green-600" />
+                            <span>Gana por tus ventas</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <FiCheckCircle className="mt-0.5 shrink-0 text-green-600" />
+                            <span>Productos fáciles de vender</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <FiCheckCircle className="mt-0.5 shrink-0 text-green-600" />
+                            <span>Atención personalizada</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <FiCheckCircle className="mt-0.5 shrink-0 text-green-600" />
+                            <span>Crece con nosotros</span>
+                        </li>
+                    </ul>
                     <a
                         href={`https://wa.me/${bazarcitoProductsSellProps.cellPhone}?text=Hola,%20estoy%20interesado%20en%20vender%20sus%20productos`}
                         target="_blank"
