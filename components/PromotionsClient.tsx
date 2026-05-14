@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import AdsCarousel from './AdsCarousel'
+import ButtonSpinner from '@/app/components/ui/ButtonSpinner'
 
 type PromoItem = string | { id?: string | number; image?: string }
 
@@ -30,7 +31,15 @@ export default function PromotionsClient({ initial }: { initial?: PromoItem[] })
         return () => { mounted = false }
     }, [])
 
-    if ((!items || items.length === 0) && loading) return null
+    if (loading && (!items || items.length === 0)) {
+        return (
+            <div className="flex items-center justify-center h-48">
+                <ButtonSpinner className="h-8 w-8 text-pink-600" />
+            </div>
+        )
+    }
+
+    if (!items || items.length === 0) return null
 
     return (
         <AdsCarousel images={items} />

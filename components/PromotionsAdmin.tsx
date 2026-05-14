@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { FiEdit2, FiTrash2, FiSave, FiX } from 'react-icons/fi'
 import ConfirmModal from '@/app/components/ui/ConfirmModal'
 import ToastMessage, { type ToastType } from '@/app/components/ui/ToastMessage'
+import ButtonSpinner from '@/app/components/ui/ButtonSpinner'
 
 type Promotion = {
     id: number | string
@@ -134,7 +135,9 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
         <div className={className}>
             <h3 className="text-lg font-medium mb-3">Administrar Promociones</h3>
             {loading ? (
-                <div>Cargando promociones...</div>
+                <div className="flex items-center justify-center py-8">
+                    <ButtonSpinner className="h-8 w-8 text-pink-600" />
+                </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {items.map((it) => (
