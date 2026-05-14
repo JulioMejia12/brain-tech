@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import Image from 'next/image'
 import { FiEdit2, FiTrash2, FiSave, FiX } from 'react-icons/fi'
+import ConfirmModal from '@/app/components/ui/ConfirmModal'
+import ToastMessage, { type ToastType } from '@/app/components/ui/ToastMessage'
 
 type Promotion = {
     id: number | string
@@ -80,7 +82,7 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
     }
 
     async function remove(id: number | string) {
-        if (!confirm('¿Eliminar promoción?')) return
+        // kept for compatibility but not used; deletion handled via ConfirmModal
         try {
             const res = await fetch(`/api/promotions/${id}`, { method: 'DELETE' })
             if (res.ok || res.status === 204) {
@@ -90,6 +92,39 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
             }
         } catch (e) {
             console.error('Delete error', e)
+        }
+    }
+
+    const [confirmOpen, setConfirmOpen] = useState(false)
+    const [confirmId, setConfirmId] = useState<string | number | null>(null)
+    const [deleting, setDeleting] = useState(false)
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
+
+    function openConfirm(id: number | string) {
+        setConfirmId(id)
+        setConfirmOpen(true)
+    }
+
+    async function performDelete() {
+        if (!confirmId) return
+        setDeleting(true)
+        try {
+            const res = await fetch(`/api/promotions/${confirmId}`, { method: 'DELETE' })
+            if (res.ok || res.status === 204) {
+                setItems((prev) => prev.filter((p) => String(p.id) !== String(confirmId)))
+                setToast({ message: 'Promoción eliminada', type: 'success' })
+            } else {
+                const txt = await res.text().catch(() => '')
+                setToast({ message: `Error al eliminar: ${res.status} ${txt}`, type: 'error' })
+                console.error('Delete failed', txt)
+            }
+        } catch (e) {
+            console.error('Delete error', e)
+            setToast({ message: 'Error al eliminar', type: 'error' })
+        } finally {
+            setDeleting(false)
+            setConfirmOpen(false)
+            setConfirmId(null)
         }
     }
 
@@ -120,7 +155,7 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
                                 <button onClick={() => openEdit(it)} className="p-2 rounded bg-yellow-200 hover:bg-yellow-300">
                                     <FiEdit2 />
                                 </button>
-                                <button onClick={() => remove(it.id)} className="p-2 rounded bg-red-100 hover:bg-red-200">
+                                <button onClick={() => openConfirm(it.id)} className="p-2 rounded bg-red-100 hover:bg-red-200">
                                     <FiTrash2 />
                                 </button>
                             </div>
@@ -128,6 +163,16 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
                     ))}
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmOpen}
+                title="Eliminar promoción"
+                description="¿Eliminar esta promoción? Esta acción no se puede deshacer."
+                confirmText="Eliminar"
+                isLoading={deleting}
+                onConfirm={performDelete}
+                onCancel={() => { setConfirmOpen(false); setConfirmId(null) }}
+            />
 
             {editing && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -162,6 +207,9 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
                         </div>
                     </div>
                 </div>
+            )}
+            {toast && (
+                <ToastMessage message={toast.message} type={toast.type} onClose={() => setToast(null)} />
             )}
         </div>
     )
