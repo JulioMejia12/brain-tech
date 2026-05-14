@@ -14,6 +14,7 @@ function Spinner() {
     )
 }
 import AdsCarousel from '../../../components/AdsCarousel'
+import PromotionsClient from '../../../components/PromotionsClient'
 import Image from 'next/image'
 import { FiTrash2 } from 'react-icons/fi'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
@@ -588,7 +589,7 @@ const ProductsSell = ({
             </section>
             <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Promociones</h2>
-                <AdsCarousel images={promos} />
+                <PromotionsClient initial={promos} />
             </section>
             {children}
             <MobileMenu primary={primary} whatsappNumber={cellPhone} />
