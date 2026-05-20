@@ -106,8 +106,7 @@ export async function POST(req: Request) {
             if (code === 'P2022' || msg.includes('orientation') || msg.includes('The column') || msg.includes("Unknown argument `orientation`")) {
                 // Prisma schema not migrated yet or DB column missing: retry without orientation
                 console.warn('Prisma create failed referencing orientation; retrying without orientation', { code, msg })
-                const fallbackData = { ...createData }
-                delete fallbackData.orientation
+                const { orientation: _orientation, ...fallbackData } = createData as any
                 item = await prismaAny.promotion.create({ data: fallbackData })
             } else {
                 throw err

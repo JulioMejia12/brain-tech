@@ -97,8 +97,7 @@ export async function PUT(req: NextRequest, ctx: any) {
             const msg = String(err?.message || '')
             if (msg.includes("Unknown argument `orientation`") || msg.includes('Unknown argument `orientation`')) {
                 console.warn('Prisma update failed with orientation field; retrying without orientation')
-                const fallback = { ...updateData }
-                delete fallback.orientation
+                const { orientation: _orientation, ...fallback } = updateData as any
                 updated = await prismaAny.promotion.update({ where: { id }, data: fallback })
             } else {
                 throw err
