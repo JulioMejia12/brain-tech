@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 export default function PromotionForm() {
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [preview, setPreview] = useState<string | null>(null)
+    const [orientation, setOrientation] = useState<'HORIZONTAL' | 'VERTICAL'>('HORIZONTAL')
     const [fileError, setFileError] = useState<string | null>(null)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<string | null>(null)
@@ -53,6 +54,7 @@ export default function PromotionForm() {
             const form = new FormData()
             // only send the image file; server will accept missing textual fields
             if (imageFile) form.append('imageFile', imageFile)
+            form.append('orientation', orientation)
 
             const res = await fetch('/api/promotions', { method: 'POST', body: form })
             const json = await res.json().catch(() => ({})) as unknown
@@ -69,6 +71,12 @@ export default function PromotionForm() {
             if (data && (data.id !== undefined)) {
                 setCreatedId(Number((data as Record<string, unknown>)['id']))
                 if ((data as Record<string, unknown>)['image']) setPreview(String((data as Record<string, unknown>)['image']))
+                // if API returned orientation, set it locally
+                if ((data as Record<string, unknown>)['orientation']) {
+                    const o = String((data as Record<string, unknown>)['orientation'] || '').toUpperCase()
+                    if (o === 'VERTICAL') setOrientation('VERTICAL')
+                    else setOrientation('HORIZONTAL')
+                }
                 // redirect to bazarcito main page after successful creation
                 try {
                     router.push('/bazarcito')
@@ -150,6 +158,20 @@ export default function PromotionForm() {
                 </div>
                 {fileError && <p className="mt-2 text-sm text-red-600">{fileError}</p>}
             </label>
+
+            <div className="mt-3">
+                <span className="text-sm font-medium text-gray-900">Orientación</span>
+                <div className="mt-2 flex items-center gap-4">
+                    <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="orientation" value="HORIZONTAL" checked={orientation === 'HORIZONTAL'} onChange={() => setOrientation('HORIZONTAL')} />
+                        <span className="text-sm">Horizontal</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="orientation" value="VERTICAL" checked={orientation === 'VERTICAL'} onChange={() => setOrientation('VERTICAL')} />
+                        <span className="text-sm">Vertical</span>
+                    </label>
+                </div>
+            </div>
 
             <div className="flex items-center gap-3 mt-4">
                 <button type="submit" disabled={saving || Boolean(fileError)} className="rounded bg-pink-600 text-white px-4 py-2 disabled:opacity-60">{saving ? 'Guardando...' : 'Crear promoción'}</button>

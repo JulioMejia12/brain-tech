@@ -52,7 +52,13 @@ model Promotion {
   specialPrice String
   image       String
   imagePublicId String?
+  orientation PromotionOrientation @default(HORIZONTAL)
   createdAt   DateTime @default(now())
+}
+
+enum PromotionOrientation {
+  HORIZONTAL
+  VERTICAL
 }
 
 model Category {

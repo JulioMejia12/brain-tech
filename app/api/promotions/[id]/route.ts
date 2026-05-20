@@ -18,6 +18,7 @@ export async function PUT(req: NextRequest, ctx: any) {
             body.name = String(form.get('name') || '')
             body.description = String(form.get('description') || '')
             body.specialPrice = String(form.get('specialPrice') || '')
+            body.orientation = String(form.get('orientation') || '').trim()
 
             const imageFiles = form.getAll('imageFile') || []
             if (imageFiles.length > 1) {
@@ -80,12 +81,30 @@ export async function PUT(req: NextRequest, ctx: any) {
             updateData.image = uploadedImageUrl
             updateData.imagePublicId = uploadedImagePublicId || null
         } else if (body.image !== undefined) updateData.image = String(body.image || '').trim()
+        if (body.orientation !== undefined) {
+            const val = String(body.orientation || '').trim()
+            if (val) updateData.orientation = val.toUpperCase()
+        }
 
         if (Object.keys(updateData).length === 0) {
             return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
         }
 
-        const updated = await prismaAny.promotion.update({ where: { id }, data: updateData })
+        let updated: any
+        try {
+            updated = await prismaAny.promotion.update({ where: { id }, data: updateData })
+        } catch (err: any) {
+            const msg = String(err?.message || '')
+            if (msg.includes("Unknown argument `orientation`") || msg.includes('Unknown argument `orientation`')) {
+                console.warn('Prisma update failed with orientation field; retrying without orientation')
+                const fallback = { ...updateData }
+                delete fallback.orientation
+                updated = await prismaAny.promotion.update({ where: { id }, data: fallback })
+            } else {
+                throw err
+            }
+        }
+
         return NextResponse.json({ data: updated })
     } catch (e) {
         console.error('Update promotion error', e)

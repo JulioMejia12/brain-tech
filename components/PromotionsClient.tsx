@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import AdsCarousel from './AdsCarousel'
 import ButtonSpinner from '@/app/components/ui/ButtonSpinner'
 
-type PromoItem = string | { id?: string | number; image?: string }
+type PromoItem = string | { id?: string | number; image?: string; orientation?: string }
 
 export default function PromotionsClient({ initial }: { initial?: PromoItem[] }) {
     const [items, setItems] = useState<PromoItem[]>(initial || [])
@@ -21,9 +21,10 @@ export default function PromotionsClient({ initial }: { initial?: PromoItem[] })
                     .map((p) => {
                         const id = (p as any).id as string | number | undefined
                         const image = (p as any).image as string | undefined
-                        return image ? { id, image } : null
+                        const orientation = ((p as any).orientation as string | undefined) || undefined
+                        return image ? { id, image, orientation } : null
                     })
-                    .filter(Boolean) as { id?: string | number; image?: string }[]
+                    .filter(Boolean) as { id?: string | number; image?: string; orientation?: string }[]
                 if (mapped.length) setItems(mapped)
             })
             .catch(() => { })

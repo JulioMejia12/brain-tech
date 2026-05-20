@@ -7,8 +7,30 @@ import { prisma } from '@/app/lib/prisma'
 export async function GET() {
     try {
         const prismaAny = prisma as any
-        const items = await prismaAny.promotion.findMany({ orderBy: { createdAt: 'desc' } })
-        return NextResponse.json({ data: items })
+        try {
+            const items = await prismaAny.promotion.findMany({ orderBy: { createdAt: 'desc' } })
+            return NextResponse.json({ data: items })
+        } catch (err: any) {
+            const msg = String(err?.message || '')
+            if (err?.code === 'P2022' || msg.includes('promotion.orientation') || msg.includes('orientation')) {
+                console.warn('Prisma findMany failed due to missing orientation column; retrying without selecting orientation')
+                const items = await prismaAny.promotion.findMany({
+                    orderBy: { createdAt: 'desc' },
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        specialPrice: true,
+                        image: true,
+                        imagePublicId: true,
+                        createdAt: true,
+                    },
+                })
+                const mapped = items.map((it: any) => ({ ...it, orientation: 'HORIZONTAL' }))
+                return NextResponse.json({ data: mapped })
+            }
+            throw err
+        }
     } catch (e) {
         console.error('GET /api/promotions error', e)
         return NextResponse.json({ error: 'Failed to read promotions' }, { status: 500 })
@@ -27,6 +49,7 @@ export async function POST(req: Request) {
             body.name = String(form.get('name') || '').trim()
             body.description = String(form.get('description') || '').trim()
             body.specialPrice = String(form.get('specialPrice') || '').trim()
+            body.orientation = String(form.get('orientation') || 'HORIZONTAL').trim()
 
             // Ensure only one image is provided
             const imageFiles = form.getAll('imageFile') || []
@@ -68,12 +91,28 @@ export async function POST(req: Request) {
             description: String(body.description || '').trim(),
             specialPrice: specialPrice,
             image: uploadedImageUrl || (body.image ? String(body.image).trim() : ''),
+            orientation: (body.orientation ? String(body.orientation).toUpperCase() : 'HORIZONTAL'),
             imagePublicId: uploadedImagePublicId || null,
         }
 
         console.debug('Creating promotion with data:', createData)
 
-        const item = await prismaAny.promotion.create({ data: createData })
+        let item: any
+        try {
+            item = await prismaAny.promotion.create({ data: createData })
+        } catch (err: any) {
+            const msg = String(err?.message || '')
+            const code = String(err?.code || '')
+            if (code === 'P2022' || msg.includes('orientation') || msg.includes('The column') || msg.includes("Unknown argument `orientation`")) {
+                // Prisma schema not migrated yet or DB column missing: retry without orientation
+                console.warn('Prisma create failed referencing orientation; retrying without orientation', { code, msg })
+                const fallbackData = { ...createData }
+                delete fallbackData.orientation
+                item = await prismaAny.promotion.create({ data: fallbackData })
+            } else {
+                throw err
+            }
+        }
 
         return NextResponse.json({ data: item }, { status: 201 })
     } catch (error) {

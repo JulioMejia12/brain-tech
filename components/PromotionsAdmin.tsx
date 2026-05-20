@@ -13,6 +13,7 @@ type Promotion = {
     description?: string
     specialPrice?: string
     image?: string
+    orientation?: string
 }
 
 export default function PromotionsAdmin({ className = '' }: { className?: string }) {
@@ -62,6 +63,7 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
             form.append('name', editing.name || '')
             form.append('description', editing.description || '')
             form.append('specialPrice', editing.specialPrice || '')
+            form.append('orientation', String(editing.orientation || 'HORIZONTAL'))
             if (imageFile) form.append('imageFile', imageFile)
 
             const res = await fetch(`/api/promotions/${editing.id}`, { method: 'PUT', body: form })
@@ -200,6 +202,19 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
                             <label className="block">
                                 <span className="text-sm">Imagen</span>
                                 <input type="file" accept="image/*" onChange={onFile} />
+                            </label>
+                            <label className="block">
+                                <span className="text-sm">Orientación</span>
+                                <div className="mt-2 flex items-center gap-4">
+                                    <label className="inline-flex items-center gap-2">
+                                        <input type="radio" name="orientation_edit" value="HORIZONTAL" checked={(editing.orientation || 'HORIZONTAL') === 'HORIZONTAL'} onChange={() => setEditing({ ...editing, orientation: 'HORIZONTAL' })} />
+                                        <span className="text-sm">Horizontal</span>
+                                    </label>
+                                    <label className="inline-flex items-center gap-2">
+                                        <input type="radio" name="orientation_edit" value="VERTICAL" checked={(editing.orientation || 'HORIZONTAL') === 'VERTICAL'} onChange={() => setEditing({ ...editing, orientation: 'VERTICAL' })} />
+                                        <span className="text-sm">Vertical</span>
+                                    </label>
+                                </div>
                             </label>
                             <div className="flex gap-2 justify-end">
                                 <button onClick={() => setEditing(null)} className="px-3 py-2 rounded border">Cancelar</button>

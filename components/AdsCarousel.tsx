@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { FiTrash2 } from 'react-icons/fi'
 
 interface AdsCarouselProps {
-    images?: Array<string | { id?: string | number; image?: string }>
+    images?: Array<string | { id?: string | number; image?: string; orientation?: string }>
     interval?: number
     className?: string
     showDots?: boolean
@@ -20,7 +20,7 @@ const AdsCarousel: React.FC<AdsCarouselProps> = ({ images, interval = 4000, clas
     const auth = useAuth()
     const isAdmin = Boolean(auth.user?.role?.name && String(auth.user.role.name).toLowerCase() === 'admin')
 
-    const [items, setItems] = useState(() => (images || []).map((it) => (typeof it === 'string' ? { id: undefined as string | undefined, src: it } : { id: (it as any).id, src: (it as any).image })))
+    const [items, setItems] = useState(() => (images || []).map((it) => (typeof it === 'string' ? { id: undefined as string | undefined, src: it, orientation: 'HORIZONTAL' } : { id: (it as any).id, src: (it as any).image, orientation: ((it as any).orientation || 'HORIZONTAL') })))
     const length = items.length
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [confirmId, setConfirmId] = useState<string | number | null>(null)
@@ -67,7 +67,9 @@ const AdsCarousel: React.FC<AdsCarouselProps> = ({ images, interval = 4000, clas
     }, [length, interval])
 
     useEffect(() => {
-        setItems((images || []).map((it) => (typeof it === 'string' ? { id: undefined as string | undefined, src: it } : { id: (it as any).id, src: (it as any).image })))
+        setItems((images || []).map((it) => (typeof it === 'string'
+            ? { id: undefined as string | undefined, src: it, orientation: 'HORIZONTAL' }
+            : { id: (it as any).id, src: (it as any).image, orientation: ((it as any).orientation || 'HORIZONTAL') })))
     }, [images])
 
     if (!items || items.length === 0) return null
@@ -76,8 +78,8 @@ const AdsCarousel: React.FC<AdsCarouselProps> = ({ images, interval = 4000, clas
         <div ref={containerRef} className={`relative overflow-hidden rounded-lg ${className}`}>
             <div className="flex transition-transform duration-500" style={{ transform: `translateX(-${index * 100}%)` }}>
                 {items.map((it, i) => (
-                    <div key={i} className="w-full flex-shrink-0 relative h-48 sm:h-56 md:h-64 bg-gray-100 overflow-hidden">
-                        <Image src={it.src} alt={`Ad ${i + 1}`} fill style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                    <div key={i} className={`w-full flex-shrink-0 relative ${String(it.orientation).toUpperCase() === 'VERTICAL' ? 'h-80 sm:h-96 md:h-[28rem]' : 'h-48 sm:h-56 md:h-64'} bg-gray-100 overflow-hidden`}>
+                        <Image src={it.src} alt={`Ad ${i + 1}`} fill style={{ objectFit: 'contain', objectPosition: 'center' }} />
                         {isAdmin && it.id != null && (
                             <button
                                 type="button"
