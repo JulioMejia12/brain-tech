@@ -5,11 +5,20 @@ import ButtonSpinner from '@/app/components/ui/ButtonSpinner'
 
 type PromoItem = string | { id?: string | number; image?: string; orientation?: string }
 
-export default function PromotionsClient({ initial }: { initial?: PromoItem[] }) {
-    const [items, setItems] = useState<PromoItem[]>(initial || [])
+type Props = {
+    items?: PromoItem[]
+    initial?: PromoItem[]
+}
+
+export default function PromotionsClient({ items: propItems, initial }: Props) {
+    const [items, setItems] = useState<PromoItem[] | null>(propItems ?? (initial ?? null))
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
+        // If items are provided via prop (even an empty array), don't fetch — caller controls data
+        if (propItems !== undefined) return
+        if (initial && initial.length > 0) return
+
         let mounted = true
         setLoading(true)
         fetch('/api/promotions')
@@ -26,13 +35,16 @@ export default function PromotionsClient({ initial }: { initial?: PromoItem[] })
                     })
                     .filter(Boolean) as { id?: string | number; image?: string; orientation?: string }[]
                 if (mapped.length) setItems(mapped)
+                else setItems([])
             })
-            .catch(() => { })
+            .catch(() => { if (mounted) setItems([]) })
             .finally(() => { if (mounted) setLoading(false) })
         return () => { mounted = false }
-    }, [])
+    }, [propItems, initial])
 
-    if (loading && (!items || items.length === 0)) {
+    const resolved = propItems ?? items ?? []
+
+    if (loading && resolved.length === 0) {
         return (
             <div className="flex items-center justify-center h-48">
                 <ButtonSpinner className="h-8 w-8 text-pink-600" />
@@ -40,9 +52,7 @@ export default function PromotionsClient({ initial }: { initial?: PromoItem[] })
         )
     }
 
-    if (!items || items.length === 0) return null
+    if (!resolved || resolved.length === 0) return null
 
-    return (
-        <AdsCarousel images={items} />
-    )
+    return <AdsCarousel images={resolved} />
 }

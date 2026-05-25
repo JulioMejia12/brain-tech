@@ -3,14 +3,15 @@ import { FiCheckCircle } from 'react-icons/fi'
 import ProductsSell from '../components/layout/ProductsSell'
 import ProductsLoading from '../components/ui/ProductsLoading'
 import { bazarcitoProductsSellProps } from '../lib/productsSellConfig'
+import { getBazarcitoProducts } from '../lib/products'
+import PromotionsLoader from './PromotionsLoader'
 
 export default async function BazarcitoPage() {
-    // promotions will be fetched on the client; pass fallback from config
-    let promos: Array<string | { id?: string | number; image?: string }> = bazarcitoProductsSellProps.promos || []
+    const products = await getBazarcitoProducts()
 
     return (
         <Suspense fallback={<ProductsLoading />}>
-            <ProductsSell {...bazarcitoProductsSellProps} promos={[]}>
+            <ProductsSell {...bazarcitoProductsSellProps} products={products} promosComponent={<PromotionsLoader />}>
                 <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                     <h2 className="text-2xl font-bold mb-4" style={{ color: bazarcitoProductsSellProps.secondary }}>Conviértete en Asociado Betterware</h2>
                     <p className="text-gray-700 text-base mb-2 font-semibold">

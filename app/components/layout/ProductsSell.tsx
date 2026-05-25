@@ -59,6 +59,7 @@ type Props = {
     textColor: string
     QuienesSomos?: string
     promos?: Array<string | { id?: string | number; image?: string }>
+    promosComponent?: React.ReactNode
     children?: React.ReactNode
     cellPhone?: string
     products?: Product[]
@@ -100,6 +101,7 @@ const ProductsSell = ({
     bgColor,
     QuienesSomos,
     promos,
+    promosComponent,
     children,
     cellPhone,
     products: productsArray,
@@ -158,66 +160,11 @@ const ProductsSell = ({
             return
         }
 
-        let mounted = true
-        async function load() {
-            setLoading(true)
-            setFetchError(null)
-            try {
-                const res = await fetch(resolvedProductsEndpoint)
-                let body: { error?: string; warning?: string; data?: ProductApiItem[] } | null = null
-                try {
-                    body = await res.json()
-                } catch (parseErr) {
-                    console.warn('Could not parse JSON from products endpoint', parseErr)
-                    body = null
-                }
-
-                let items: ProductApiItem[] = []
-
-                if (!res.ok) {
-                    const msg = body?.error || body?.warning || `HTTP ${res.status}`
-                    console.warn('Products endpoint returned non-ok status:', msg)
-                    if (mounted) setFetchError(String(msg))
-                    items = (body?.data || []) as ProductApiItem[]
-                } else {
-                    items = (body?.data || []) as ProductApiItem[]
-                }
-
-                // Validate and filter items: require id and a name/title and a price
-                const validItems = (items || []).filter((it) => {
-                    if (!it) return false
-                    const hasId = it.id !== undefined && it.id !== null && String(it.id).trim() !== ''
-                    const hasName = Boolean(it.title || it.name)
-                    const hasPrice = it.price !== undefined && it.price !== null && it.price !== ''
-                    return hasId && hasName && hasPrice
-                }) as ProductApiItem[]
-
-                if (mounted) {
-                    if (validItems.length === 0) {
-                        // If response was OK but no valid items, show friendly message
-                        if (res.ok) {
-                            setProducts([])
-                            setFetchError('No se encontraron productos')
-                        } else {
-                            setProducts([])
-                            // fetchError already set above for non-ok responses
-                        }
-                    } else {
-                        const mapped: ProductWithPieces[] = validItems.map(mapProductApiItem)
-                        setProducts(mapped)
-                        setFetchError(null)
-                    }
-                }
-            } catch (e: unknown) {
-                console.error('Failed to load products', e)
-                if (mounted) setFetchError('No se pudieron cargar los productos')
-            } finally {
-                if (mounted) setLoading(false)
-            }
-        }
-        load()
-        return () => { mounted = false }
-    }, [productsArray, resolvedProductsEndpoint])
+        // No client-side fetch here — component expects `products` to be provided by the caller.
+        setProducts([])
+        setLoading(false)
+        setFetchError(null)
+    }, [productsArray])
 
     const visible = products.filter((p) => {
         const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory
@@ -589,7 +536,7 @@ const ProductsSell = ({
             </section>
             <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Promociones</h2>
-                <PromotionsClient initial={promos} />
+                {promosComponent ?? <PromotionsClient items={promos} />}
             </section>
             {children}
             <MobileMenu primary={primary} whatsappNumber={cellPhone} />
