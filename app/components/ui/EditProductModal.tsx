@@ -35,7 +35,6 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
     const [description, setDescription] = useState(() => product?.description ?? '')
     const [pieces, setPieces] = useState<number | ''>(() => product?.pieces ?? '')
     const [price, setPrice] = useState<number | ''>(() => parsePrice(product?.price))
-    const [stock, setStock] = useState<number | ''>(() => product?.pieces ?? '')
     const [category, setCategory] = useState<string>(() => product?.category ?? '')
     const [details, setDetails] = useState<{ label: string; value: string }[]>(() => product?.details ?? [{ label: '', value: '' }])
 
@@ -47,7 +46,6 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
         setDescription(product?.description ?? '')
         setPieces(product?.pieces ?? '')
         setPrice(parsePrice(product?.price))
-        setStock(product?.pieces ?? '')
         setCategory(product?.category ?? '')
         setDetails(product?.details ?? [{ label: '', value: '' }])
         setPreviewUrl(product?.image ?? '')
@@ -83,10 +81,7 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                             <input type="number" step="0.01" value={price === '' ? '' : String(price)} onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500" />
                         </label>
 
-                        <label className="block">
-                            <span className="text-sm text-gray-600">Stock</span>
-                            <input type="number" value={stock === '' ? '' : String(stock)} onChange={(e) => setStock(e.target.value === '' ? '' : Number(e.target.value))} className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500" />
-                        </label>
+                        {/* stock removed from edit form */}
                     </div>
 
                     <label className="block">
@@ -155,7 +150,6 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                             const payload: EditPayload = { name, description }
                             if (pieces !== '') payload.pieces = pieces
                             if (price !== '') payload.price = Number(price)
-                            if (stock !== '') payload.stock = Number(stock)
                             if (category) payload.category = category
                             // image upload disabled here; promotions form handles promotion images
                             const filtered = details.filter(d => (d.label && d.label.trim() !== '') || (d.value && d.value.trim() !== ''))

@@ -477,7 +477,7 @@ const ProductsSell = ({
                             form.append('title', String(payload.name ?? editingProduct.name))
                             if (payload.description !== undefined) form.append('description', String(payload.description))
                             if (payload.price !== undefined) form.append('price', String(payload.price))
-                            if (payload.stock !== undefined) form.append('stock', String(payload.stock))
+                            // stock removed from edit payload
                             if (payload.pieces !== undefined) form.append('pieces', String(payload.pieces))
                             if (payload.details !== undefined) form.append('details', JSON.stringify(payload.details))
                             if (payload.category) form.append('category', String(payload.category))

@@ -7,7 +7,8 @@ export default function NewBazarcitoProductPage() {
     const [title, setTitle] = useState("")
     const [price, setPrice] = useState<number | "">("")
     const [stock, setStock] = useState<number | "">("")
-    const [image, setImage] = useState("")
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [category, setCategory] = useState("")
     const [description, setDescription] = useState("")
     const [details, setDetails] = useState<{ label: string; value: string }[]>([{ label: "", value: "" }])
@@ -22,20 +23,25 @@ export default function NewBazarcitoProductPage() {
         try {
             let res: Response
             const filteredDetails = details.filter(d => d.label.trim() !== "" || d.value.trim() !== "")
-            const payload = {
-                title,
-                description,
-                details: filteredDetails,
-                price: Number(price),
-                stock: Number(stock),
-                image,
-                category: category.trim(),
+
+            if (!imageFile) {
+                setError('Debes subir un archivo de imagen')
+                setLoading(false)
+                return
             }
+
+            const fd = new FormData()
+            fd.append('title', title)
+            fd.append('description', description)
+            fd.append('price', String(price))
+            fd.append('stock', String(stock))
+            fd.append('category', category.trim())
+            fd.append('details', JSON.stringify(filteredDetails))
+            fd.append('imageFile', imageFile)
 
             res = await fetch('/api/bazarcito/products', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+                body: fd,
             })
 
             if (!res.ok) {
@@ -101,13 +107,33 @@ export default function NewBazarcitoProductPage() {
                     </div>
 
                     <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Imagen (URL)</label>
-                        <input
-                            className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100"
-                            value={image}
-                            onChange={(e) => setImage(e.target.value)}
-                            placeholder="URL de la imagen (opcional)"
-                        />
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Imagen</label>
+                        <div className="flex flex-col gap-2">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    const f = e.target.files && e.target.files[0] ? e.target.files[0] : null
+                                    // revoke previous preview
+                                    try { if (previewUrl) URL.revokeObjectURL(previewUrl) } catch (_) { }
+                                    setImageFile(f)
+                                    if (f) {
+                                        const url = URL.createObjectURL(f)
+                                        setPreviewUrl(url)
+                                    } else {
+                                        setPreviewUrl(null)
+                                    }
+                                }}
+                                className="text-sm text-gray-700"
+                            />
+
+                            {imageFile && <div className="text-xs text-gray-500">Archivo seleccionado: {imageFile.name}</div>}
+                            {previewUrl && (
+                                <div className="pt-2">
+                                    <img src={previewUrl} alt="Vista previa" className="w-32 h-32 object-cover rounded-md border" />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="sm:col-span-2">
