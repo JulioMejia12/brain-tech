@@ -24,7 +24,7 @@ export const bazarcitoProductsSellProps: ProductsSellPageConfig = {
     bgColor: '#ffb6ef',
     QuienesSomos: 'Somos una tienda en línea enfocada en ofrecer productos útiles, prácticos y accesibles para tu hogar. Aquí encontrarás artículos de organización, cocina, limpieza, almacenamiento y mucho más. En Mi tienda online buscamos hacer tus compras más fáciles mediante atención rápida por WhatsApp y un catálogo pensado para ayudarte en tu día a día. ✨ Calidad, atención y practicidad en un solo lugar.',
     promos: [],
-    cellPhone: '5571906152',
+    cellPhone: process.env.NUMBER_BAZARCITO || '',
     heroImage: 'https://res.cloudinary.com/ddfj0omil/image/upload/v1778286297/bazarcito_ftyipo.png',
     productsEndpoint: '/api/bazarcito/products',
     productMutationBase: '/api/bazarcito/products',
