@@ -110,6 +110,7 @@ const ProductsSell = ({
 }: Props) => {
     const resolvedProductsEndpoint = productsEndpoint || DEFAULT_PRODUCTS_ENDPOINT
     const resolvedProductMutationBase = productMutationBase || resolvedProductsEndpoint.split('?')[0]
+    const whatsappDigits = String(cellPhone || '').replace(/[^0-9]/g, '')
 
     const [products, setProducts] = useState<ProductWithPieces[]>((productsArray || []) as ProductWithPieces[])
     const [loading, setLoading] = useState<boolean>(false)
@@ -222,6 +223,7 @@ const ProductsSell = ({
         const productId = String(product.id)
         try {
             setRequestingIds((prev) => [...prev, productId])
+            if (!whatsappDigits) return
             const pageUrl = buildShareUrl(product)
             const detailsText = (product as any).details && Array.isArray((product as any).details) && (product as any).details.length
                 ? (product as any).details
@@ -233,7 +235,7 @@ const ProductsSell = ({
             if (detailsText) textParts.push('', detailsText)
             textParts.push('', 'Por favor me pueden confirmar disponibilidad.')
             const text = textParts.join('\n')
-            window.open(`https://api.whatsapp.com/send?phone=${cellPhone}&text=${encodeURIComponent(text)}`, '_blank')
+            window.open(`https://api.whatsapp.com/send?phone=${whatsappDigits}&text=${encodeURIComponent(text)}`, '_blank')
         } finally {
             window.setTimeout(() => {
                 setRequestingIds((prev) => prev.filter((id) => id !== productId))
@@ -565,8 +567,8 @@ const ProductsSell = ({
 
             <div className="hidden md:block">
                 <FloatingWhatsApp
-                    whatsappNumber={cellPhone}
-                    message={`Hola, quiero reservar en ${title}`}
+                    whatsappNumber={whatsappDigits}
+                    message={`Hola, me interesan los productos de ${title}. ¿Me pueden compartir información y promociones disponibles?`}
                     className="top-6 right-6 md:top-auto md:bottom-6 md:right-6 lg:bottom-8"
                 />
             </div>
@@ -581,7 +583,7 @@ const ProductsSell = ({
                 {promosComponent ?? <PromotionsClient items={promos} />}
             </section>
             {children}
-            <MobileMenu primary={primary} whatsappNumber={cellPhone} />
+            <MobileMenu primary={primary} whatsappNumber={whatsappDigits} />
         </div>
     )
 }

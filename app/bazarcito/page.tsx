@@ -8,10 +8,11 @@ import PromotionsLoader from './PromotionsLoader'
 
 export default async function BazarcitoPage() {
     const products = await getBazarcitoProducts()
+    const bazarcitoWhatsappNumber = (process.env.NUMBER_BAZARCITO || bazarcitoProductsSellProps.cellPhone || '').replace(/[^0-9]/g, '')
 
     return (
         <Suspense fallback={<ProductsLoading />}>
-            <ProductsSell {...bazarcitoProductsSellProps} products={products} promosComponent={<PromotionsLoader />}>
+            <ProductsSell {...bazarcitoProductsSellProps} cellPhone={bazarcitoWhatsappNumber} products={products} promosComponent={<PromotionsLoader />}>
                 <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                     <h2 className="text-2xl font-bold mb-4" style={{ color: bazarcitoProductsSellProps.secondary }}>Conviértete en Asociado Betterware</h2>
                     <p className="text-gray-700 text-base mb-2 font-semibold">
@@ -37,7 +38,7 @@ export default async function BazarcitoPage() {
                         </li>
                     </ul>
                     <a
-                        href={`https://wa.me/${bazarcitoProductsSellProps.cellPhone}?text=Hola,%20estoy%20interesado%20en%20vender%20sus%20productos`}
+                        href={`https://wa.me/${bazarcitoWhatsappNumber}?text=${encodeURIComponent('Hola, me interesan los productos de Bazarcito online. ¿Me pueden compartir información y promociones disponibles?')}`}
                         target="_blank"
                         rel="noreferrer"
                         className="px-4 py-2 rounded text-white"
