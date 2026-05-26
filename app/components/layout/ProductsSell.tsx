@@ -153,25 +153,60 @@ const ProductsSell = ({
     }, [products])
 
     useEffect(() => {
-        if (productsArray) {
-            setProducts(productsArray as ProductWithPieces[])
-            setLoading(false)
+        let mounted = true
+
+        const normalized = (productsArray as any[] | undefined)?.map((p) => ({
+            ...p,
+            pieces: (p as any).pieces ?? (p as any).stock ?? null,
+        })) as ProductWithPieces[] | undefined
+
+        if (normalized) {
+            setProducts(normalized)
             setFetchError(null)
-            return
+        } else {
+            setProducts([])
         }
 
-        // No client-side fetch here — component expects `products` to be provided by the caller.
-        setProducts([])
-        setLoading(false)
-        setFetchError(null)
-    }, [productsArray])
+        async function refreshProducts() {
+            try {
+                setLoading(true)
+                const res = await fetch(resolvedProductsEndpoint, { cache: 'no-store' })
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`)
+                }
+
+                const body = await res.json()
+                const items = Array.isArray(body?.data) ? body.data : []
+                const mapped = items.map(mapProductApiItem)
+
+                if (mounted) {
+                    setProducts(mapped)
+                    setFetchError(null)
+                }
+            } catch (error: unknown) {
+                console.error('Failed to refresh products from API', error)
+                if (mounted && !normalized) {
+                    setFetchError(error instanceof Error ? error.message : String(error))
+                }
+            } finally {
+                if (mounted) {
+                    setLoading(false)
+                }
+            }
+        }
+
+        void refreshProducts()
+
+        return () => {
+            mounted = false
+        }
+    }, [productsArray, resolvedProductsEndpoint])
 
     const visible = products.filter((p) => {
         const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
         return matchesCategory && matchesSearch
     })
-
     const buildShareUrl = (product: Product) => {
         const browserOrigin = typeof window !== 'undefined' ? window.location.origin : ''
         const isLocalhost = browserOrigin.includes('localhost') || browserOrigin.includes('127.0.0.1')
@@ -315,6 +350,7 @@ const ProductsSell = ({
                                                 <button
                                                     type="button"
                                                     onClick={() => {
+                                                        console.info('[ProductsSell] opening edit modal for', p)
                                                         setOpeningEditId(String(p.id))
                                                         setEditingProduct(p)
                                                         setModalOpen(true)
@@ -360,7 +396,13 @@ const ProductsSell = ({
                                         <div className="mt-3">
                                             <div className="flex flex-col gap-3 min-w-0">
                                                 <div className="text-lg font-bold text-gray-900">{p.price}</div>
-                                                <div className="text-sm text-gray-500">Piezas: {p.pieces ?? '—'}</div>
+                                                {(() => {
+                                                    const raw = (p as any).pieces ?? (p as any).stock ?? (p as any).quantity ?? null
+                                                    const disp = raw == null || raw === '' ? null : Number(raw)
+                                                    return (
+                                                        <div className="text-sm text-gray-500">Piezas: {disp == null ? '—' : String(disp)}</div>
+                                                    )
+                                                })()}
                                                 <button
                                                     type="button"
                                                     className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"

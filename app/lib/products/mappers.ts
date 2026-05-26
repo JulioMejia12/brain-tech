@@ -18,6 +18,9 @@ export function formatProductPrice(price: string | number | undefined | null) {
 }
 
 export function mapItemToProduct(item: ProductApiItem): Product {
+    const rawPieces = (item as any).pieces ?? (item as any).quantity ?? (item as any).stock ?? null
+    const pieces = rawPieces != null && rawPieces !== '' ? Number(rawPieces) : null
+
     return {
         id: String(item.id),
         name: item.title || item.name || '',
@@ -26,5 +29,6 @@ export function mapItemToProduct(item: ProductApiItem): Product {
         description: item.description || '',
         category: item.category?.name || 'Otros',
         details: Array.isArray((item as any).details) ? (item as any).details.map((d: any) => ({ label: String(d?.label ?? ''), value: String(d?.value ?? '') })) : undefined,
+        pieces,
     }
 }

@@ -49,6 +49,11 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
         setCategory(product?.category ?? '')
         setDetails(product?.details ?? [{ label: '', value: '' }])
         setPreviewUrl(product?.image ?? '')
+        try {
+            console.info('[EditProductModal] product prop:', product)
+        } catch (e) {
+            // ignore
+        }
     }, [product, isOpen])
 
     const addDetail = () => setDetails((d) => [...d, { label: '', value: '' }])
@@ -139,7 +144,14 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
 
                     <label className="block">
                         <span className="text-sm text-gray-600">Piezas</span>
-                        <input value={String(pieces)} onChange={(e) => setPieces(e.target.value ? Number(e.target.value) : '')} className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500" />
+                        <input
+                            name="pieces"
+                            aria-label="Piezas"
+                            inputMode="numeric"
+                            value={pieces === '' ? '' : String(pieces)}
+                            onChange={(e) => setPieces(e.target.value ? Number(e.target.value) : '')}
+                            className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500"
+                        />
                     </label>
                 </div>
 
@@ -148,7 +160,10 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                     <button
                         onClick={async () => {
                             const payload: EditPayload = { name, description }
-                            if (pieces !== '') payload.pieces = pieces
+                            if (pieces !== '') {
+                                payload.pieces = pieces
+                                payload.stock = Number(pieces)
+                            }
                             if (price !== '') payload.price = Number(price)
                             if (category) payload.category = category
                             // image upload disabled here; promotions form handles promotion images

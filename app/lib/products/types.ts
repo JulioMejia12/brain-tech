@@ -5,6 +5,7 @@ export type Product = {
     image: string
     description: string
     category: string
+    pieces?: number | null
     details?: { label: string; value: string }[]
 }
 
@@ -19,4 +20,7 @@ export type ProductApiItem = {
         name?: string | null
     } | null
     details?: any
+    pieces?: number | null
+    quantity?: number | null
+    stock?: number | null
 }

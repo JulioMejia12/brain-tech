@@ -196,6 +196,13 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
             return jsonError('No valid fields to update', 400)
         }
 
+        // debug logging to help diagnose stock/pieces update issues
+        try {
+            console.info('[PUT] /api/bazarcito/products/{id} - updating product', { id: result.value, body, data })
+        } catch (e) {
+            // ignore logging errors
+        }
+
         const updated = await prisma.product.update({ where: { id: result.value }, data, include: { category: true } })
         return NextResponse.json({ data: updated })
     } catch (error: unknown) {
