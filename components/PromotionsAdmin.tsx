@@ -14,6 +14,13 @@ type Promotion = {
     specialPrice?: string
     image?: string
     orientation?: string
+    negocioId?: number | string | null
+}
+
+type NegocioOption = {
+    id: number
+    nombre: string
+    slug: string
 }
 
 export default function PromotionsAdmin({ className = '' }: { className?: string }) {
@@ -21,7 +28,9 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
     const isAdmin = Boolean(auth.user?.role?.name && String(auth.user.role.name).toLowerCase() === 'admin')
 
     const [items, setItems] = useState<Promotion[]>([])
+    const [negocios, setNegocios] = useState<NegocioOption[]>([])
     const [loading, setLoading] = useState(false)
+    const [loadingNegocios, setLoadingNegocios] = useState(false)
     const [editing, setEditing] = useState<Promotion | null>(null)
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [saving, setSaving] = useState(false)
@@ -29,6 +38,7 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
     useEffect(() => {
         if (!isAdmin) return
         load()
+        loadNegocios()
     }, [isAdmin])
 
     async function load() {
@@ -42,6 +52,20 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
             console.error('Failed to load promotions', e)
         } finally {
             setLoading(false)
+        }
+    }
+
+    async function loadNegocios() {
+        setLoadingNegocios(true)
+        try {
+            const res = await fetch('/api/negocios')
+            const body = await res.json().catch(() => ({}))
+            const list = Array.isArray(body?.data) ? body.data : []
+            setNegocios(list)
+        } catch (e) {
+            console.error('Failed to load negocios', e)
+        } finally {
+            setLoadingNegocios(false)
         }
     }
 
@@ -64,6 +88,9 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
             form.append('description', editing.description || '')
             form.append('specialPrice', editing.specialPrice || '')
             form.append('orientation', String(editing.orientation || 'HORIZONTAL'))
+            if (editing.negocioId != null && String(editing.negocioId) !== '') {
+                form.append('negocioId', String(editing.negocioId))
+            }
             if (imageFile) form.append('imageFile', imageFile)
 
             const res = await fetch(`/api/promotions/${editing.id}`, { method: 'PUT', body: form })
@@ -187,6 +214,22 @@ export default function PromotionsAdmin({ className = '' }: { className?: string
                             <button onClick={() => setEditing(null)} className="p-2"><FiX /></button>
                         </div>
                         <div className="grid grid-cols-1 gap-3">
+                            <label className="block">
+                                <span className="text-sm">Negocio</span>
+                                <select
+                                    value={editing.negocioId == null ? '' : String(editing.negocioId)}
+                                    onChange={(e) => setEditing({ ...editing, negocioId: e.target.value ? Number(e.target.value) : null })}
+                                    disabled={loadingNegocios}
+                                    className="w-full border rounded px-2 py-1"
+                                >
+                                    <option value="">Selecciona un negocio</option>
+                                    {negocios.map((negocio) => (
+                                        <option key={negocio.id} value={negocio.id}>
+                                            {negocio.nombre}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <label className="block">
                                 <span className="text-sm">Nombre</span>
                                 <input type="text" value={editing.name || ''} onChange={(e) => setEditing({ ...editing, name: e.target.value })} className="w-full border rounded px-2 py-1" />

@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react'
 import AdsCarousel from './AdsCarousel'
 import ButtonSpinner from '@/app/components/ui/ButtonSpinner'
 
+const BAZARCITO_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || ''
+
 type PromoItem = string | { id?: string | number; image?: string; orientation?: string }
 
 type Props = {
@@ -21,7 +23,8 @@ export default function PromotionsClient({ items: propItems, initial }: Props) {
 
         let mounted = true
         setLoading(true)
-        fetch('/api/promotions')
+        const url = BAZARCITO_NEGOCIO_ID ? `/api/promotions?negocioId=${encodeURIComponent(BAZARCITO_NEGOCIO_ID)}` : '/api/promotions'
+        fetch(url)
             .then((r) => r.json())
             .then((j) => {
                 if (!mounted) return

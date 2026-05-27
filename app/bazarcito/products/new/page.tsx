@@ -1,8 +1,14 @@
 "use client"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 400
+
+type NegocioOption = {
+    id: number
+    nombre: string
+    slug: string
+}
 
 export default function NewBazarcitoProductPage() {
     const router = useRouter()
@@ -11,11 +17,52 @@ export default function NewBazarcitoProductPage() {
     const [stock, setStock] = useState<number | "">("")
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [negocioId, setNegocioId] = useState("")
+    const [negocios, setNegocios] = useState<NegocioOption[]>([])
+    const [loadingNegocios, setLoadingNegocios] = useState(true)
     const [category, setCategory] = useState("")
     const [description, setDescription] = useState("")
     const [details, setDetails] = useState<{ label: string; value: string }[]>([{ label: "", value: "" }])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        let mounted = true
+
+        async function loadNegocios() {
+            try {
+                setLoadingNegocios(true)
+                const res = await fetch('/api/negocios', { cache: 'no-store' })
+                const body = await res.json().catch(() => ({}))
+
+                if (!res.ok) {
+                    throw new Error(body?.error || 'No se pudieron cargar los negocios')
+                }
+
+                if (!mounted) return
+
+                const items = Array.isArray(body?.data) ? body.data : []
+                setNegocios(items)
+
+                if (items.length === 1) {
+                    setNegocioId(String(items[0].id))
+                }
+            } catch (err: unknown) {
+                if (!mounted) return
+                setError(err instanceof Error ? err.message : String(err))
+            } finally {
+                if (mounted) {
+                    setLoadingNegocios(false)
+                }
+            }
+        }
+
+        void loadNegocios()
+
+        return () => {
+            mounted = false
+        }
+    }, [])
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -32,6 +79,12 @@ export default function NewBazarcitoProductPage() {
                 return
             }
 
+            if (!negocioId) {
+                setError('Debes seleccionar un negocio')
+                setLoading(false)
+                return
+            }
+
             if (description.length > PRODUCT_DESCRIPTION_MAX_LENGTH) {
                 setError(`La descripción es muy larga. Máximo ${PRODUCT_DESCRIPTION_MAX_LENGTH} caracteres.`)
                 setLoading(false)
@@ -43,6 +96,7 @@ export default function NewBazarcitoProductPage() {
             fd.append('description', description)
             fd.append('price', String(price))
             fd.append('stock', String(stock))
+            fd.append('negocioId', negocioId)
             fd.append('category', category.trim())
             fd.append('details', JSON.stringify(filteredDetails))
             fd.append('imageFile', imageFile)
@@ -81,6 +135,24 @@ export default function NewBazarcitoProductPage() {
                 <h1 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Nuevo producto — Bazarcito</h1>
 
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Negocio</label>
+                        <select
+                            className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100"
+                            value={negocioId}
+                            onChange={(e) => setNegocioId(e.target.value)}
+                            disabled={loadingNegocios}
+                            required
+                        >
+                            <option value="">{loadingNegocios ? 'Cargando negocios...' : 'Selecciona un negocio'}</option>
+                            {negocios.map((negocio) => (
+                                <option key={negocio.id} value={negocio.id}>
+                                    {negocio.nombre}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     <div className="sm:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Título</label>
                         <input
@@ -172,31 +244,59 @@ export default function NewBazarcitoProductPage() {
                     </div>
 
                     <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Detalles</label>
-                        <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Detalles</label>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{details.length} {details.length === 1 ? 'detalle' : 'detalles'}</span>
+                        </div>
+
+                        <div className="space-y-3">
                             {details.map((d, idx) => (
-                                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                                    <input
-                                        className="col-span-5 p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100"
-                                        placeholder="Etiqueta"
-                                        value={d.label}
-                                        onChange={(e) => updateDetail(idx, "label", e.target.value)}
-                                    />
-                                    <input
-                                        className="col-span-6 p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100"
-                                        placeholder="Valor"
-                                        value={d.value}
-                                        onChange={(e) => updateDetail(idx, "value", e.target.value)}
-                                    />
-                                    <button type="button" onClick={() => removeDetail(idx)} className="col-span-1 text-red-500 hover:text-red-600">✕</button>
+                                <div key={idx} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-slate-800/60 p-3 shadow-sm">
+                                    <div className="mb-3 flex items-center justify-between">
+                                        <div className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-green-100 px-2 text-xs font-semibold text-green-700 dark:bg-green-500/20 dark:text-green-300">
+                                            #{idx + 1}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeDetail(idx)}
+                                            aria-label={`Eliminar detalle ${idx + 1}`}
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <label className="block">
+                                            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Etiqueta</span>
+                                            <input
+                                                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 text-sm text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
+                                                placeholder="Ej. Material"
+                                                value={d.label}
+                                                onChange={(e) => updateDetail(idx, "label", e.target.value)}
+                                            />
+                                        </label>
+
+                                        <label className="block">
+                                            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Valor</span>
+                                            <input
+                                                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 text-sm text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
+                                                placeholder="Ej. Acero inoxidable"
+                                                value={d.value}
+                                                onChange={(e) => updateDetail(idx, "value", e.target.value)}
+                                            />
+                                        </label>
+                                    </div>
                                 </div>
                             ))}
 
                             <div>
-                                <button type="button" onClick={addDetail} className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                                    </svg>
+                                <button
+                                    type="button"
+                                    onClick={addDetail}
+                                    className="inline-flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300"
+                                >
+                                    <span className="text-base leading-none">＋</span>
                                     Agregar detalle
                                 </button>
                             </div>
@@ -207,7 +307,7 @@ export default function NewBazarcitoProductPage() {
                         <div>
                             <button
                                 type="submit"
-                                disabled={loading}
+                                disabled={loading || loadingNegocios || negocios.length === 0}
                                 className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-medium px-4 py-2 rounded-lg shadow"
                             >
                                 {loading ? "Creando..." : "Crear producto"}

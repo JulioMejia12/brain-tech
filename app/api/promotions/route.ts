@@ -4,28 +4,90 @@ import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
 import { prisma } from '@/app/lib/prisma'
 
-export async function GET() {
+function parseNegocioId(value: string | null) {
+    if (value == null || value.trim() === '') {
+        return undefined
+    }
+
+    const parsed = Number(value)
+    return Number.isNaN(parsed) ? null : parsed
+}
+
+export async function GET(req: Request) {
     try {
+        const url = new URL(req.url)
+        const negocioId = parseNegocioId(url.searchParams.get('negocioId'))
+        if (negocioId === null) {
+            return NextResponse.json({ error: 'negocioId must be a valid number' }, { status: 400 })
+        }
+
         const prismaAny = prisma as any
         try {
+            if (negocioId != null) {
+                const ids = await prisma.$queryRaw<Array<{ id: number }>>`
+                    SELECT id
+                    FROM Promotion
+                    WHERE negocioId = ${negocioId}
+                    ORDER BY createdAt DESC
+                `
+
+                if (!ids.length) {
+                    return NextResponse.json({ data: [] })
+                }
+
+                const items = await prismaAny.promotion.findMany({
+                    where: { id: { in: ids.map((row) => row.id) } },
+                    orderBy: { createdAt: 'desc' },
+                })
+                return NextResponse.json({ data: items })
+            }
+
             const items = await prismaAny.promotion.findMany({ orderBy: { createdAt: 'desc' } })
             return NextResponse.json({ data: items })
         } catch (err: any) {
             const msg = String(err?.message || '')
             if (err?.code === 'P2022' || msg.includes('promotion.orientation') || msg.includes('orientation')) {
                 console.warn('Prisma findMany failed due to missing orientation column; retrying without selecting orientation')
-                const items = await prismaAny.promotion.findMany({
-                    orderBy: { createdAt: 'desc' },
-                    select: {
-                        id: true,
-                        name: true,
-                        description: true,
-                        specialPrice: true,
-                        image: true,
-                        imagePublicId: true,
-                        createdAt: true,
-                    },
-                })
+                let items: any[]
+                if (negocioId != null) {
+                    const ids = await prisma.$queryRaw<Array<{ id: number }>>`
+                        SELECT id
+                        FROM Promotion
+                        WHERE negocioId = ${negocioId}
+                        ORDER BY createdAt DESC
+                    `
+
+                    if (!ids.length) {
+                        return NextResponse.json({ data: [] })
+                    }
+
+                    items = await prismaAny.promotion.findMany({
+                        where: { id: { in: ids.map((row) => row.id) } },
+                        orderBy: { createdAt: 'desc' },
+                        select: {
+                            id: true,
+                            name: true,
+                            description: true,
+                            specialPrice: true,
+                            image: true,
+                            imagePublicId: true,
+                            createdAt: true,
+                        },
+                    })
+                } else {
+                    items = await prismaAny.promotion.findMany({
+                        orderBy: { createdAt: 'desc' },
+                        select: {
+                            id: true,
+                            name: true,
+                            description: true,
+                            specialPrice: true,
+                            image: true,
+                            imagePublicId: true,
+                            createdAt: true,
+                        },
+                    })
+                }
                 const mapped = items.map((it: any) => ({ ...it, orientation: 'HORIZONTAL' }))
                 return NextResponse.json({ data: mapped })
             }
@@ -50,6 +112,7 @@ export async function POST(req: Request) {
             body.description = String(form.get('description') || '').trim()
             body.specialPrice = String(form.get('specialPrice') || '').trim()
             body.orientation = String(form.get('orientation') || 'HORIZONTAL').trim()
+            body.negocioId = parseNegocioId(String(form.get('negocioId') || ''))
 
             // Ensure only one image is provided
             const imageFiles = form.getAll('imageFile') || []
@@ -79,11 +142,32 @@ export async function POST(req: Request) {
             }
         } else {
             body = await req.json().catch(() => ({}))
+            body.negocioId = parseNegocioId(body?.negocioId != null ? String(body.negocioId) : null)
+        }
+
+        if (body.negocioId === null) {
+            return NextResponse.json({ error: 'negocioId must be a valid number' }, { status: 400 })
+        }
+
+        if (body.negocioId == null) {
+            return NextResponse.json({ error: 'negocioId es requerido' }, { status: 400 })
         }
 
         // Allow promotions created with only an image; textual fields default to empty strings
         const name = String(body.name || '').trim()
         const specialPrice = String(body.specialPrice || '').trim()
+        const negocioId = body.negocioId != null ? Number(body.negocioId) : undefined
+
+        const negocioRows = await prisma.$queryRaw<Array<{ id: number }>>`
+            SELECT id
+            FROM Negocio
+            WHERE id = ${negocioId}
+            LIMIT 1
+        `
+
+        if (!negocioRows.length) {
+            return NextResponse.json({ error: `Negocio with id=${negocioId} not found` }, { status: 400 })
+        }
 
         const prismaAny = prisma as any
         const createData = {
@@ -111,6 +195,15 @@ export async function POST(req: Request) {
             } else {
                 throw err
             }
+        }
+
+        if (item?.id != null) {
+            await prisma.$executeRaw`
+                UPDATE Promotion
+                SET negocioId = ${negocioId}
+                WHERE id = ${item.id}
+            `
+            item = { ...item, negocioId }
         }
 
         return NextResponse.json({ data: item }, { status: 201 })

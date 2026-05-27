@@ -1,14 +1,25 @@
 "use client"
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 
+const BAZARCITO_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || ''
+
+type NegocioOption = {
+    id: number
+    nombre: string
+    slug: string
+}
+
 export default function PromotionForm() {
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [preview, setPreview] = useState<string | null>(null)
     const [orientation, setOrientation] = useState<'HORIZONTAL' | 'VERTICAL'>('HORIZONTAL')
+    const [negocioId, setNegocioId] = useState(BAZARCITO_NEGOCIO_ID)
+    const [negocios, setNegocios] = useState<NegocioOption[]>([])
+    const [loadingNegocios, setLoadingNegocios] = useState(true)
     const [fileError, setFileError] = useState<string | null>(null)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<string | null>(null)
@@ -19,6 +30,44 @@ export default function PromotionForm() {
     const [isDeleting, setIsDeleting] = useState(false)
 
     const MAX_SIZE = 5 * 1024 * 1024
+
+    useEffect(() => {
+        let mounted = true
+
+        async function loadNegocios() {
+            try {
+                setLoadingNegocios(true)
+                const res = await fetch('/api/negocios', { cache: 'no-store' })
+                const body = await res.json().catch(() => ({})) as { data?: NegocioOption[]; error?: string }
+
+                if (!res.ok) {
+                    throw new Error(body?.error || 'No se pudieron cargar los negocios')
+                }
+
+                if (!mounted) return
+
+                const items = Array.isArray(body?.data) ? body.data : []
+                setNegocios(items)
+
+                if (!BAZARCITO_NEGOCIO_ID && items.length === 1) {
+                    setNegocioId(String(items[0].id))
+                }
+            } catch (error: unknown) {
+                if (!mounted) return
+                setMessage(error instanceof Error ? error.message : String(error))
+            } finally {
+                if (mounted) {
+                    setLoadingNegocios(false)
+                }
+            }
+        }
+
+        void loadNegocios()
+
+        return () => {
+            mounted = false
+        }
+    }, [])
 
     function onChooseFile(file?: File | null) {
         if (!file) {
@@ -48,6 +97,10 @@ export default function PromotionForm() {
             setMessage('Selecciona una imagen')
             return
         }
+        if (!negocioId) {
+            setMessage('Selecciona un negocio')
+            return
+        }
         setSaving(true)
         setMessage(null)
         try {
@@ -55,7 +108,7 @@ export default function PromotionForm() {
             // only send the image file; server will accept missing textual fields
             if (imageFile) form.append('imageFile', imageFile)
             form.append('orientation', orientation)
-
+            form.append('negocioId', negocioId)
             const res = await fetch('/api/promotions', { method: 'POST', body: form })
             const json = await res.json().catch(() => ({})) as unknown
             if (!res.ok) {
@@ -131,6 +184,24 @@ export default function PromotionForm() {
 
     return (
         <form onSubmit={handleSubmit} className="max-w-3xl text-gray-900">
+            <label className="block mb-4">
+                <span className="text-sm font-medium text-gray-900">Negocio</span>
+                <select
+                    value={negocioId}
+                    onChange={(e) => setNegocioId(e.target.value)}
+                    disabled={loadingNegocios || saving}
+                    className="mt-1 block w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+                    required
+                >
+                    <option value="">{loadingNegocios ? 'Cargando negocios...' : 'Selecciona un negocio'}</option>
+                    {negocios.map((negocio) => (
+                        <option key={negocio.id} value={negocio.id}>
+                            {negocio.nombre}
+                        </option>
+                    ))}
+                </select>
+            </label>
+
             <label className="block">
                 <span className="text-sm font-medium text-gray-900">Imagen</span>
                 <div className="mt-1 flex items-center gap-3">
@@ -174,7 +245,7 @@ export default function PromotionForm() {
             </div>
 
             <div className="flex items-center gap-3 mt-4">
-                <button type="submit" disabled={saving || Boolean(fileError)} className="rounded bg-pink-600 text-white px-4 py-2 disabled:opacity-60">{saving ? 'Guardando...' : 'Crear promoción'}</button>
+                <button type="submit" disabled={saving || loadingNegocios || Boolean(fileError)} className="rounded bg-pink-600 text-white px-4 py-2 disabled:opacity-60">{saving ? 'Guardando...' : 'Crear promoción'}</button>
                 {createdId != null && (
                     <button type="button" onClick={() => setIsConfirmOpen(true)} disabled={saving} className="rounded bg-red-600 text-white px-3 py-2 disabled:opacity-60">Eliminar</button>
                 )}

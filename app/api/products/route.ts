@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../../lib/prisma'
 import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
@@ -15,12 +16,18 @@ function getErrorCode(error: unknown) {
     return ''
 }
 
+function parseProductDetails(raw: FormDataEntryValue) {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : JSON.parse(String(raw))
+    return Array.isArray(parsed) ? parsed : []
+}
+
 type ProductInput = {
     title: string
     price: number
     stock: number
     image: string
     description?: string
+    negocioId?: number
     categoryId?: number
     category?: string
     details?: { label: string; value: string }[]
@@ -39,6 +46,7 @@ export async function POST(req: Request) {
                 description: String(formData.get('description') || ''),
                 price: Number(formData.get('price')),
                 stock: Number(formData.get('stock')),
+                negocioId: Number(formData.get('negocioId')),
                 // category handled below
                 category: typeof formData.get('category') === 'string' ? String(formData.get('category')) : undefined,
             }
@@ -46,9 +54,8 @@ export async function POST(req: Request) {
             const fdDetails = formData.get('details')
             if (fdDetails) {
                 try {
-                    const parsed = typeof fdDetails === 'string' ? JSON.parse(fdDetails) : JSON.parse(String(fdDetails))
-                        ; (body as any).details = Array.isArray(parsed) ? parsed : []
-                } catch (e) {
+                    body.details = parseProductDetails(fdDetails)
+                } catch {
                     // ignore parse errors and leave details undefined
                 }
             }
@@ -73,9 +80,9 @@ export async function POST(req: Request) {
                         })
                         Readable.from(buffer).pipe(uploadStream)
                     })
-                } catch (e: any) {
-                    console.error('Cloudinary upload error:', e)
-                    return NextResponse.json({ error: `Image upload failed: ${String(e?.message || e)}` }, { status: 500 })
+                } catch (error: unknown) {
+                    console.error('Cloudinary upload error:', error)
+                    return NextResponse.json({ error: `Image upload failed: ${errorMessage(error)}` }, { status: 500 })
                 }
             }
         } else {
@@ -86,17 +93,18 @@ export async function POST(req: Request) {
             body.image = uploadedImageUrl
         }
 
-        const { title, price, stock, image, categoryId, details } = body
+        const { title, price, stock, image, negocioId, categoryId, details } = body
         const description = typeof body.description === 'string' ? body.description : ''
 
-        if (!title || price == null || stock == null || !image || (categoryId == null && !body.category) || !description) {
-            return NextResponse.json({ error: 'Missing required fields: include categoryId or category name and description' }, { status: 400 })
+        if (!title || price == null || stock == null || !image || negocioId == null || Number.isNaN(Number(negocioId)) || (categoryId == null && !body.category) || !description) {
+            return NextResponse.json({ error: 'Missing required fields: include negocioId, categoryId or category name, and description' }, { status: 400 })
         }
 
         if (description.length > PRODUCT_DESCRIPTION_MAX_LENGTH) {
             return jsonError(`La descripción es muy larga. Máximo ${PRODUCT_DESCRIPTION_MAX_LENGTH} caracteres.`, 400)
         }
 
+        const negocioIdNum = Number(negocioId)
         const categoryIdNum = categoryId != null ? Number(categoryId) : null
         const categoryName = typeof body.category === 'string' && body.category.trim() !== '' ? body.category.trim() : null
 
@@ -106,6 +114,17 @@ export async function POST(req: Request) {
 
         let created = null
         try {
+            const negocioExists = await prisma.$queryRaw<Array<{ id: number }>>`
+                SELECT id
+                FROM Negocio
+                WHERE id = ${negocioIdNum}
+                LIMIT 1
+            `
+
+            if (!negocioExists.length) {
+                return jsonError(`Negocio with id=${negocioIdNum} not found`, 400)
+            }
+
             if (categoryName) {
                 created = await prisma.product.create({
                     data: {
@@ -148,6 +167,15 @@ export async function POST(req: Request) {
                     },
                 })
             }
+
+            if (created?.id != null) {
+                await prisma.$executeRaw`
+                    UPDATE Product
+                    SET negocioId = ${negocioIdNum}
+                    WHERE id = ${created.id}
+                `
+                created = { ...created, negocioId: negocioIdNum }
+            }
         } catch (error: unknown) {
             logError('Prisma create error:', error)
             const msg = errorMessage(error)
@@ -177,9 +205,48 @@ export async function GET(req: Request) {
 
         const url = new URL(req.url)
         const category = url.searchParams.get('category') || undefined
+        const negocioIdParam = url.searchParams.get('negocioId')
         const { take, skip } = getPaginationParams(req)
 
+        if (negocioIdParam != null && Number.isNaN(Number(negocioIdParam))) {
+            return jsonError('negocioId must be a valid number', 400)
+        }
+
+        const negocioId = negocioIdParam != null ? Number(negocioIdParam) : undefined
+
         const where = category ? { category: { name: category } } : undefined
+
+        if (negocioId != null) {
+            const rows = category
+                ? await prisma.$queryRaw<Array<{ id: number }>>(Prisma.sql`
+                    SELECT p.id
+                    FROM Product p
+                    LEFT JOIN Category c ON c.id = p.categoryId
+                    WHERE p.negocioId = ${negocioId} AND c.name = ${category}
+                    ORDER BY p.createdAt DESC
+                    LIMIT ${take} OFFSET ${skip}
+                `)
+                : await prisma.$queryRaw<Array<{ id: number }>>(Prisma.sql`
+                    SELECT p.id
+                    FROM Product p
+                    WHERE p.negocioId = ${negocioId}
+                    ORDER BY p.createdAt DESC
+                    LIMIT ${take} OFFSET ${skip}
+                `)
+
+            if (!rows.length) {
+                return NextResponse.json({ data: [] })
+            }
+
+            const ids = rows.map((row) => row.id)
+            const products = await prisma.product.findMany({
+                where: { id: { in: ids } },
+                include: { category: true },
+                orderBy: { createdAt: 'desc' },
+            })
+
+            return NextResponse.json({ data: products })
+        }
 
         const products = await prisma.product.findMany({
             where,

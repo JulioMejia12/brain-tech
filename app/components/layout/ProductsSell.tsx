@@ -1,6 +1,8 @@
 'use client'
-import { useMemo, useState, useEffect } from 'react'
+import { Children, useMemo, useState, useEffect } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+
+const DEFAULT_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || ''
 
 // Spinner simple
 function Spinner() {
@@ -37,6 +39,7 @@ type ProductApiItem = {
     price?: string | number
     image?: string
     description?: string
+    negocioId?: number | null
     category?: {
         name?: string
     } | null
@@ -87,6 +90,7 @@ function mapProductApiItem(it: ProductApiItem): ProductWithPieces {
         price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
         image: it.image || '/placeholder.png',
         description: it.description || '',
+        negocioId: it.negocioId == null ? null : Number(it.negocioId),
         details: Array.isArray((it as any).details) ? (it as any).details.map((d: any) => ({ label: String(d?.label ?? ''), value: String(d?.value ?? '') })) : undefined,
         category: it.category?.name || 'Otros',
         pieces: it.pieces ?? it.quantity ?? it.stock ?? null,
@@ -147,6 +151,8 @@ const ProductsSell = ({
     const [toast, setToast] = useState<ToastState>(null)
     const [productPendingDelete, setProductPendingDelete] = useState<ProductWithPieces | null>(null)
     const resolvedHeroImage = getOptimizedHeroImage(heroImage)
+    const normalizedPromosComponent = Children.toArray(promosComponent)
+    const normalizedChildren = Children.toArray(children)
 
     const categories = useMemo(() => {
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))
@@ -459,6 +465,7 @@ const ProductsSell = ({
                     if (!editingProduct) return
                     setSavingProductId(String(editingProduct.id))
                     const normalizedPieces = payload.pieces ?? null
+                    const resolvedNegocioId = payload.negocioId ?? editingProduct.negocioId ?? (DEFAULT_NEGOCIO_ID ? Number(DEFAULT_NEGOCIO_ID) : undefined)
                     // call API
                     try {
                         let res: Response
@@ -471,6 +478,7 @@ const ProductsSell = ({
                             // stock removed from edit payload
                             if (payload.pieces !== undefined) form.append('pieces', String(payload.pieces))
                             if (payload.details !== undefined) form.append('details', JSON.stringify(payload.details))
+                            if (resolvedNegocioId !== undefined) form.append('negocioId', String(resolvedNegocioId))
                             if (payload.category) form.append('category', String(payload.category))
                             const file = (payload as any).imageFile as File
                             form.append('imageFile', file)
@@ -483,7 +491,7 @@ const ProductsSell = ({
                             res = await fetch(`${resolvedProductMutationBase}/${editingProduct.id}`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload),
+                                body: JSON.stringify({ ...payload, negocioId: resolvedNegocioId }),
                             })
                         }
                         if (res.ok) {
@@ -497,19 +505,20 @@ const ProductsSell = ({
                                     const newPieces = updated.pieces ?? updated.stock ?? normalizedPieces ?? it.pieces
                                     const newDetails = (updated as any).details ?? payload.details ?? it.details
                                     const newImage = String(updated.image ?? it.image ?? '')
+                                    const newNegocioId = updated.negocioId ?? payload.negocioId ?? it.negocioId ?? null
                                     const newCategory = String((updated.category && (updated.category.name || updated.category)) || payload.category || it.category || '')
                                     const newPrice = (updated.price !== undefined && updated.price !== null) ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(updated.price)) : (payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price)
-                                    return { ...it, name: newName, description: newDescription, pieces: newPieces, details: newDetails, image: newImage, category: newCategory, price: newPrice }
+                                    return { ...it, name: newName, description: newDescription, pieces: newPieces, details: newDetails, image: newImage, negocioId: newNegocioId, category: newCategory, price: newPrice }
                                 }))
                             }
                             setToast({ message: 'Producto actualizado correctamente.', type: 'success' })
                         } else {
-                            setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: String(payload.name ?? it.name), description: String(payload.description ?? it.description), pieces: normalizedPieces ?? it.pieces, image: String(it.image), category: String(payload.category ?? it.category), price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price } : it)))
+                            setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: String(payload.name ?? it.name), description: String(payload.description ?? it.description), pieces: normalizedPieces ?? it.pieces, image: String(it.image), negocioId: payload.negocioId ?? it.negocioId, category: String(payload.category ?? it.category), price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price } : it)))
                             setToast({ message: 'Producto actualizado localmente.', type: 'success' })
                         }
                     } catch (e) {
                         console.error('Update error', e)
-                        setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: String(payload.name ?? it.name), description: String(payload.description ?? it.description), pieces: normalizedPieces ?? it.pieces, image: String(it.image), category: String(payload.category ?? it.category), price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price } : it)))
+                        setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: String(payload.name ?? it.name), description: String(payload.description ?? it.description), pieces: normalizedPieces ?? it.pieces, image: String(it.image), negocioId: payload.negocioId ?? it.negocioId, category: String(payload.category ?? it.category), price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price } : it)))
                         setToast({ message: 'No se pudo actualizar en el servidor; se aplicó localmente.', type: 'error' })
                     } finally {
                         setSavingProductId(null)
@@ -580,9 +589,9 @@ const ProductsSell = ({
             </section>
             <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Promociones</h2>
-                {promosComponent ?? <PromotionsClient items={promos} />}
+                {normalizedPromosComponent.length > 0 ? normalizedPromosComponent : <PromotionsClient items={promos} />}
             </section>
-            {children}
+            {normalizedChildren}
             <MobileMenu primary={primary} whatsappNumber={whatsappDigits} />
         </div>
     )

@@ -5,12 +5,20 @@ import type { Product } from '@/app/lib/products'
 
 type ProductWithPieces = Product & { pieces?: number | null }
 
+type NegocioOption = {
+    id: number
+    nombre: string
+}
+
+const DEFAULT_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || ''
+
 type EditPayload = {
     name?: string
     description?: string
     pieces?: number | null
     price?: number | null
     stock?: number | null
+    negocioId?: number | null
     category?: string
     details?: { label: string; value: string }[]
 }
@@ -38,23 +46,9 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
     const [category, setCategory] = useState<string>(() => product?.category ?? '')
     const [details, setDetails] = useState<{ label: string; value: string }[]>(() => product?.details ?? [{ label: '', value: '' }])
 
-    const [previewUrl, setPreviewUrl] = useState<string>(() => product?.image ?? '')
-
-    useEffect(() => {
-        // reset internal state when opening a different product
-        setName(product?.name ?? '')
-        setDescription(product?.description ?? '')
-        setPieces(product?.pieces ?? '')
-        setPrice(parsePrice(product?.price))
-        setCategory(product?.category ?? '')
-        setDetails(product?.details ?? [{ label: '', value: '' }])
-        setPreviewUrl(product?.image ?? '')
-        try {
-            console.info('[EditProductModal] product prop:', product)
-        } catch (e) {
-            // ignore
-        }
-    }, [product, isOpen])
+    const previewUrl = product?.image ?? ''
+    const [negocioNombre, setNegocioNombre] = useState<string>('')
+    const resolvedNegocioId = product?.negocioId ?? (DEFAULT_NEGOCIO_ID ? Number(DEFAULT_NEGOCIO_ID) : null)
 
     const addDetail = () => setDetails((d) => [...d, { label: '', value: '' }])
     const updateDetail = (idx: number, key: 'label' | 'value', val: string) => setDetails((prev) => {
@@ -65,6 +59,37 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
     const removeDetail = (idx: number) => setDetails((prev) => prev.filter((_, i) => i !== idx))
 
     // image upload handled in promotions form only
+
+    useEffect(() => {
+        let mounted = true
+
+        async function loadNegocioNombre() {
+            if (resolvedNegocioId == null) {
+                setNegocioNombre('Sin negocio asignado')
+                return
+            }
+
+            try {
+                const res = await fetch('/api/negocios', { cache: 'no-store' })
+                const body = await res.json().catch(() => ({})) as { data?: NegocioOption[] }
+                if (!mounted) return
+
+                const negocios = Array.isArray(body?.data) ? body.data : []
+                const negocio = negocios.find((item) => item.id === Number(resolvedNegocioId))
+                setNegocioNombre(negocio?.nombre || `ID ${resolvedNegocioId}`)
+            } catch {
+                if (mounted) {
+                    setNegocioNombre(`ID ${resolvedNegocioId}`)
+                }
+            }
+        }
+
+        void loadNegocioNombre()
+
+        return () => {
+            mounted = false
+        }
+    }, [resolvedNegocioId])
 
     if (!isOpen || !product) return null
 
@@ -105,39 +130,76 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                     </label>
 
                     <label className="block">
+                        <span className="text-sm text-gray-600">Negocio detectado</span>
+                        <input
+                            value={negocioNombre || 'Cargando negocio...'}
+                            readOnly
+                            disabled
+                            className="mt-1 w-full border border-gray-300 bg-gray-50 text-gray-700 rounded px-3 py-2"
+                        />
+                    </label>
+
+                    <label className="block">
                         <span className="text-sm text-gray-600">Categoría</span>
                         <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="ej. cocina" className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500" />
                     </label>
 
                     <div>
-                        <span className="text-sm text-gray-600">Detalles</span>
-                        <div className="mt-2 space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-medium text-gray-600">Detalles</span>
+                            <span className="text-xs text-gray-400">{details.length} {details.length === 1 ? 'detalle' : 'detalles'}</span>
+                        </div>
+
+                        <div className="mt-3 space-y-3">
                             {details.map((d, idx) => (
-                                <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                                    <input
-                                        className="col-span-11 sm:col-span-5 mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500"
-                                        placeholder="Etiqueta"
-                                        value={d.label}
-                                        onChange={(e) => updateDetail(idx, 'label', e.target.value)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeDetail(idx)}
-                                        aria-label={`Eliminar detalle ${idx + 1}`}
-                                        className="col-span-1 sm:col-span-1 text-red-500 flex items-center justify-center"
-                                    >
-                                        ✕
-                                    </button>
-                                    <input
-                                        className="col-span-12 sm:col-span-6 mt-1 w-full border border-gray-300 rounded px-2 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500"
-                                        placeholder="Valor"
-                                        value={d.value}
-                                        onChange={(e) => updateDetail(idx, 'value', e.target.value)}
-                                    />
+                                <div key={idx} className="rounded-xl border border-gray-200 bg-gray-50/80 p-3 shadow-sm">
+                                    <div className="mb-3 flex items-center justify-between">
+                                        <div className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-pink-100 px-2 text-xs font-semibold text-pink-700">
+                                            #{idx + 1}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeDetail(idx)}
+                                            aria-label={`Eliminar detalle ${idx + 1}`}
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 hover:text-red-600"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <label className="block">
+                                            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Etiqueta</span>
+                                            <input
+                                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500"
+                                                placeholder="Ej. Material"
+                                                value={d.label}
+                                                onChange={(e) => updateDetail(idx, 'label', e.target.value)}
+                                            />
+                                        </label>
+
+                                        <label className="block">
+                                            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Valor</span>
+                                            <input
+                                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500"
+                                                placeholder="Ej. Acero inoxidable"
+                                                value={d.value}
+                                                onChange={(e) => updateDetail(idx, 'value', e.target.value)}
+                                            />
+                                        </label>
+                                    </div>
                                 </div>
                             ))}
+
                             <div>
-                                <button type="button" onClick={addDetail} className="text-sm text-green-600">Agregar detalle</button>
+                                <button
+                                    type="button"
+                                    onClick={addDetail}
+                                    className="inline-flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100"
+                                >
+                                    <span className="text-base leading-none">＋</span>
+                                    Agregar detalle
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -165,6 +227,9 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                                 payload.stock = Number(pieces)
                             }
                             if (price !== '') payload.price = Number(price)
+                            if (resolvedNegocioId != null && !Number.isNaN(Number(resolvedNegocioId))) {
+                                payload.negocioId = Number(resolvedNegocioId)
+                            }
                             if (category) payload.category = category
                             // image upload disabled here; promotions form handles promotion images
                             const filtered = details.filter(d => (d.label && d.label.trim() !== '') || (d.value && d.value.trim() !== ''))

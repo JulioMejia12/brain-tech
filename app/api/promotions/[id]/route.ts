@@ -3,10 +3,37 @@ import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
 import { prisma } from '@/app/lib/prisma'
 
+function parseNegocioId(value: string | null) {
+    if (value == null || value.trim() === '') {
+        return undefined
+    }
+
+    const parsed = Number(value)
+    return Number.isNaN(parsed) ? null : parsed
+}
+
+async function promotionBelongsToNegocio(id: number, negocioId?: number) {
+    if (negocioId == null) {
+        return true
+    }
+
+    const rows = await prisma.$queryRaw<Array<{ id: number }>>`
+        SELECT id
+        FROM Promotion
+        WHERE id = ${id} AND negocioId = ${negocioId}
+        LIMIT 1
+    `
+
+    return rows.length > 0
+}
+
 export async function PUT(req: NextRequest, ctx: any) {
     try {
         const params = await ctx?.params
         const id = Number(params?.id)
+        const negocioId = parseNegocioId(new URL(req.url).searchParams.get('negocioId'))
+        if (negocioId === null) return NextResponse.json({ error: 'negocioId must be a valid number' }, { status: 400 })
+        if (!(await promotionBelongsToNegocio(id, negocioId))) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
         const contentType = req.headers.get('content-type') || ''
         let body: any = {}
@@ -19,6 +46,7 @@ export async function PUT(req: NextRequest, ctx: any) {
             body.description = String(form.get('description') || '')
             body.specialPrice = String(form.get('specialPrice') || '')
             body.orientation = String(form.get('orientation') || '').trim()
+            body.negocioId = parseNegocioId(String(form.get('negocioId') || ''))
 
             const imageFiles = form.getAll('imageFile') || []
             if (imageFiles.length > 1) {
@@ -47,11 +75,29 @@ export async function PUT(req: NextRequest, ctx: any) {
             }
         } else {
             body = await req.json().catch(() => ({}))
+            body.negocioId = parseNegocioId(body?.negocioId != null ? String(body.negocioId) : null)
+        }
+
+        if (body.negocioId === null) {
+            return NextResponse.json({ error: 'negocioId must be a valid number' }, { status: 400 })
         }
 
         const prismaAny = prisma as any
         const existing = await prismaAny.promotion.findUnique({ where: { id } })
         if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+        if (body.negocioId != null) {
+            const negocioRows = await prisma.$queryRaw<Array<{ id: number }>>`
+                SELECT id
+                FROM Negocio
+                WHERE id = ${Number(body.negocioId)}
+                LIMIT 1
+            `
+
+            if (!negocioRows.length) {
+                return NextResponse.json({ error: `Negocio with id=${Number(body.negocioId)} not found` }, { status: 400 })
+            }
+        }
 
         const updateData: any = {}
         if (body.name !== undefined) {
@@ -104,6 +150,19 @@ export async function PUT(req: NextRequest, ctx: any) {
             }
         }
 
+        const nextNegocioId = body.negocioId != null ? Number(body.negocioId) : undefined
+        if (nextNegocioId != null) {
+            await prisma.$executeRaw`
+                UPDATE Promotion
+                SET negocioId = ${nextNegocioId}
+                WHERE id = ${id}
+            `
+        }
+
+        if (nextNegocioId != null) {
+            updated = { ...updated, negocioId: nextNegocioId }
+        }
+
         return NextResponse.json({ data: updated })
     } catch (e) {
         console.error('Update promotion error', e)
@@ -115,6 +174,9 @@ export async function GET(req: NextRequest, ctx: any) {
     try {
         const params = await ctx?.params
         const id = Number(params?.id)
+        const negocioId = parseNegocioId(new URL(req.url).searchParams.get('negocioId'))
+        if (negocioId === null) return NextResponse.json({ error: 'negocioId must be a valid number' }, { status: 400 })
+        if (!(await promotionBelongsToNegocio(id, negocioId))) return NextResponse.json({ error: 'Not found' }, { status: 404 })
         const prismaAny = prisma as any
         const item = await prismaAny.promotion.findUnique({ where: { id } })
         if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -129,6 +191,9 @@ export async function DELETE(req: NextRequest, ctx: any) {
     try {
         const params = await ctx?.params
         const id = Number(params?.id)
+        const negocioId = parseNegocioId(new URL(req.url).searchParams.get('negocioId'))
+        if (negocioId === null) return NextResponse.json({ error: 'negocioId must be a valid number' }, { status: 400 })
+        if (!(await promotionBelongsToNegocio(id, negocioId))) return NextResponse.json({ error: 'Not found' }, { status: 404 })
         const prismaAny = prisma as any
         const existing = await prismaAny.promotion.findUnique({ where: { id } })
         if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })

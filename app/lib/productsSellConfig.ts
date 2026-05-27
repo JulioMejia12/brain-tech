@@ -1,6 +1,11 @@
 import plateriaConfig from '../demo/plateria-config.json'
 import type { Product } from './products'
 
+const bazarcitoNegocioId = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || process.env.BAZARCITO_NEGOCIO_ID || ''
+const bazarcitoProductsEndpoint = bazarcitoNegocioId
+    ? `/api/products?negocioId=${encodeURIComponent(bazarcitoNegocioId)}`
+    : '/api/bazarcito/products'
+
 export type ProductsSellPageConfig = {
     title: string
     secondary: string
@@ -26,7 +31,7 @@ export const bazarcitoProductsSellProps: ProductsSellPageConfig = {
     promos: [],
     cellPhone: process.env.NUMBER_BAZARCITO || '',
     heroImage: 'https://res.cloudinary.com/ddfj0omil/image/upload/v1778286297/bazarcito_ftyipo.png',
-    productsEndpoint: '/api/bazarcito/products',
+    productsEndpoint: bazarcitoProductsEndpoint,
     productMutationBase: '/api/bazarcito/products',
 }
 

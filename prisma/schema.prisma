@@ -1,69 +1,82 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
 model User {
-  id        Int @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
-  email     String @unique
+  email     String   @unique
   password  String?
   roleId    Int
-  role      Role @relation(fields: [roleId], references: [id])
-
+  negocioId Int?
   createdAt DateTime @default(now())
+  role      Role     @relation(fields: [roleId], references: [id])
+  negocio   Negocio? @relation(fields: [negocioId], references: [id])
 }
 
 model Role {
-  id      Int @id @default(autoincrement())
-  name    String @unique
-
-  users   User[]
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
 }
 
-
 model Product {
-  id          Int @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   price       Float
   stock       Int
   image       String
   categoryId  Int
-  category    Category @relation(fields:[categoryId], references:[id])
-  description String @db.VarChar(400)
-  details Json
+  description String   @db.VarChar(400)
+  details     Json
+  negocioId   Int?
   createdAt   DateTime @default(now())
+  category    Category @relation(fields: [categoryId], references: [id])
+  negocio     Negocio? @relation(fields: [negocioId], references: [id])
 }
 
 model Promotion {
-  id          Int @id @default(autoincrement())
-  name        String
-  description String
-  specialPrice String
-  image       String
+  id            Int                  @id @default(autoincrement())
+  name          String
+  description   String
+  specialPrice  String
+  image         String
   imagePublicId String?
-  orientation PromotionOrientation @default(HORIZONTAL)
-  createdAt   DateTime @default(now())
+  orientation   PromotionOrientation @default(HORIZONTAL)
+  negocioId     Int?
+  createdAt     DateTime             @default(now())
+  negocio       Negocio?             @relation(fields: [negocioId], references: [id])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  negocioId Int?
+  negocio   Negocio?  @relation(fields: [negocioId], references: [id])
+  products  Product[]
+}
+
+model Negocio {
+  id         Int         @id @default(autoincrement())
+  nombre     String
+  slug       String      @unique
+  whatsapp   String?
+  logo       String?
+  createdAt  DateTime    @default(now())
+
+  users      User[]
+  products   Product[]
+  promotions Promotion[]
+  categories Category[]
 }
 
 enum PromotionOrientation {
   HORIZONTAL
   VERTICAL
-}
-
-model Category {
-  id        Int @id @default(autoincrement())
-  name      String @unique
-
-  products  Product[]
 }
