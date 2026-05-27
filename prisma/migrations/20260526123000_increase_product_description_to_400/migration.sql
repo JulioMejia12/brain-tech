@@ -1,0 +1,2 @@
+ALTER TABLE `Product`
+MODIFY `description` VARCHAR(400) NOT NULL;

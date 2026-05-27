@@ -5,6 +5,16 @@ import { Readable } from 'stream'
 import { getPaginationParams } from '../_utils/route'
 import { errorMessage, jsonError, logError } from '../_utils/http'
 
+const PRODUCT_DESCRIPTION_MAX_LENGTH = 400
+
+function getErrorCode(error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+        return String((error as { code?: unknown }).code || '')
+    }
+
+    return ''
+}
+
 type ProductInput = {
     title: string
     price: number
@@ -83,6 +93,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing required fields: include categoryId or category name and description' }, { status: 400 })
         }
 
+        if (description.length > PRODUCT_DESCRIPTION_MAX_LENGTH) {
+            return jsonError(`La descripción es muy larga. Máximo ${PRODUCT_DESCRIPTION_MAX_LENGTH} caracteres.`, 400)
+        }
+
         const categoryIdNum = categoryId != null ? Number(categoryId) : null
         const categoryName = typeof body.category === 'string' && body.category.trim() !== '' ? body.category.trim() : null
 
@@ -137,8 +151,12 @@ export async function POST(req: Request) {
         } catch (error: unknown) {
             logError('Prisma create error:', error)
             const msg = errorMessage(error)
+            const code = getErrorCode(error)
             if (msg.includes('insecure transport') || msg.includes('Connections using insecure transport')) {
                 return jsonError('Database connection rejected insecure transport (SSL required). Update your DATABASE_URL to use TLS/SSL.', 502, msg)
+            }
+            if (code === 'P2000' || (msg.toLowerCase().includes('too long for column') && msg.toLowerCase().includes('description'))) {
+                return jsonError(`La descripción es muy larga. Máximo ${PRODUCT_DESCRIPTION_MAX_LENGTH} caracteres.`, 400)
             }
             return jsonError('Database error during product creation', 500, msg)
         }

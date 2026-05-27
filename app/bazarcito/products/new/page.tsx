@@ -2,6 +2,8 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 
+const PRODUCT_DESCRIPTION_MAX_LENGTH = 400
+
 export default function NewBazarcitoProductPage() {
     const router = useRouter()
     const [title, setTitle] = useState("")
@@ -26,6 +28,12 @@ export default function NewBazarcitoProductPage() {
 
             if (!imageFile) {
                 setError('Debes subir un archivo de imagen')
+                setLoading(false)
+                return
+            }
+
+            if (description.length > PRODUCT_DESCRIPTION_MAX_LENGTH) {
+                setError(`La descripción es muy larga. Máximo ${PRODUCT_DESCRIPTION_MAX_LENGTH} caracteres.`)
                 setLoading(false)
                 return
             }
@@ -144,8 +152,12 @@ export default function NewBazarcitoProductPage() {
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Breve descripción del producto"
                             rows={4}
+                            maxLength={PRODUCT_DESCRIPTION_MAX_LENGTH}
                             required
                         />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {description.length}/{PRODUCT_DESCRIPTION_MAX_LENGTH} caracteres
+                        </p>
                     </div>
 
                     <div className="sm:col-span-2">
