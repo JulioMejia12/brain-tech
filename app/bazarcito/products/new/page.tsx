@@ -1,14 +1,9 @@
 "use client"
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 400
-
-type NegocioOption = {
-    id: number
-    nombre: string
-    slug: string
-}
+const BAZARCITO_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || '1'
 
 export default function NewBazarcitoProductPage() {
     const router = useRouter()
@@ -17,52 +12,11 @@ export default function NewBazarcitoProductPage() {
     const [stock, setStock] = useState<number | "">("")
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-    const [negocioId, setNegocioId] = useState("")
-    const [negocios, setNegocios] = useState<NegocioOption[]>([])
-    const [loadingNegocios, setLoadingNegocios] = useState(true)
     const [category, setCategory] = useState("")
     const [description, setDescription] = useState("")
     const [details, setDetails] = useState<{ label: string; value: string }[]>([{ label: "", value: "" }])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-
-    useEffect(() => {
-        let mounted = true
-
-        async function loadNegocios() {
-            try {
-                setLoadingNegocios(true)
-                const res = await fetch('/api/negocios', { cache: 'no-store' })
-                const body = await res.json().catch(() => ({}))
-
-                if (!res.ok) {
-                    throw new Error(body?.error || 'No se pudieron cargar los negocios')
-                }
-
-                if (!mounted) return
-
-                const items = Array.isArray(body?.data) ? body.data : []
-                setNegocios(items)
-
-                if (items.length === 1) {
-                    setNegocioId(String(items[0].id))
-                }
-            } catch (err: unknown) {
-                if (!mounted) return
-                setError(err instanceof Error ? err.message : String(err))
-            } finally {
-                if (mounted) {
-                    setLoadingNegocios(false)
-                }
-            }
-        }
-
-        void loadNegocios()
-
-        return () => {
-            mounted = false
-        }
-    }, [])
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -79,12 +33,6 @@ export default function NewBazarcitoProductPage() {
                 return
             }
 
-            if (!negocioId) {
-                setError('Debes seleccionar un negocio')
-                setLoading(false)
-                return
-            }
-
             if (description.length > PRODUCT_DESCRIPTION_MAX_LENGTH) {
                 setError(`La descripción es muy larga. Máximo ${PRODUCT_DESCRIPTION_MAX_LENGTH} caracteres.`)
                 setLoading(false)
@@ -96,7 +44,7 @@ export default function NewBazarcitoProductPage() {
             fd.append('description', description)
             fd.append('price', String(price))
             fd.append('stock', String(stock))
-            fd.append('negocioId', negocioId)
+            fd.append('negocioId', BAZARCITO_NEGOCIO_ID)
             fd.append('category', category.trim())
             fd.append('details', JSON.stringify(filteredDetails))
             fd.append('imageFile', imageFile)
@@ -135,22 +83,8 @@ export default function NewBazarcitoProductPage() {
                 <h1 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Nuevo producto — Bazarcito</h1>
 
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Negocio</label>
-                        <select
-                            className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100"
-                            value={negocioId}
-                            onChange={(e) => setNegocioId(e.target.value)}
-                            disabled={loadingNegocios}
-                            required
-                        >
-                            <option value="">{loadingNegocios ? 'Cargando negocios...' : 'Selecciona un negocio'}</option>
-                            {negocios.map((negocio) => (
-                                <option key={negocio.id} value={negocio.id}>
-                                    {negocio.nombre}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="sm:col-span-2 rounded-xl border border-fuchsia-200 bg-fuchsia-50 px-4 py-3 text-sm text-fuchsia-900">
+                        Este formulario crea productos vinculados automáticamente a <span className="font-semibold">Bazarcito</span> con <span className="font-semibold">negocioId = {BAZARCITO_NEGOCIO_ID}</span>.
                     </div>
 
                     <div className="sm:col-span-2">
@@ -307,7 +241,7 @@ export default function NewBazarcitoProductPage() {
                         <div>
                             <button
                                 type="submit"
-                                disabled={loading || loadingNegocios || negocios.length === 0}
+                                disabled={loading}
                                 className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-medium px-4 py-2 rounded-lg shadow"
                             >
                                 {loading ? "Creando..." : "Crear producto"}

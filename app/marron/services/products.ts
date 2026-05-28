@@ -6,7 +6,9 @@ import type { Product } from '@/app/lib/products/types'
 const MARRON_NEGOCIO_ID = Number(process.env.NEXT_PUBLIC_MARRON_NEGOCIO_ID || process.env.MARRON_NEGOCIO_ID || '2')
 
 export async function getMarronProducts(category?: string): Promise<Product[]> {
-    if (typeof window === 'undefined') {
+    const isServer = typeof window === 'undefined'
+
+    if (isServer) {
         try {
             const rows = category
                 ? await prisma.$queryRaw<Array<{ id: number }>>(Prisma.sql`
@@ -35,7 +37,8 @@ export async function getMarronProducts(category?: string): Promise<Product[]> {
 
             return items.map(mapItemToProduct)
         } catch (error) {
-            console.error('Prisma fetch for Marron failed, falling back to HTTP fetch:', error)
+            console.error('Prisma fetch for Marron failed; returning empty list on server:', error)
+            return []
         }
     }
 
@@ -55,8 +58,9 @@ export async function getMarronProducts(category?: string): Promise<Product[]> {
 
 export async function getMarronProductById(id: string): Promise<Product | undefined> {
     if (!id || !/^\d+$/.test(id)) return undefined
+    const isServer = typeof window === 'undefined'
 
-    if (typeof window === 'undefined') {
+    if (isServer) {
         try {
             const rows = await prisma.$queryRaw<Array<{ id: number }>>(Prisma.sql`
                 SELECT id
@@ -72,7 +76,8 @@ export async function getMarronProductById(id: string): Promise<Product | undefi
             const item = await prisma.product.findUnique({ where: { id: Number(id) }, include: { category: true } })
             return item ? mapItemToProduct(item) : undefined
         } catch (error) {
-            console.error('Prisma get Marron product by id failed, falling back to HTTP fetch:', error)
+            console.error('Prisma get Marron product by id failed; returning undefined on server:', error)
+            return undefined
         }
     }
 

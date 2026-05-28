@@ -2,10 +2,8 @@ import plateriaConfig from '../demo/plateria-config.json'
 import type { Product } from './products'
 import type { MobileStoreHeaderProps } from '../components/layout/MobileStoreHeader'
 
-const bazarcitoNegocioId = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || process.env.BAZARCITO_NEGOCIO_ID || ''
-const bazarcitoProductsEndpoint = bazarcitoNegocioId
-    ? `/api/products?negocioId=${encodeURIComponent(bazarcitoNegocioId)}`
-    : '/api/bazarcito/products'
+const bazarcitoNegocioId = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || process.env.BAZARCITO_NEGOCIO_ID || '1'
+const bazarcitoProductsEndpoint = `/api/products?negocioId=${encodeURIComponent(bazarcitoNegocioId)}`
 const marronNegocioId = process.env.NEXT_PUBLIC_MARRON_NEGOCIO_ID || process.env.MARRON_NEGOCIO_ID || '2'
 const marronProductsEndpoint = `/api/products?negocioId=${encodeURIComponent(marronNegocioId)}`
 

@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client'
 
 export type { Product } from './products/types'
 
-const BAZARCITO_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || process.env.BAZARCITO_NEGOCIO_ID || ''
+const BAZARCITO_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || process.env.BAZARCITO_NEGOCIO_ID || '1'
 
 function getBazarcitoNegocioId() {
     const parsed = Number(BAZARCITO_NEGOCIO_ID)
@@ -16,8 +16,9 @@ function getBazarcitoNegocioId() {
 
 export async function getBazarcitoProducts(category?: string): Promise<Product[]> {
     const negocioId = getBazarcitoNegocioId()
+    const isServer = typeof window === 'undefined'
 
-    if (typeof window === 'undefined') {
+    if (isServer) {
         try {
             if (negocioId != null) {
                 const rows = category
@@ -62,7 +63,8 @@ export async function getBazarcitoProducts(category?: string): Promise<Product[]
             const items = await prisma.product.findMany({ where, include: { category: true } })
             return items.map(mapItemToProduct)
         } catch (err) {
-            console.error('Prisma fetch failed, falling back to HTTP fetch:', err)
+            console.error('Prisma fetch failed for Bazarcito products; returning empty list on server:', err)
+            return []
         }
     }
 
@@ -85,7 +87,9 @@ export async function getBazarcitoProducts(category?: string): Promise<Product[]
 export async function getBazarcitoProductById(id: string): Promise<Product | undefined> {
     if (!id) return undefined
     const negocioId = getBazarcitoNegocioId()
-    if (typeof window === 'undefined') {
+    const isServer = typeof window === 'undefined'
+
+    if (isServer) {
         try {
             if (!/^\d+$/.test(id)) {
                 return undefined
@@ -110,7 +114,8 @@ export async function getBazarcitoProductById(id: string): Promise<Product | und
             }
             return item ? mapItemToProduct(item) : undefined
         } catch (err) {
-            console.error('Prisma get by id failed, falling back to HTTP fetch:', err)
+            console.error('Prisma get by id failed for Bazarcito; returning undefined on server:', err)
+            return undefined
         }
     }
 

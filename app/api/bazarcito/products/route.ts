@@ -6,6 +6,8 @@ import { bazarcitoWhereClause } from '@/app/api/_utils/catalog'
 import { errorMessage, jsonError, logError } from '@/app/api/_utils/http'
 import { getPaginationParams } from '@/app/api/_utils/route'
 
+const BAZARCITO_NEGOCIO_ID = Number(process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || process.env.BAZARCITO_NEGOCIO_ID || '1')
+
 export async function POST(req: Request) {
     return productsPOST(req)
 }
@@ -21,7 +23,7 @@ export async function GET(req: Request) {
             return jsonError('negocioId must be a valid number', 400)
         }
 
-        const negocioId = negocioIdParam != null ? Number(negocioIdParam) : undefined
+        const negocioId = negocioIdParam != null ? Number(negocioIdParam) : BAZARCITO_NEGOCIO_ID
 
         if (negocioId != null) {
             const rows = category
