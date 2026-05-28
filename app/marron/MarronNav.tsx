@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NavBar from '../components/layout/NavBar'
 
-export default function BazarcitoNav() {
+export default function MarronNav() {
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -24,10 +24,10 @@ export default function BazarcitoNav() {
 
     return (
         <NavBar
-            primary="#ff81e3"
+            primary="#895129"
             textColor="#fff"
             textColorLogo="#fff"
-            title="Bazarcito online"
+            title="Marron"
             query={query}
             logo={'/logoBazar.png'}
             onQueryChange={handleQueryChange}

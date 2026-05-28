@@ -48,8 +48,10 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
     if (auth?.user) {
         // show admin-only actions
         const isAdmin = String(auth.user?.role?.name || '').toLowerCase() === 'admin'
-        if (isAdmin) defaultItems.push({ label: 'Agregar productos', href: '/bazarcito/products/new' })
-        if (isAdmin) defaultItems.push({ label: 'Crear promociones', href: '/bazarcito/promotions/new' })
+        const isMarronPath = currentPath.startsWith('/marron')
+        const adminBasePath = isMarronPath ? '/marron' : '/bazarcito'
+        if (isAdmin) defaultItems.push({ label: 'Agregar productos', href: `${adminBasePath}/products/new` })
+        if (isAdmin) defaultItems.push({ label: 'Crear promociones', href: `${adminBasePath}/promotions/new` })
         defaultItems.push({ label: 'Cerrar sesión', href: '/logout' })
     } else {
         defaultItems = [{ label: 'Iniciar sesión', href: `/auth/login?next=${encodeURIComponent(currentPath)}` }]

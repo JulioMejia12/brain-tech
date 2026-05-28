@@ -21,6 +21,12 @@ type AuthResponse = {
     }
 }
 
+function getSiteContextFromPath(path: string) {
+    if (path.startsWith('/bazarcito')) return 'bazarcito'
+    if (path.startsWith('/marron')) return 'marron'
+    return undefined
+}
+
 export default function LoginPage() {
     const router = useRouter()
     const auth = useAuth()
@@ -37,6 +43,8 @@ export default function LoginPage() {
         if (typeof window === 'undefined') return '/profile'
         return new URLSearchParams(window.location.search).get('next') || '/profile'
     }
+
+    const getSiteContext = () => getSiteContextFromPath(getNextPath())
 
     const persistToken = (token?: string) => {
         if (!token) return false
@@ -68,7 +76,7 @@ export default function LoginPage() {
                 res = await apiFetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, name, createIfNotExists, password }),
+                    body: JSON.stringify({ email, name, createIfNotExists, password, siteContext: getSiteContext() }),
                 })
             }
 

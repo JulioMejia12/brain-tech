@@ -9,8 +9,9 @@ type Props = {
     textColorLogo?: string
     query?: string
     onQueryChange?: (value: string) => void
+    hideOnMobile?: boolean
 }
-const NavBar = ({ logo, title, primary, textColor, textColorLogo, query = '', onQueryChange }: Props) => {
+const NavBar = ({ logo, title, primary, textColor, textColorLogo, query = '', onQueryChange, hideOnMobile = false }: Props) => {
     const handleQueryChange = (value: string) => {
         if (onQueryChange) onQueryChange(value)
     }
@@ -23,7 +24,7 @@ const NavBar = ({ logo, title, primary, textColor, textColorLogo, query = '', on
     const inputColor = (normalized === '#fff' || normalized === 'white' || normalized === 'rgb(255,255,255)') ? '#111' : (textColor || '#111')
 
     return (
-        <header className="shadow" style={{ background: primary }}>
+        <header className={`shadow ${hideOnMobile ? 'hidden sm:block' : ''}`} style={{ background: primary }}>
             <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     {logo ? (

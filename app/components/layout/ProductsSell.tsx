@@ -27,6 +27,7 @@ import ButtonSpinner from '../ui/ButtonSpinner'
 import EditProductModal from '@/app/components/ui/EditProductModal'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Product } from '@/app/lib/products'
+import MobileStoreHeader, { type MobileStoreHeaderProps } from './MobileStoreHeader'
 
 type ProductWithPieces = Product & {
     pieces?: number | null
@@ -68,6 +69,9 @@ type Props = {
     products?: Product[]
     productsEndpoint?: string
     productMutationBase?: string
+    mobileHero?: MobileStoreHeaderProps
+    mobileHeroVariant?: 'default' | 'compact-card'
+    mobileHeroSubtitle?: string
 }
 
 const DEFAULT_PRODUCTS_ENDPOINT = '/api/bazarcito/products'
@@ -111,6 +115,9 @@ const ProductsSell = ({
     products: productsArray,
     productsEndpoint,
     productMutationBase,
+    mobileHero,
+    mobileHeroVariant = 'default',
+    mobileHeroSubtitle,
 }: Props) => {
     const resolvedProductsEndpoint = productsEndpoint || DEFAULT_PRODUCTS_ENDPOINT
     const resolvedProductMutationBase = productMutationBase || resolvedProductsEndpoint.split('?')[0]
@@ -153,6 +160,10 @@ const ProductsSell = ({
     const resolvedHeroImage = getOptimizedHeroImage(heroImage)
     const normalizedPromosComponent = Children.toArray(promosComponent)
     const normalizedChildren = Children.toArray(children)
+    const storeBasePath = useMemo(() => {
+        const parts = String(pathname || '/').split('/').filter(Boolean)
+        return parts.length > 0 ? `/${parts[0]}` : ''
+    }, [pathname])
 
     const categories = useMemo(() => {
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))
@@ -218,7 +229,8 @@ const ProductsSell = ({
         const browserOrigin = typeof window !== 'undefined' ? window.location.origin : ''
         const isLocalhost = browserOrigin.includes('localhost') || browserOrigin.includes('127.0.0.1')
         const baseUrl = !browserOrigin || isLocalhost ? SHARE_BASE_URL : browserOrigin
-        const url = new URL(`/share/product/${product.id}`, baseUrl)
+        const detailPath = `${storeBasePath || ''}/product/${product.id}`
+        const url = new URL(detailPath, baseUrl)
         url.searchParams.set('utm_source', 'whatsapp')
         url.searchParams.set('utm_medium', 'share')
         url.searchParams.set('preview', String(Date.now()))
@@ -260,7 +272,7 @@ const ProductsSell = ({
                     .map((d: any) => `• ${d.label}: ${d.value}`)
                     .join('\n')
                 : ''
-            const textParts = [pageUrl, '', `Producto: ${product.name}`, `Precio: ${product.price}`, product.description || 'Mira este producto en Bazarcito.']
+            const textParts = [pageUrl, '', `Producto: ${product.name}`, `Precio: ${product.price}`, product.description || `Mira este producto en ${title || 'nuestra tienda'}.`]
             if (detailsText) textParts.push('', detailsText)
             const text = textParts.join('\n')
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
@@ -274,26 +286,54 @@ const ProductsSell = ({
     return (
         <div style={{ background: bgColor }}>
             <div className="block sm:hidden xs:block relative w-full overflow-hidden bg-white" style={{ background: primary }}>
-                <div className="relative mx-auto flex min-h-[360px] items-center justify-center px-4 py-4">
-                    <Image
-                        src={resolvedHeroImage}
-                        alt={title || 'Hero'}
-                        width={800}
-                        height={800}
-                        priority
-                        quality={100}
-                        sizes="100vw"
-                        className="h-auto max-h-[520px] w-full object-contain object-center"
+                {mobileHero ? (
+                    <MobileStoreHeader
+                        {...mobileHero}
+                        imageSrc={getOptimizedHeroImage(mobileHero.imageSrc || heroImage)}
+                        title={mobileHero.title || title}
                     />
-                </div>
-                {/* {title && (
-                    <div className="relative z-10 h-full flex items-center justify-center">
-                        <div className="text-center px-4">
-                            <h1 className="text-3xl md:text-4xl font-bold" style={{ color: textColor }}>{title}</h1>
-                            <p className="mt-2 text-sm md:text-base text-white/90" style={{ color: textColor }}>Explora todos nuestros productos</p>
+                ) : mobileHeroVariant === 'compact-card' ? (
+                    <div className="mx-auto px-4 pb-5 pt-4">
+                        <div className="overflow-hidden rounded-[28px] border border-white/20 bg-white/10 shadow-[0_18px_50px_rgba(0,0,0,0.16)] backdrop-blur-sm">
+                            <div className="px-4 pb-3 pt-4 text-center">
+                                <span className="inline-flex rounded-full border border-white/20 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/85">
+                                    {mobileHeroSubtitle || 'Catálogo online'}
+                                </span>
+                            </div>
+                            <div className="px-3 pb-3">
+                                <div className="relative overflow-hidden rounded-[24px] bg-[#fffaf6] p-2 shadow-inner">
+                                    <Image
+                                        src={resolvedHeroImage}
+                                        alt={title || 'Hero'}
+                                        width={800}
+                                        height={800}
+                                        priority
+                                        quality={100}
+                                        sizes="100vw"
+                                        className="h-auto max-h-[250px] w-full rounded-[18px] object-contain object-center"
+                                    />
+                                </div>
+                            </div>
+                            <div className="px-5 pb-5 text-center">
+                                <h1 className="text-2xl font-extrabold tracking-tight text-white">{title}</h1>
+                                <p className="mt-1 text-sm text-white/80">Descubre novedades prácticas para tu hogar.</p>
+                            </div>
                         </div>
                     </div>
-                )} */}
+                ) : (
+                    <div className="relative mx-auto flex min-h-[360px] items-center justify-center px-4 py-4">
+                        <Image
+                            src={resolvedHeroImage}
+                            alt={title || 'Hero'}
+                            width={800}
+                            height={800}
+                            priority
+                            quality={100}
+                            sizes="100vw"
+                            className="h-auto max-h-[520px] w-full object-contain object-center"
+                        />
+                    </div>
+                )}
             </div>
 
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">

@@ -11,51 +11,58 @@ type LoginBody = {
     password?: string
     name?: string
     createIfNotExists?: boolean
+    siteContext?: string
+}
+
+function getAllowedNegocioFromContext(siteContext?: string) {
+    if (siteContext === 'bazarcito') {
+        return process.env.BAZARCITO_NEGOCIO_ID || process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || undefined
+    }
+
+    if (siteContext === 'marron') {
+        return process.env.MARRON_NEGOCIO_ID || process.env.NEXT_PUBLIC_MARRON_NEGOCIO_ID || undefined
+    }
+
+    return undefined
 }
 
 export async function POST(req: Request) {
     try {
         const body = (await req.json()) as LoginBody
+        const allowedNegocioEnv = getAllowedNegocioFromContext(body?.siteContext)
+        const allowedNegocio = allowedNegocioEnv ? Number(allowedNegocioEnv) : undefined
         const email = normalizeEmail(body?.email)
         const password = body?.password
         if (!email) return jsonError('Missing email', 400)
 
         try {
+            // Login with password
             if (typeof password === 'string') {
                 const user = await findUserByEmail(email)
-                if (!user) {
-                    return jsonError('Usuario no encontrado', 404)
-                }
-
-                if (!user.password) {
-                    return jsonError('Usuario no tiene password', 400)
-                }
+                if (!user) return jsonError('Usuario no encontrado', 404)
+                if (!user.password) return jsonError('Usuario no tiene password', 400)
 
                 const validPassword = await bcrypt.compare(password, user.password)
-                if (!validPassword) {
-                    return jsonError('Password incorrecto', 401)
+                if (!validPassword) return jsonError('Password incorrecto', 401)
+
+                // Enforce negocio restriction if present
+                if (allowedNegocio != null && user.negocioId !== allowedNegocio) {
+                    return jsonError('Usuario no autorizado para este sitio', 403)
                 }
 
                 const jwtSecret = getJwtSecret()
-                if (!jwtSecret) {
-                    return jsonError('JWT_SECRET no configurado', 500)
-                }
+                if (!jwtSecret) return jsonError('JWT_SECRET no configurado', 500)
 
                 const token = jwt.sign(
-                    {
-                        userId: user.id,
-                        role: user.role,
-                    },
+                    { userId: user.id, role: user.role, negocioId: user.negocioId ?? null },
                     jwtSecret,
                     { expiresIn: '7d' }
                 )
 
-                return NextResponse.json({
-                    token,
-                    user: toPublicUser(user),
-                })
+                return NextResponse.json({ token, user: toPublicUser(user) })
             }
 
+            // No password supplied: return user info if exists or optionally create
             const user = await findUserByEmail(email)
             if (user) return NextResponse.json({ data: user })
 
@@ -64,20 +71,17 @@ export async function POST(req: Request) {
                 const randomPassword = randomUUID()
                 const hashed = bcrypt.hashSync(randomPassword, 10)
 
-                const created = await prisma.user.create({
-                    data: {
-                        name,
-                        email,
-                        password: hashed,
-                        role: {
-                            connectOrCreate: {
-                                where: { name: 'user' },
-                                create: { name: 'user' },
-                            },
-                        },
+                const createData: any = {
+                    name,
+                    email,
+                    password: hashed,
+                    role: {
+                        connectOrCreate: { where: { name: 'user' }, create: { name: 'user' } },
                     },
-                    include: { role: true },
-                })
+                }
+                if (allowedNegocio != null) createData.negocioId = allowedNegocio
+
+                const created = await prisma.user.create({ data: createData, include: { role: true } })
                 return NextResponse.json({ data: created }, { status: 201 })
             }
 
