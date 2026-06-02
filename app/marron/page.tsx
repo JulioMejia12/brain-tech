@@ -14,7 +14,7 @@ export default async function MarronPage() {
         <Suspense fallback={<ProductsLoading />}>
             <ProductsSell {...marronProductsSellProps} cellPhone={marronWhatsappNumber} products={products} promosComponent={<PromotionsLoader />}>
                 <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                    <h2 className="text-2xl font-bold mb-4" style={{ color: marronProductsSellProps.secondary }}>Conviértete en Asociado Betterware</h2>
+                    <h2 className="text-2xl font-bold mb-4" style={{ color: marronProductsSellProps.secondary }}>Conviértete en Asociado Betterware y Tupperware</h2>
                     <p className="text-gray-700 text-base mb-2 font-semibold">
                         Empieza a vender productos Betterware y genera ingresos extra con horarios flexibles y apoyo de nuestro equipo.
 
