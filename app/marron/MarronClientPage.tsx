@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { FiCheckCircle } from 'react-icons/fi'
 import ProductsSell from '../components/layout/ProductsSell'
+import ProductsLoading from '../components/ui/ProductsLoading'
 import { marronProductsSellProps } from '../lib/productsSellConfig'
 import PromotionsLoader from './PromotionsLoader'
 import type { Product } from '../lib/products'
@@ -12,6 +14,16 @@ type Props = {
 }
 
 export default function MarronClientPage({ products, marronWhatsappNumber }: Props) {
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) {
+        return <ProductsLoading message="Cargando Marron..." />
+    }
+
     return (
         <ProductsSell {...marronProductsSellProps} cellPhone={marronWhatsappNumber} products={products} promosComponent={<PromotionsLoader />}>
             <section id="vender" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">

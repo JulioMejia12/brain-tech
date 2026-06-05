@@ -75,6 +75,11 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
         return (first.slice(0, 2)).toUpperCase()
     }
     const initials = user ? getInitials(user?.name, user?.email) : ''
+    const logoutRedirectPath = currentPath.startsWith('/marron')
+        ? '/marron'
+        : currentPath.startsWith('/bazarcito')
+            ? '/bazarcito'
+            : '/'
 
     return (
         <div className="relative" ref={ref}>
@@ -101,7 +106,7 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
             </button>
 
             {open && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl ring-opacity-5 z-50 origin-top-right transform transition ease-out duration-150">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl ring-opacity-5 z-[90] origin-top-right transform transition ease-out duration-150">
                     {user && (
                         <div className="p-3 border-b border-gray-100">
                             <div className="flex items-center gap-3">
@@ -125,7 +130,7 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
                             const extra = isLogout && i > 0 ? 'border-t border-gray-100 mt-1 pt-2' : ''
                             if (isLogout) {
                                 return (
-                                    <button key={itemKey} onClick={() => { auth.logout(); setOpen(false); router.push('/') }} className={`${baseClass} ${extra}`} role="menuitem">
+                                    <button key={itemKey} onClick={() => { auth.logout(); setOpen(false); router.push(logoutRedirectPath) }} className={`${baseClass} ${extra}`} role="menuitem">
                                         <span className="flex-1">{it.label}</span>
                                     </button>
                                 )

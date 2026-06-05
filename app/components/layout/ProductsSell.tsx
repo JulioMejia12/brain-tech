@@ -283,7 +283,7 @@ const ProductsSell = ({
 
     return (
         <div style={{ background: bgColor }}>
-            <div className="block sm:hidden xs:block relative w-full overflow-hidden bg-white" style={{ background: primary }}>
+            <div className="block sm:hidden xs:block relative z-30 w-full overflow-visible bg-white" style={{ background: primary }}>
                 {mobileHero ? (
                     <MobileStoreHeader
                         {...mobileHero}
