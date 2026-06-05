@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import StorefrontSwitchGuard from "@/app/components/auth/StorefrontSwitchGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {/* Auth provider wraps the app so components can access logged user */}
           <AuthProvider>
+            <StorefrontSwitchGuard />
             {children}
           </AuthProvider>
         </ThemeProvider>

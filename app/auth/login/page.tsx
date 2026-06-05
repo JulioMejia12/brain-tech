@@ -21,6 +21,8 @@ type AuthResponse = {
     }
 }
 
+type StorefrontContext = 'bazarcito' | 'marron' | undefined
+
 function getSiteContextFromPath(path: string) {
     if (path.startsWith('/bazarcito')) return 'bazarcito'
     if (path.startsWith('/marron')) return 'marron'
@@ -44,7 +46,7 @@ export default function LoginPage() {
         return new URLSearchParams(window.location.search).get('next') || '/profile'
     }
 
-    const getSiteContext = () => {
+    const getSiteContext = (): StorefrontContext => {
         if (typeof window !== 'undefined') {
             const fromPath = getSiteContextFromPath(window.location.pathname)
             if (fromPath) return fromPath
@@ -96,8 +98,9 @@ export default function LoginPage() {
             }
 
             const user = body?.user ?? body?.data
+            const siteContext = getSiteContext()
             if (user) {
-                try { auth.login(user) } catch (e) { console.warn(e) }
+                try { auth.login(user, siteContext) } catch (e) { console.warn(e) }
             }
 
             if (!isRegister && !persistToken(body?.token)) {
