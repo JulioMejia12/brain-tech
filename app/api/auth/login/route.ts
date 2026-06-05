@@ -29,7 +29,22 @@ function getAllowedNegocioFromContext(siteContext?: string) {
 export async function POST(req: Request) {
     try {
         const body = (await req.json()) as LoginBody
-        const allowedNegocioEnv = getAllowedNegocioFromContext(body?.siteContext)
+        // Determine allowed negocio from explicit siteContext, falling back to the Referer header
+        let allowedNegocioEnv = getAllowedNegocioFromContext(body?.siteContext)
+        if (!allowedNegocioEnv) {
+            const referer = req.headers.get('referer')
+            if (referer) {
+                try {
+                    const url = new URL(referer)
+                    const parts = url.pathname.split('/').filter(Boolean)
+                    const ctx = parts[0]
+                    const envFromReferer = getAllowedNegocioFromContext(ctx)
+                    if (envFromReferer) allowedNegocioEnv = envFromReferer
+                } catch (e) {
+                    /* ignore URL parse errors */
+                }
+            }
+        }
         const allowedNegocio = allowedNegocioEnv ? Number(allowedNegocioEnv) : undefined
         const email = normalizeEmail(body?.email)
         const password = body?.password
@@ -62,9 +77,14 @@ export async function POST(req: Request) {
                 return NextResponse.json({ token, user: toPublicUser(user) })
             }
 
-            // No password supplied: return user info if exists or optionally create
+            // No password supplied: do not allow login without password.
+            // Only allow account creation when `createIfNotExists` is true.
             const user = await findUserByEmail(email)
-            if (user) return NextResponse.json({ data: user })
+
+            if (user) {
+                // For safety, never return user data on a login attempt without password.
+                return jsonError('Password required', 400)
+            }
 
             if (body.createIfNotExists) {
                 const name = body.name?.trim() || email.split('@')[0]

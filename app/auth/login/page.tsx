@@ -33,7 +33,7 @@ export default function LoginPage() {
     // read `next` from the browser URL at submit time to avoid using useSearchParams
     const [email, setEmail] = useState('')
     const [name, setName] = useState('')
-    const [createIfNotExists, setCreateIfNotExists] = useState(true)
+    const [createIfNotExists, setCreateIfNotExists] = useState(false)
     const [isRegister, setIsRegister] = useState(false)
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
@@ -44,7 +44,15 @@ export default function LoginPage() {
         return new URLSearchParams(window.location.search).get('next') || '/profile'
     }
 
-    const getSiteContext = () => getSiteContextFromPath(getNextPath())
+    const getSiteContext = () => {
+        if (typeof window !== 'undefined') {
+            const fromPath = getSiteContextFromPath(window.location.pathname)
+            if (fromPath) return fromPath
+            // fallback to next query param if present
+            return getSiteContextFromPath(getNextPath())
+        }
+        return getSiteContextFromPath(getNextPath())
+    }
 
     const persistToken = (token?: string) => {
         if (!token) return false
