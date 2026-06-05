@@ -119,22 +119,23 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
                     <div className="py-1">
                         {menu.map((it, i) => {
                             const label = String(it.label)
+                            const itemKey = `${it.href || 'action'}:${label}`
                             const isLogout = label.toLowerCase().includes('cerrar') || label.toLowerCase().includes('salir')
                             const baseClass = 'flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full'
                             const extra = isLogout && i > 0 ? 'border-t border-gray-100 mt-1 pt-2' : ''
                             if (isLogout) {
                                 return (
-                                    <button key={i} onClick={() => { auth.logout(); setOpen(false); router.push('/') }} className={`${baseClass} ${extra}`} role="menuitem">
+                                    <button key={itemKey} onClick={() => { auth.logout(); setOpen(false); router.push('/') }} className={`${baseClass} ${extra}`} role="menuitem">
                                         <span className="flex-1">{it.label}</span>
                                     </button>
                                 )
                             }
                             return it.href ? (
-                                <Link key={i} href={it.href} className={`${baseClass} ${extra}`} onClick={() => setOpen(false)} role="menuitem">
+                                <Link key={itemKey} href={it.href} className={`${baseClass} ${extra}`} onClick={() => setOpen(false)} role="menuitem">
                                     <span className="flex-1">{it.label}</span>
                                 </Link>
                             ) : (
-                                <button key={i} onClick={() => { it.onClick?.(); setOpen(false) }} className={`${baseClass} ${extra}`} role="menuitem">
+                                <button key={itemKey} onClick={() => { it.onClick?.(); setOpen(false) }} className={`${baseClass} ${extra}`} role="menuitem">
                                     <span className="flex-1">{it.label}</span>
                                 </button>
                             )

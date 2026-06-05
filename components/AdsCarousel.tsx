@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import ConfirmModal from '../app/components/ui/ConfirmModal'
 import { useAuth } from '@/contexts/AuthContext'
@@ -20,7 +20,14 @@ const AdsCarousel: React.FC<AdsCarouselProps> = ({ images, interval = 4000, clas
     const auth = useAuth()
     const isAdmin = Boolean(auth.user?.role?.name && String(auth.user.role.name).toLowerCase() === 'admin')
 
-    const [items, setItems] = useState(() => (images || []).map((it) => (typeof it === 'string' ? { id: undefined as string | undefined, src: it, orientation: 'HORIZONTAL' } : { id: (it as any).id, src: (it as any).image, orientation: ((it as any).orientation || 'HORIZONTAL') })))
+    const [removedIds, setRemovedIds] = useState<string[]>([])
+    const items = useMemo(() => {
+        return (images || [])
+            .map((it) => (typeof it === 'string'
+                ? { id: undefined as string | undefined, src: it, orientation: 'HORIZONTAL' }
+                : { id: (it as any).id, src: (it as any).image, orientation: ((it as any).orientation || 'HORIZONTAL') }))
+            .filter((it) => (it.id == null ? true : !removedIds.includes(String(it.id))))
+    }, [images, removedIds])
     const length = items.length
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [confirmId, setConfirmId] = useState<string | number | null>(null)
@@ -67,31 +74,37 @@ const AdsCarousel: React.FC<AdsCarouselProps> = ({ images, interval = 4000, clas
     }, [length, interval])
 
     useEffect(() => {
-        setItems((images || []).map((it) => (typeof it === 'string'
-            ? { id: undefined as string | undefined, src: it, orientation: 'HORIZONTAL' }
-            : { id: (it as any).id, src: (it as any).image, orientation: ((it as any).orientation || 'HORIZONTAL') })))
+        setRemovedIds([])
     }, [images])
+
+    useEffect(() => {
+        if (index <= Math.max(length - 1, 0)) return
+        setIndex(0)
+    }, [index, length])
 
     if (!items || items.length === 0) return null
 
     return (
         <div ref={containerRef} className={`relative overflow-hidden rounded-lg ${className}`}>
             <div className="flex transition-transform duration-500" style={{ transform: `translateX(-${index * 100}%)` }}>
-                {items.map((it, i) => (
-                    <div key={i} className={`w-full flex-shrink-0 relative ${String(it.orientation).toUpperCase() === 'VERTICAL' ? 'h-80 sm:h-96 md:h-[28rem]' : 'h-48 sm:h-56 md:h-64'} bg-gray-100 overflow-hidden`}>
-                        <Image src={it.src} alt={`Ad ${i + 1}`} fill style={{ objectFit: 'contain', objectPosition: 'center' }} />
-                        {isAdmin && it.id != null && (
-                            <button
-                                type="button"
-                                onClick={() => { setConfirmId(it.id as string | number); setConfirmOpen(true) }}
-                                className="absolute top-2 right-2 z-20 flex items-center justify-center h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/75"
-                                aria-label="Eliminar promoción"
-                            >
-                                <FiTrash2 />
-                            </button>
-                        )}
-                    </div>
-                ))}
+                {items.map((it, i) => {
+                    const itemKey = String(it.id ?? it.src ?? i)
+                    return (
+                        <div key={itemKey} className={`w-full flex-shrink-0 relative ${String(it.orientation).toUpperCase() === 'VERTICAL' ? 'h-80 sm:h-96 md:h-[28rem]' : 'h-48 sm:h-56 md:h-64'} bg-gray-100 overflow-hidden`}>
+                            <Image src={it.src} alt={`Ad ${i + 1}`} fill style={{ objectFit: 'contain', objectPosition: 'center' }} />
+                            {isAdmin && it.id != null && (
+                                <button
+                                    type="button"
+                                    onClick={() => { setConfirmId(it.id as string | number); setConfirmOpen(true) }}
+                                    className="absolute top-2 right-2 z-20 flex items-center justify-center h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/75"
+                                    aria-label="Eliminar promoción"
+                                >
+                                    <FiTrash2 />
+                                </button>
+                            )}
+                        </div>
+                    )
+                })}
             </div>
 
             {showArrows && length > 1 && (
@@ -107,9 +120,10 @@ const AdsCarousel: React.FC<AdsCarouselProps> = ({ images, interval = 4000, clas
 
             {showDots && length > 1 && (
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-3 flex gap-2">
-                    {items.map((_, i) => (
-                        <button key={i} aria-label={`Ir a ${i + 1}`} onClick={() => setIndex(i)} className={`w-2 h-2 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'}`} />
-                    ))}
+                    {items.map((it, i) => {
+                        const itemKey = String(it.id ?? it.src ?? i)
+                        return <button key={itemKey} aria-label={`Ir a ${i + 1}`} onClick={() => setIndex(i)} className={`w-2 h-2 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'}`} />
+                    })}
                 </div>
             )}
 
@@ -130,7 +144,7 @@ const AdsCarousel: React.FC<AdsCarouselProps> = ({ images, interval = 4000, clas
                         }
                         const res = await fetch(`/api/promotions/${confirmId}`, { method: 'DELETE' })
                         if (res.ok || res.status === 204) {
-                            setItems((prev) => prev.filter((p) => String(p.id) !== String(confirmId)))
+                            setRemovedIds((prev) => [...prev, String(confirmId)])
                             setMessage('Promoción eliminada')
                         } else {
                             const txt = await res.text().catch(() => '')

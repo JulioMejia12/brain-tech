@@ -8,11 +8,10 @@ type ItemType = { id?: string | number; image?: string; orientation?: string }
 
 export default function PromotionsLoader() {
     const [items, setItems] = useState<ItemType[] | undefined>(undefined)
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         let mounted = true
-        setLoading(true)
         const url = BAZARCITO_NEGOCIO_ID ? `/api/promotions?negocioId=${encodeURIComponent(BAZARCITO_NEGOCIO_ID)}` : '/api/promotions'
         fetch(url)
             .then((r) => r.json())

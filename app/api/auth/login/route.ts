@@ -16,7 +16,12 @@ type LoginBody = {
 
 function getAllowedNegocioFromContext(siteContext?: string) {
     if (siteContext === 'bazarcito') {
-        return process.env.BAZARCITO_NEGOCIO_ID || process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || undefined
+        return (
+            process.env.BAZARCITO_NEGOCIO_ID ||
+            process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID ||
+            // default to 1 when not configured to keep Bazarcito locked
+            '1'
+        )
     }
 
     if (siteContext === 'marron') {

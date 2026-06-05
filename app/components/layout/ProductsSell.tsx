@@ -1,5 +1,5 @@
 'use client'
-import { Children, useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 const DEFAULT_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || ''
@@ -158,8 +158,6 @@ const ProductsSell = ({
     const [toast, setToast] = useState<ToastState>(null)
     const [productPendingDelete, setProductPendingDelete] = useState<ProductWithPieces | null>(null)
     const resolvedHeroImage = getOptimizedHeroImage(heroImage)
-    const normalizedPromosComponent = Children.toArray(promosComponent)
-    const normalizedChildren = Children.toArray(children)
     const storeBasePath = useMemo(() => {
         const parts = String(pathname || '/').split('/').filter(Boolean)
         return parts.length > 0 ? `/${parts[0]}` : ''
@@ -436,8 +434,8 @@ const ProductsSell = ({
                                         <p className="text-sm text-gray-600 mt-1">{p.description}</p>
                                         {p.details && p.details.length > 0 && (
                                             <ul className="text-xs text-gray-500 mt-2 space-y-1">
-                                                {p.details.slice(0, 3).map((d, i) => (
-                                                    <li key={i}><span className="font-semibold">{d.label}:</span> {d.value}</li>
+                                                {p.details.slice(0, 3).map((d) => (
+                                                    <li key={`${d.label}-${d.value}`}><span className="font-semibold">{d.label}:</span> {d.value}</li>
                                                 ))}
                                             </ul>
                                         )}
@@ -629,9 +627,11 @@ const ProductsSell = ({
             </section>
             <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
                 <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Promociones</h2>
-                {normalizedPromosComponent.length > 0 ? normalizedPromosComponent : <PromotionsClient items={promos} />}
+                <div>
+                    {promosComponent ?? <PromotionsClient items={promos} />}
+                </div>
             </section>
-            {normalizedChildren}
+            {children ? <div>{children}</div> : null}
             <MobileMenu primary={primary} whatsappNumber={whatsappDigits} />
         </div>
     )
