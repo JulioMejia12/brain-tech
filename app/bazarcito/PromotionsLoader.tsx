@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import PromotionsClient from '../../components/PromotionsClient'
 
-const BAZARCITO_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || ''
+const BAZARCITO_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || '1'
 
 type ItemType = { id?: string | number; image?: string; orientation?: string }
 
@@ -12,7 +12,7 @@ export default function PromotionsLoader() {
 
     useEffect(() => {
         let mounted = true
-        const url = BAZARCITO_NEGOCIO_ID ? `/api/promotions?negocioId=${encodeURIComponent(BAZARCITO_NEGOCIO_ID)}` : '/api/promotions'
+        const url = `/api/promotions?negocioId=${encodeURIComponent(BAZARCITO_NEGOCIO_ID)}`
         fetch(url)
             .then((r) => r.json())
             .then((j) => {
