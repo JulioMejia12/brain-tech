@@ -74,6 +74,19 @@ model Negocio {
   products   Product[]
   promotions Promotion[]
   categories Category[]
+  catalogos   Catalogo[]
+}
+
+model Catalogo {
+  id            Int      @id @default(autoincrement())
+  name          String   // Un nombre para identificarlo, ej: "Catálogo de Verano"
+  image         String   // Aquí guardarás la URL de la imagen (de Cloudinary, por ejemplo)
+  imagePublicId String?  // Útil para borrarla después de tu almacenamiento en la nube
+  negocioId     Int?
+  createdAt     DateTime @default(now())
+  categoria     String?
+
+  negocio       Negocio? @relation(fields: [negocioId], references: [id])
 }
 
 enum PromotionOrientation {

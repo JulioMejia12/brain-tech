@@ -52,6 +52,7 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
         const adminBasePath = isMarronPath ? '/marron' : '/bazarcito'
         if (isAdmin) defaultItems.push({ label: 'Agregar productos', href: `${adminBasePath}/products/new` })
         if (isAdmin) defaultItems.push({ label: 'Crear promociones', href: `${adminBasePath}/promotions/new` })
+        if (isAdmin) defaultItems.push({ label: 'Subir catalogo', href: `${adminBasePath}/catalog` })
         defaultItems.push({ label: 'Cerrar sesión', href: '/logout' })
     } else {
         defaultItems = [{ label: 'Iniciar sesión', href: `/auth/login?next=${encodeURIComponent(currentPath)}` }]
