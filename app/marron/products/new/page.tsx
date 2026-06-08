@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { marronProductsSellProps } from '@/app/lib/productsSellConfig'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
@@ -77,13 +78,48 @@ export default function NewMarronProductPage() {
     }
     const removeDetail = (idx: number) => setDetails((prev) => prev.filter((_, i) => i !== idx))
 
+    const bg = marronProductsSellProps.bgColor || '#fff'
+    const headingColor = marronProductsSellProps.secondary || '#111'
+    const primary = marronProductsSellProps.primary || '#895129'
+
+    useEffect(() => {
+        try {
+            const root = document.documentElement
+            const prev = {
+                background: getComputedStyle(root).getPropertyValue('--background') || '',
+                primary: getComputedStyle(root).getPropertyValue('--primary') || '',
+                secondary: getComputedStyle(root).getPropertyValue('--secondary') || '',
+                foreground: getComputedStyle(root).getPropertyValue('--foreground') || '',
+            }
+
+            if (bg) root.style.setProperty('--background', bg)
+            if (primary) root.style.setProperty('--primary', primary)
+            if (headingColor) root.style.setProperty('--secondary', headingColor)
+            // force readable foreground using the heading/secondary color
+            if (headingColor) root.style.setProperty('--foreground', headingColor)
+
+            return () => {
+                try {
+                    if (prev.background) root.style.setProperty('--background', prev.background)
+                    if (prev.primary) root.style.setProperty('--primary', prev.primary)
+                    if (prev.secondary) root.style.setProperty('--secondary', prev.secondary)
+                    if (prev.foreground) root.style.setProperty('--foreground', prev.foreground)
+                } catch (e) {
+                    // ignore
+                }
+            }
+        } catch (e) {
+            // ignore in non-browser
+        }
+    }, [bg, primary, headingColor])
+
     return (
-        <main className="max-w-4xl mx-auto p-6">
-            <div className="bg-white/80 dark:bg-slate-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-lg p-8">
-                <h1 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Nuevo producto — Marron</h1>
+        <main style={{ background: bg }} className="marron-theme max-w-4xl mx-auto p-6">
+            <div className="border rounded-2xl shadow-lg p-8" style={{ background: 'var(--card-background, rgba(255,255,255,0.98))', borderColor: 'var(--card-border, rgba(0,0,0,0.06))' }}>
+                <h1 className="text-2xl font-semibold mb-6" style={{ color: headingColor }}>Nuevo producto — Marron</h1>
 
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    <div className="sm:col-span-2 rounded-xl px-4 py-3 text-sm" style={{ borderColor: '#e9dfd6', background: bg, color: headingColor }}>
                         Este formulario crea productos vinculados automáticamente a <span className="font-semibold">Marron</span> con <span className="font-semibold">negocioId = {MARRON_NEGOCIO_ID}</span>.
                     </div>
 
@@ -146,28 +182,28 @@ export default function NewMarronProductPage() {
 
                         <div className="space-y-3">
                             {details.map((d, idx) => (
-                                <div key={idx} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-slate-800/60 p-3 shadow-sm">
+                                <div key={idx} className="rounded-xl border p-3 shadow-sm" style={{ background: 'var(--card-background, transparent)', borderColor: 'var(--card-border, rgba(0,0,0,0.06))' }}>
                                     <div className="mb-3 flex items-center justify-between">
-                                        <div className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-amber-100 px-2 text-xs font-semibold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">#{idx + 1}</div>
+                                        <div className="inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold" style={{ background: primary + '22', color: primary }}>#{idx + 1}</div>
                                         <button type="button" onClick={() => removeDetail(idx)} aria-label={`Eliminar detalle ${idx + 1}`} className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10">✕</button>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                         <label className="block">
                                             <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Etiqueta</span>
-                                            <input className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 text-sm text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300" placeholder="Ej. Material" value={d.label} onChange={(e) => updateDetail(idx, 'label', e.target.value)} />
+                                            <input className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 text-sm text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none" placeholder="Ej. Material" value={d.label} onChange={(e) => updateDetail(idx, 'label', e.target.value)} />
                                         </label>
 
                                         <label className="block">
                                             <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Valor</span>
-                                            <input className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 text-sm text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300" placeholder="Ej. Acero inoxidable" value={d.value} onChange={(e) => updateDetail(idx, 'value', e.target.value)} />
+                                            <input className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 text-sm text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none" placeholder="Ej. Acero inoxidable" value={d.value} onChange={(e) => updateDetail(idx, 'value', e.target.value)} />
                                         </label>
                                     </div>
                                 </div>
                             ))}
 
                             <div>
-                                <button type="button" onClick={addDetail} className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                                <button type="button" onClick={addDetail} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition" style={{ borderColor: primary, background: primary + '15', color: primary }}>
                                     <span className="text-base leading-none">＋</span>
                                     Agregar detalle
                                 </button>
@@ -177,7 +213,7 @@ export default function NewMarronProductPage() {
 
                     <div className="sm:col-span-2 flex items-center justify-between mt-2">
                         <div>
-                            <button type="submit" disabled={loading} className="inline-flex items-center gap-2 bg-amber-700 hover:bg-amber-600 disabled:opacity-50 text-white font-medium px-4 py-2 rounded-lg shadow">
+                            <button type="submit" disabled={loading} className="inline-flex items-center gap-2 disabled:opacity-50 text-white font-medium px-4 py-2 rounded-lg shadow" style={{ background: primary }}>
                                 {loading ? 'Creando...' : 'Crear producto'}
                             </button>
                         </div>

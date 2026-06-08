@@ -118,6 +118,7 @@ const ProductsSell = ({
     mobileHero,
     mobileHeroVariant = 'default',
     mobileHeroSubtitle,
+    textColor,
 }: Props) => {
     const resolvedProductsEndpoint = productsEndpoint || DEFAULT_PRODUCTS_ENDPOINT
     const resolvedProductMutationBase = productMutationBase || resolvedProductsEndpoint.split('?')[0]
@@ -162,6 +163,38 @@ const ProductsSell = ({
         const parts = String(pathname || '/').split('/').filter(Boolean)
         return parts.length > 0 ? `/${parts[0]}` : ''
     }, [pathname])
+
+    // Apply the store theme into CSS variables so global styles (including
+    // the .dark rule that references --secondary) pick up the store colors.
+    useEffect(() => {
+        try {
+            const root = document.documentElement
+            const prev = {
+                background: getComputedStyle(root).getPropertyValue('--background') || '',
+                primary: getComputedStyle(root).getPropertyValue('--primary') || '',
+                secondary: getComputedStyle(root).getPropertyValue('--secondary') || '',
+                foreground: getComputedStyle(root).getPropertyValue('--foreground') || '',
+            }
+
+            if (bgColor) root.style.setProperty('--background', bgColor)
+            if (primary) root.style.setProperty('--primary', primary)
+            if (secondary) root.style.setProperty('--secondary', secondary)
+            if (textColor) root.style.setProperty('--foreground', textColor)
+
+            return () => {
+                try {
+                    if (prev.background) root.style.setProperty('--background', prev.background)
+                    if (prev.primary) root.style.setProperty('--primary', prev.primary)
+                    if (prev.secondary) root.style.setProperty('--secondary', prev.secondary)
+                    if (prev.foreground) root.style.setProperty('--foreground', prev.foreground)
+                } catch (e) {
+                    // ignore
+                }
+            }
+        } catch (e) {
+            // ignore in non-browser environments
+        }
+    }, [bgColor, primary, secondary, textColor])
 
     const categories = useMemo(() => {
         const set = new Set<string>(products.map((p) => p.category || 'Otros'))

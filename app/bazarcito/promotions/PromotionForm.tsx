@@ -4,6 +4,7 @@ import Image from 'next/image'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { bazarcitoProductsSellProps } from '@/app/lib/productsSellConfig'
 
 const BAZARCITO_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || '1'
 
@@ -19,6 +20,7 @@ export default function PromotionForm() {
     const router = useRouter()
     const [isConfirmOpen, setIsConfirmOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
+    const primary = bazarcitoProductsSellProps.primary || '#ff81e3'
 
     const MAX_SIZE = 5 * 1024 * 1024
 
@@ -126,10 +128,6 @@ export default function PromotionForm() {
 
     return (
         <form onSubmit={handleSubmit} className="max-w-3xl text-gray-900">
-            <div className="mb-4 rounded-lg border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-pink-900">
-                Esta promoción se creará automáticamente para <span className="font-semibold">Bazarcito</span> con <span className="font-semibold">negocioId = {BAZARCITO_NEGOCIO_ID}</span>.
-            </div>
-
             <label className="block">
                 <span className="text-sm font-medium text-gray-900">Imagen</span>
                 <div className="mt-1 flex items-center gap-3">
@@ -144,7 +142,8 @@ export default function PromotionForm() {
                                 <button
                                     type="button"
                                     onClick={() => setIsConfirmOpen(true)}
-                                    className="absolute top-1 right-1 z-10 flex items-center justify-center h-7 w-7 rounded-full bg-black/60 text-white hover:bg-black/70"
+                                    className="absolute top-1 right-1 z-10 flex items-center justify-center h-7 w-7 rounded-full text-white"
+                                    style={{ background: primary }}
                                     aria-label="Eliminar promoción"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -173,7 +172,7 @@ export default function PromotionForm() {
             </div>
 
             <div className="flex items-center gap-3 mt-4">
-                <button type="submit" disabled={saving || Boolean(fileError)} className="rounded bg-pink-600 text-white px-4 py-2 disabled:opacity-60">{saving ? 'Guardando...' : 'Crear promoción'}</button>
+                <button type="submit" disabled={saving || Boolean(fileError)} className="rounded text-white px-4 py-2 disabled:opacity-60" style={{ background: primary }}>{saving ? 'Guardando...' : 'Crear promoción'}</button>
                 {createdId != null && (
                     <button type="button" onClick={() => setIsConfirmOpen(true)} disabled={saving} className="rounded bg-red-600 text-white px-3 py-2 disabled:opacity-60">Eliminar</button>
                 )}

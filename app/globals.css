@@ -11,7 +11,7 @@
 }
 
 .dark {
-  --background: #020817;
+  --background: var(--secondary);
   --foreground: #e6f4ff;
 }
 
@@ -35,4 +35,53 @@ input[type="button"],
 input[type="submit"],
 .btn {
   cursor: pointer;
+}
+
+/* Marron theme overrides: ensure form fields use store card/background colors
+   even if Tailwind `dark:` utilities exist. Scoped to `.marron-theme`. */
+.marron-theme input,
+.marron-theme textarea,
+.marron-theme select,
+.marron-theme .rounded-lg,
+.marron-theme .text-sm {
+  background: var(--card-field-bg, #ffffff) !important;
+  color: var(--foreground) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.marron-theme input::placeholder,
+.marron-theme textarea::placeholder {
+  color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.marron-theme input[type="file"] {
+  background: transparent !important;
+}
+
+/* Bazarcito theme: use defined card/background colors and readable text
+   Scoped to `.bazarcito-theme`. */
+.bazarcito-theme {
+  /* force background and foreground for Bazarcito pages */
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.bazarcito-theme input,
+.bazarcito-theme textarea,
+.bazarcito-theme select,
+.bazarcito-theme .rounded-lg,
+.bazarcito-theme .text-sm {
+  background: var(--card-background, #fff) !important;
+  color: var(--foreground) !important;
+  border-color: var(--card-border, rgba(0,0,0,0.06)) !important;
+}
+
+.bazarcito-theme input::placeholder,
+.bazarcito-theme textarea::placeholder {
+  color: rgba(0,0,0,0.45) !important;
+}
+
+.bazarcito-theme .mobile-hero,
+.bazarcito-theme .hero {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
 }
