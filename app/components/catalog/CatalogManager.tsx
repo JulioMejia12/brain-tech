@@ -88,7 +88,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
             const res = await fetch(`/api/catalog?negocioId=${encodeURIComponent(negocioId)}`, { cache: 'no-store' })
             const json = await res.json().catch(() => ({})) as { data?: CatalogItem[]; error?: string }
             if (!res.ok) {
-                throw new Error(json?.error || 'No se pudo cargar el catálogo')
+                throw new Error(json?.error || json?.error)
             }
             setItems(Array.isArray(json?.data) ? json.data : [])
         } catch (err) {
@@ -188,7 +188,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
             const res = await fetch('/api/catalog', { method: 'POST', body: form })
             const json = await res.json().catch(() => ({})) as { error?: string; totalParts?: number }
             if (!res.ok) {
-                throw new Error(json?.error || 'No se pudo subir el catálogo')
+                throw new Error(json?.error || json?.error)
             }
 
             setMessage(json?.totalParts && json.totalParts > 1
