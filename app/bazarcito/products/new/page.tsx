@@ -2,6 +2,7 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from 'next/image'
+import { FiPlus, FiX } from 'react-icons/fi'
 import { bazarcitoProductsSellProps } from '@/app/lib/productsSellConfig'
 
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 400
@@ -201,7 +202,7 @@ export default function NewBazarcitoProductPage() {
                                                 aria-label={`Eliminar detalle ${idx + 1}`}
                                                 className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 hover:text-red-600"
                                             >
-                                                ✕
+                                                <FiX className="h-5 w-5" />
                                             </button>
                                         </div>
 
@@ -238,7 +239,7 @@ export default function NewBazarcitoProductPage() {
                                         className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition"
                                         style={{ borderColor: primary, background: primary + '15', color: secondary }}
                                     >
-                                        <span className="text-base leading-none">＋</span>
+                                        <FiPlus className="h-4 w-4" />
                                         Agregar detalle
                                     </button>
                                 </div>

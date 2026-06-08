@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { marronProductsSellProps } from '@/app/lib/productsSellConfig'
 import Image from 'next/image'
+import { FiPlus, FiX } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
 
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 400
@@ -185,7 +186,7 @@ export default function NewMarronProductPage() {
                                 <div key={idx} className="rounded-xl border p-3 shadow-sm" style={{ background: 'var(--card-background, transparent)', borderColor: 'var(--card-border, rgba(0,0,0,0.06))' }}>
                                     <div className="mb-3 flex items-center justify-between">
                                         <div className="inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-xs font-semibold" style={{ background: primary + '22', color: primary }}>#{idx + 1}</div>
-                                        <button type="button" onClick={() => removeDetail(idx)} aria-label={`Eliminar detalle ${idx + 1}`} className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10">✕</button>
+                                        <button type="button" onClick={() => removeDetail(idx)} aria-label={`Eliminar detalle ${idx + 1}`} className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"><FiX className="h-5 w-5" /></button>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -204,7 +205,7 @@ export default function NewMarronProductPage() {
 
                             <div>
                                 <button type="button" onClick={addDetail} className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition" style={{ borderColor: primary, background: primary + '15', color: primary }}>
-                                    <span className="text-base leading-none">＋</span>
+                                    <FiPlus className="h-4 w-4" />
                                     Agregar detalle
                                 </button>
                             </div>

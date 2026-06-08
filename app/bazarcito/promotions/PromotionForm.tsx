@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { FiTrash2 } from 'react-icons/fi'
 import ConfirmModal from '../../components/ui/ConfirmModal'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -146,9 +147,7 @@ export default function PromotionForm() {
                                     style={{ background: primary }}
                                     aria-label="Eliminar promoción"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6h18M8 6v14a2 2 0 002 2h4a2 2 0 002-2V6M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
-                                    </svg>
+                                    <FiTrash2 className="h-4 w-4" />
                                 </button>
                             )}
                         </div>
