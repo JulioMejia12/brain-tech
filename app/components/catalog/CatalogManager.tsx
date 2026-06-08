@@ -231,6 +231,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
                         </label>
 
                         <label className="block md:col-span-2">
+                            <span className="mb-2 block text-sm font-medium text-gray-900">Nombre de la marca</span>
                             <input
                                 value={categoria}
                                 onChange={(e) => setCategoria(e.target.value)}
