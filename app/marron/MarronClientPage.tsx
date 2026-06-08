@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { FiCheckCircle, FiDownload } from 'react-icons/fi'
+import { useEffect, useState } from 'react'
+import { FiCheckCircle } from 'react-icons/fi'
+import StorefrontCatalogDownloads from '../components/catalog/StorefrontCatalogDownloads'
 import ProductsSell from '../components/layout/ProductsSell'
 import ProductsLoading from '../components/ui/ProductsLoading'
 import { marronProductsSellProps } from '../lib/productsSellConfig'
@@ -22,19 +23,6 @@ type CatalogItem = {
 export default function MarronClientPage({ products, marronWhatsappNumber }: Props) {
     const [mounted, setMounted] = useState(false)
     const [catalogs, setCatalogs] = useState<CatalogItem[]>([])
-
-    const catalogsByCategory = useMemo(() => {
-        const map = new Map<string, CatalogItem>()
-
-        for (const item of catalogs) {
-            const categoryKey = String(item.categoria || 'general').trim().toLowerCase() || 'general'
-            if (!map.has(categoryKey)) {
-                map.set(categoryKey, item)
-            }
-        }
-
-        return Array.from(map.values())
-    }, [catalogs])
 
     useEffect(() => {
         setMounted(true)
@@ -101,19 +89,16 @@ export default function MarronClientPage({ products, marronWhatsappNumber }: Pro
                     >
                         Contáctanos por WhatsApp
                     </a>
-
-                    {catalogsByCategory.map((catalog) => (
-                        <a
-                            key={`${catalog.id}-${catalog.categoria || 'general'}`}
-                            href={`/api/catalog/${catalog.id}/download?negocioId=2`}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded border font-medium bg-white shadow-sm"
-                            style={{ borderColor: marronProductsSellProps.primary, color: '#7a4b16' }}
-                        >
-                            <FiDownload className="shrink-0" />
-                            Descargar {catalog.categoria ? `${catalog.categoria}: ` : ''}{catalog.name}
-                        </a>
-                    ))}
                 </div>
+
+                <StorefrontCatalogDownloads
+                    catalogs={catalogs}
+                    negocioId="2"
+                    borderColor={marronProductsSellProps.primary}
+                    textColor="#7a4b16"
+                    badgeClassName="bg-amber-100 text-amber-800"
+                    helperText="Catálogo listo para descargar."
+                />
             </section>
         </ProductsSell>
     )

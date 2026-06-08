@@ -29,7 +29,7 @@ export default function MarronNav() {
             textColorLogo="#fff"
             title="Marron"
             query={query}
-            logo={'/logoBazar.png'}
+            
             onQueryChange={handleQueryChange}
             hideOnMobile
         />

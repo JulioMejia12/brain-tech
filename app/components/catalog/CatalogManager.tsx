@@ -19,7 +19,7 @@ type Props = {
     accentClassName: string
 }
 
-const MAX_SIZE = 10 * 1024 * 1024
+const MAX_SIZE = 35 * 1024 * 1024
 
 function isPdf(value?: string | null) {
     const normalized = String(value || '').toLowerCase()
@@ -51,6 +51,25 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
     const [categoria, setCategoria] = useState('')
     const [file, setFile] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+    const groupedItems = useMemo(() => {
+        const map = new Map<string, { title: string; items: CatalogItem[] }>()
+
+        for (const item of items) {
+            const rawCategory = String(item.categoria || '').trim()
+            const key = rawCategory.toLowerCase() || 'general'
+            const title = rawCategory || 'General'
+
+            const group = map.get(key)
+            if (group) {
+                group.items.push(item)
+            } else {
+                map.set(key, { title, items: [item] })
+            }
+        }
+
+        return Array.from(map.values())
+    }, [items])
 
     const loadCatalogs = useCallback(async () => {
         setLoading(true)
@@ -98,7 +117,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
         if (nextFile.size > MAX_SIZE) {
             setFile(null)
             setPreviewUrl(null)
-            setError('El archivo excede el máximo permitido de 10MB')
+            setError('El archivo excede el máximo permitido de 35MB')
             return
         }
 
@@ -151,12 +170,14 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
             form.append('file', file)
 
             const res = await fetch('/api/catalog', { method: 'POST', body: form })
-            const json = await res.json().catch(() => ({})) as { error?: string }
+            const json = await res.json().catch(() => ({})) as { error?: string; totalParts?: number }
             if (!res.ok) {
                 throw new Error(json?.error || 'No se pudo subir el catálogo')
             }
 
-            setMessage('Catálogo subido correctamente')
+            setMessage(json?.totalParts && json.totalParts > 1
+                ? `Catálogo dividido y subido correctamente en ${json.totalParts} partes`
+                : 'Catálogo subido correctamente')
             setName('')
             setCategoria('')
             setFile(null)
@@ -196,10 +217,6 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
     return (
         <div className="space-y-8">
             <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                <div className={`mb-4 rounded-xl border px-4 py-3 text-sm ${accentClassName}`}>
-                    Los archivos que subas aquí quedarán vinculados a <span className="font-semibold">{storefrontName}</span> con <span className="font-semibold">negocioId = {negocioId}</span>.
-                </div>
-
                 {isAdmin ? (
                     <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
                         <label className="block md:col-span-2">
@@ -214,15 +231,15 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
                         </label>
 
                         <label className="block md:col-span-2">
-                            <span className="mb-2 block text-sm font-medium text-gray-900">Categoría</span>
+                            <span className="mb-2 block text-sm font-medium text-gray-900">Nombre de la marca</span>
                             <input
                                 value={categoria}
                                 onChange={(e) => setCategoria(e.target.value)}
                                 className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none focus:border-pink-400"
-                                placeholder="Ej. Junio, Hogar, Cocina, Promociones"
+                                placeholder="Ej. Betterware, Tupperware, Avon etc ..."
                                 required
                             />
-                            <p className="mt-2 text-xs text-gray-500">Usa una categoría para distinguir varios catálogos del mismo negocio.</p>
+                            <p className="mt-2 text-xs text-gray-500">Puedes subir varios archivos con la misma categoría, por ejemplo: Betterware, y diferenciarlos por nombre como Parte 1, Parte 2, etc.</p>
                         </label>
 
                         <label className="block md:col-span-2">
@@ -235,7 +252,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
                                 className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 file:mr-3 file:rounded-lg file:border-0 file:bg-pink-50 file:px-3 file:py-2 file:text-pink-700"
                                 required
                             />
-                            <p className="mt-2 text-xs text-gray-500">Acepta imágenes o PDF. Tamaño máximo: 10MB.</p>
+                            <p className="mt-2 text-xs text-gray-500">Acepta imágenes o PDF. Tamaño máximo: 35MB. Si el PDF es muy pesado, se dividirá automáticamente en varias partes.</p>
                         </label>
 
                         {file && (
@@ -299,64 +316,65 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
                         Aún no hay catálogos cargados para {storefrontName}.
                     </div>
                 ) : (
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {items.map((item) => {
-                            const pdf = isPdf(item.image) || isPdf(item.name)
-                            return (
-                                <article key={item.id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                                    <div className="flex h-48 items-center justify-center bg-gray-100">
-                                        {pdf ? (
-                                            <div className="flex flex-col items-center gap-3 px-4 text-center">
-                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-2xl text-red-600">PDF</div>
-                                                <p className="line-clamp-2 text-sm font-medium text-gray-700">Documento listo para descargar</p>
-                                            </div>
-                                        ) : (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                                        )}
-                                    </div>
-                                    <div className="space-y-3 p-4">
-                                        <div>
-                                            {item.categoria && (
-                                                <span className="mb-2 inline-flex rounded-full bg-pink-100 px-2.5 py-1 text-xs font-semibold text-pink-700">
-                                                    {item.categoria}
-                                                </span>
-                                            )}
-                                            <h3 className="text-base font-semibold text-gray-900">{item.name}</h3>
-                                            <p className="text-xs text-gray-500">{formatDate(item.createdAt)}</p>
-                                        </div>
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <a
-                                                href={`/api/catalog/${item.id}/download?negocioId=${encodeURIComponent(negocioId)}`}
-                                                className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black"
-                                            >
-                                                Descargar
-                                            </a>
-                                            <a
-                                                href={pdf
-                                                    ? `/api/catalog/${item.id}/download?negocioId=${encodeURIComponent(negocioId)}&disposition=inline`
-                                                    : item.image}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                            >
-                                                Ver archivo
-                                            </a>
-                                            {isAdmin && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void handleDelete(item.id)}
-                                                    disabled={deletingId === item.id}
-                                                    className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-60"
-                                                >
-                                                    {deletingId === item.id ? 'Eliminando...' : 'Eliminar'}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </article>
-                            )
-                        })}
+                    <div className="space-y-8">
+                        {groupedItems.map((group) => (
+                            <section key={group.title} className="space-y-4">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900">Catálogos de {group.title}</h3>
+                                    <p className="text-sm text-gray-500">{group.items.length} {group.items.length === 1 ? 'archivo disponible' : 'archivos disponibles'}</p>
+                                </div>
+
+                                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                    {group.items.map((item) => {
+                                        const pdf = isPdf(item.image) || isPdf(item.name)
+                                        return (
+                                            <article key={item.id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                                                <div className="flex h-48 items-center justify-center bg-gray-100">
+                                                    {pdf ? (
+                                                        <div className="flex flex-col items-center gap-3 px-4 text-center">
+                                                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-2xl text-red-600">PDF</div>
+                                                            <p className="line-clamp-2 text-sm font-medium text-gray-700">Documento listo para descargar</p>
+                                                        </div>
+                                                    ) : (
+                                                        // eslint-disable-next-line @next/next/no-img-element
+                                                        <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                                                    )}
+                                                </div>
+                                                <div className="space-y-3 p-4">
+                                                    <div>
+                                                        {item.categoria && (
+                                                            <span className="mb-2 inline-flex rounded-full bg-pink-100 px-2.5 py-1 text-xs font-semibold text-pink-700">
+                                                                {item.categoria}
+                                                            </span>
+                                                        )}
+                                                        <h4 className="text-base font-semibold text-gray-900">{item.name}</h4>
+                                                        <p className="text-xs text-gray-500">{formatDate(item.createdAt)}</p>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <a
+                                                            href={`/api/catalog/${item.id}/download?negocioId=${encodeURIComponent(negocioId)}`}
+                                                            className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-black"
+                                                        >
+                                                            Descargar
+                                                        </a>
+                                                        {isAdmin && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => void handleDelete(item.id)}
+                                                                disabled={deletingId === item.id}
+                                                                className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-60"
+                                                            >
+                                                                {deletingId === item.id ? 'Eliminando...' : 'Eliminar'}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </article>
+                                        )
+                                    })}
+                                </div>
+                            </section>
+                        ))}
                     </div>
                 )}
 

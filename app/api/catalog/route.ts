@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server'
 import cloudinary from 'cloudinary'
+import { PDFDocument } from 'pdf-lib'
 import { Readable } from 'stream'
 import { prisma } from '@/app/lib/prisma'
+
+const MAX_CATALOG_PART_SIZE = 9 * 1024 * 1024
 
 function parseNegocioId(value: string | null) {
     if (value == null || value.trim() === '') {
@@ -27,6 +30,74 @@ async function ensureNegocioExists(negocioId: number) {
     `
 
     return rows.length > 0
+}
+
+async function buildPdfFromPages(source: PDFDocument, pageIndexes: number[]) {
+    const pdf = await PDFDocument.create()
+    const pages = await pdf.copyPages(source, pageIndexes)
+    pages.forEach((page) => pdf.addPage(page))
+    return pdf.save()
+}
+
+async function splitPdfIntoParts(buffer: Buffer, maxPartBytes: number) {
+    const source = await PDFDocument.load(buffer)
+    const totalPages = source.getPageCount()
+    const parts: Uint8Array[] = []
+    let currentIndexes: number[] = []
+
+    for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
+        const nextIndexes = [...currentIndexes, pageIndex]
+        const nextBytes = await buildPdfFromPages(source, nextIndexes)
+
+        if (nextBytes.length > maxPartBytes && currentIndexes.length > 0) {
+            parts.push(await buildPdfFromPages(source, currentIndexes))
+            currentIndexes = [pageIndex]
+            continue
+        }
+
+        if (nextBytes.length > maxPartBytes) {
+            parts.push(nextBytes)
+            currentIndexes = []
+            continue
+        }
+
+        currentIndexes = nextIndexes
+    }
+
+    if (currentIndexes.length > 0) {
+        parts.push(await buildPdfFromPages(source, currentIndexes))
+    }
+
+    return parts.length > 0 ? parts : [buffer]
+}
+
+async function uploadCatalogAsset(buffer: Buffer, options: { isPdf: boolean; safeBaseName: string }) {
+    if (!process.env.CLOUDINARY_URL) {
+        throw new Error('CLOUDINARY_URL no está configurado')
+    }
+
+    cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
+
+    const uploadResult = await new Promise<any>((resolve, reject) => {
+        const uploadStream = cloudinary.v2.uploader.upload_stream(
+            {
+                folder: 'catalogos',
+                resource_type: options.isPdf ? 'raw' : 'image',
+                public_id: options.isPdf ? `${options.safeBaseName}.pdf` : options.safeBaseName,
+            },
+            (error, result) => {
+                if (error) return reject(error)
+                if (!result) return reject(new Error('Missing upload result'))
+                resolve(result)
+            }
+        )
+        Readable.from(buffer).pipe(uploadStream)
+    })
+
+    return {
+        image: String(uploadResult.secure_url || ''),
+        imagePublicId: String(uploadResult.public_id || '') || null,
+    }
 }
 
 export async function GET(req: Request) {
@@ -98,49 +169,52 @@ export async function POST(req: Request) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer())
-        let uploadedUrl = ''
-        let uploadedPublicId: string | null = null
         const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
         const safeBaseName = `${Date.now()}-${name.replace(/[^a-zA-Z0-9-_]+/g, '-').slice(0, 60)}`
 
-        if (process.env.CLOUDINARY_URL) {
-            cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
-            const uploadResult = await new Promise<any>((resolve, reject) => {
-                const uploadStream = cloudinary.v2.uploader.upload_stream(
-                    {
-                        folder: 'catalogos',
-                        resource_type: isPdf ? 'raw' : 'image',
-                        public_id: isPdf ? `${safeBaseName}.pdf` : safeBaseName,
-                    },
-                    (error, result) => {
-                        if (error) return reject(error)
-                        if (!result) return reject(new Error('Missing upload result'))
-                        resolve(result)
-                    }
-                )
-                Readable.from(buffer).pipe(uploadStream)
+        const partBuffers = isPdf && buffer.length > MAX_CATALOG_PART_SIZE
+            ? await splitPdfIntoParts(buffer, MAX_CATALOG_PART_SIZE)
+            : [buffer]
+
+        const createdItems: Array<{ id?: number; name: string; categoria: string | null; image: string; imagePublicId: string | null; negocioId: number | null; createdAt?: Date }> = []
+
+        for (let index = 0; index < partBuffers.length; index += 1) {
+            const hasMultipleParts = partBuffers.length > 1
+            const partNumber = index + 1
+            const partName = hasMultipleParts ? `${name} - Parte ${partNumber}` : name
+            const partSafeBaseName = hasMultipleParts ? `${safeBaseName}-parte-${partNumber}` : safeBaseName
+            const uploaded = await uploadCatalogAsset(Buffer.from(partBuffers[index]), {
+                isPdf,
+                safeBaseName: partSafeBaseName,
             })
 
-            uploadedUrl = String(uploadResult.secure_url || '')
-            uploadedPublicId = String(uploadResult.public_id || '') || null
-        } else {
-            return NextResponse.json({ error: 'CLOUDINARY_URL no está configurado' }, { status: 500 })
+            await prisma.$executeRaw`
+                INSERT INTO Catalogo (name, image, imagePublicId, negocioId, createdAt, categoria)
+                VALUES (${partName}, ${uploaded.image}, ${uploaded.imagePublicId}, ${negocioId}, NOW(), ${categoria})
+            `
+
+            const rows = await prisma.$queryRaw<Array<{ id: number; name: string; categoria: string | null; image: string; imagePublicId: string | null; negocioId: number | null; createdAt: Date }>>`
+                SELECT id, name, categoria, image, imagePublicId, negocioId, createdAt
+                FROM Catalogo
+                WHERE negocioId = ${negocioId} AND image = ${uploaded.image}
+                ORDER BY id DESC
+                LIMIT 1
+            `
+
+            createdItems.push(rows[0] ?? {
+                name: partName,
+                categoria,
+                image: uploaded.image,
+                imagePublicId: uploaded.imagePublicId,
+                negocioId,
+            })
         }
 
-        await prisma.$executeRaw`
-            INSERT INTO Catalogo (name, image, imagePublicId, negocioId, createdAt, categoria)
-            VALUES (${name}, ${uploadedUrl}, ${uploadedPublicId}, ${negocioId}, NOW(), ${categoria})
-        `
-
-        const rows = await prisma.$queryRaw<Array<{ id: number; name: string; categoria: string | null; image: string; imagePublicId: string | null; negocioId: number | null; createdAt: Date }>>`
-            SELECT id, name, categoria, image, imagePublicId, negocioId, createdAt
-            FROM Catalogo
-            WHERE negocioId = ${negocioId} AND image = ${uploadedUrl}
-            ORDER BY id DESC
-            LIMIT 1
-        `
-
-        return NextResponse.json({ data: rows[0] ?? { name, categoria, image: uploadedUrl, imagePublicId: uploadedPublicId, negocioId } }, { status: 201 })
+        return NextResponse.json({
+            data: createdItems[0] ?? null,
+            items: createdItems,
+            totalParts: createdItems.length,
+        }, { status: 201 })
     } catch (error) {
         console.error('POST /api/catalog error', error)
         if (isMissingCatalogTableError(error)) {

@@ -56,7 +56,7 @@ export const marronProductsSellProps: ProductsSellPageConfig = {
     primary: '#895129',
     textColor: '#fff',
     bgColor: '#e8dbd2',
-    QuienesSomos: 'Somos una tienda en línea enfocada en ofrecer productos útiles, prácticos y accesibles para tu hogar. Aquí encontrarás artículos de organización, cocina, limpieza, almacenamiento y mucho más. En Mi tienda online buscamos hacer tus compras más fáciles mediante atención rápida por WhatsApp y un catálogo pensado para ayudarte en tu día a día. ✨ Calidad, atención y practicidad en un solo lugar.',
+    QuienesSomos: 'Somos una tienda en línea enfocada en ofrecer productos útiles, prácticos y accesibles para tu hogar. Aquí encontrarás artículos de organización, cocina, limpieza, almacenamiento y mucho más. En Marrón buscamos hacer tus compras más fáciles mediante atención rápida por WhatsApp y un catálogo pensado para ayudarte en tu día a día. ✨ Calidad, atención y practicidad en un solo lugar.',
     promos: [],
     cellPhone: process.env.NUMBER_MARRON || '',
     heroImage: 'https://res.cloudinary.com/ddfj0omil/image/upload/v1779923687/WhatsApp_Image_2026-05-20_at_10.56.58_PM_xxualo.jpg',
