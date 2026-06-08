@@ -21,6 +21,16 @@ type Props = {
 
 const MAX_SIZE = 35 * 1024 * 1024
 
+async function fileLooksLikePdf(file: File) {
+    try {
+        const head = await file.slice(0, 5).arrayBuffer()
+        const signature = new TextDecoder().decode(head)
+        return signature === '%PDF-'
+    } catch {
+        return false
+    }
+}
+
 function isPdf(value?: string | null) {
     const normalized = String(value || '').toLowerCase()
     return normalized.endsWith('.pdf') || normalized.includes('/pdf') || normalized.includes('raw/upload')
@@ -100,7 +110,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
         }
     }, [previewUrl])
 
-    function onChooseFile(nextFile?: File | null) {
+    async function onChooseFile(nextFile?: File | null) {
         setError(null)
         setMessage(null)
 
@@ -121,7 +131,13 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
             return
         }
 
-        const allowed = nextFile.type.startsWith('image/') || nextFile.type === 'application/pdf'
+        const normalizedName = nextFile.name.toLowerCase()
+        const looksLikePdf = await fileLooksLikePdf(nextFile)
+        const allowed = nextFile.type.startsWith('image/')
+            || nextFile.type === 'application/pdf'
+            || normalizedName.endsWith('.pdf')
+            || looksLikePdf
+
         if (!allowed) {
             setFile(null)
             setPreviewUrl(null)
@@ -247,7 +263,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
                                 type="file"
                                 accept="image/*,application/pdf"
                                 data-catalog-input="true"
-                                onChange={(e) => onChooseFile(e.target.files?.[0] ?? null)}
+                                onChange={(e) => { void onChooseFile(e.target.files?.[0] ?? null) }}
                                 className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 file:mr-3 file:rounded-lg file:border-0 file:bg-pink-50 file:px-3 file:py-2 file:text-pink-700"
                                 required
                             />

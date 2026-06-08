@@ -7,6 +7,14 @@ import { prisma } from '@/app/lib/prisma'
 
 const MAX_CATALOG_PART_SIZE = 9 * 1024 * 1024
 
+function bufferLooksLikePdf(buffer: Buffer) {
+    try {
+        return buffer.subarray(0, 5).toString('utf8') === '%PDF-'
+    } catch {
+        return false
+    }
+}
+
 function parseNegocioId(value: string | null) {
     if (value == null || value.trim() === '') {
         return undefined
@@ -169,12 +177,28 @@ export async function POST(req: Request) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer())
-        const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+        const isPdf = file.type === 'application/pdf'
+            || file.name.toLowerCase().endsWith('.pdf')
+            || bufferLooksLikePdf(buffer)
+
+        const isImage = String(file.type || '').startsWith('image/')
+        if (!isPdf && !isImage) {
+            return NextResponse.json({
+                error: 'Archivo no soportado. Adjunta una imagen o PDF válido.',
+            }, { status: 400 })
+        }
+
         const safeBaseName = `${Date.now()}-${name.replace(/[^a-zA-Z0-9-_]+/g, '-').slice(0, 60)}`
 
-        const partBuffers = isPdf && buffer.length > MAX_CATALOG_PART_SIZE
-            ? await splitPdfIntoParts(buffer, MAX_CATALOG_PART_SIZE)
-            : [buffer]
+        let partBuffers: Array<Uint8Array | Buffer> = [buffer]
+        if (isPdf && buffer.length > MAX_CATALOG_PART_SIZE) {
+            try {
+                partBuffers = await splitPdfIntoParts(buffer, MAX_CATALOG_PART_SIZE)
+            } catch (splitError) {
+                console.warn('POST /api/catalog splitPdfIntoParts failed, uploading original PDF without splitting', splitError)
+                partBuffers = [buffer]
+            }
+        }
 
         const createdItems: Array<{ id?: number; name: string; categoria: string | null; image: string; imagePublicId: string | null; negocioId: number | null; createdAt?: Date }> = []
 
