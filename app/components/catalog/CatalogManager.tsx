@@ -231,7 +231,6 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
                         </label>
 
                         <label className="block md:col-span-2">
-                            <span className="mb-2 block text-sm font-medium text-gray-900">Nombre de la marca</span>
                             <input
                                 value={categoria}
                                 onChange={(e) => setCategoria(e.target.value)}
@@ -239,7 +238,6 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
                                 placeholder="Ej. Betterware, Tupperware, Avon etc ..."
                                 required
                             />
-                            <p className="mt-2 text-xs text-gray-500">Puedes subir varios archivos con la misma categoría, por ejemplo: Betterware, y diferenciarlos por nombre como Parte 1, Parte 2, etc.</p>
                         </label>
 
                         <label className="block md:col-span-2">
