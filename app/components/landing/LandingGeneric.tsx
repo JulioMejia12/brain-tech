@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function LandingGeneric() {
     return (
@@ -12,7 +13,7 @@ export default function LandingGeneric() {
                     </span>
 
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mt-6 leading-tight">
-                        Consigue más clientes y vende en internet sin complicarte a 1 QR de distancia
+                        Consigue más clientes y vende en internet sin complicarte
                     </h1>
 
                     <p className="text-gray-300 mt-6">
@@ -24,7 +25,7 @@ export default function LandingGeneric() {
                     </p> */}
 
                     <div className="mt-6 text-[var(--primary)] font-semibold">
-                        🔥 Primer mes $999 — después $150/mes
+                        🔥 Primer mes $500 — después $110/mes
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-8">
                         <button className="cursor-pointer w-full sm:w-auto min-w-[180px] bg-[var(--primary)] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/80 text-center">
@@ -38,9 +39,9 @@ export default function LandingGeneric() {
                             <a href="/barberias" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 flex items-center justify-center">
                                 Ver Barberia
                             </a>
-                            <a href="/bazarcito" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 flex items-center justify-center">
+                            {/* <a href="/bazarcito" className="w-full sm:w-auto text-center border border-[var(--primary)] px-4 py-3 rounded-lg hover:bg-[var(--primary)]/10 flex items-center justify-center">
                                 Ver Bazar
-                            </a>
+                            </a> */}
                         </div>
                     </div>
 
@@ -80,7 +81,7 @@ export default function LandingGeneric() {
             {/* SOLUCIÓN */}
             <section className="py-20 px-6 max-w-6xl mx-auto text-center">
                 <h2 className="text-3xl font-bold mb-10">
-                    Tu negocio en internet en minutos
+                    Tu negocio en internet
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-6 text-left">
@@ -121,23 +122,24 @@ export default function LandingGeneric() {
                 </div>
 
                 <p className="text-2xl mt-10 text-[var(--primary)]">
-                    En 24 horas tendras listo tu perfil profesional.
+                    En 7 dias tendras listo tu perfil profesional.
                 </p>
                 <div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl mx-auto mt-10">
                         {[
-                            { name: "Bazarcito", image: "/1.jpeg" },
-                            { name: "Store", image: "/2.jpeg" },
-                            { name: "Mi tiendita", image: "/3.jpeg" },
+                            { name: "bazarcito", image: "/1.jpeg" },
+                            { name: "marron", image: "/2.jpeg" },
                         ].map((profile, i) => (
                             <div key={i} className="rounded-lg overflow-hidden bg-gray-800 hover:shadow-lg transition">
                                 <div className="relative w-full h-48 sm:h-56 md:h-64">
-                                    <Image
-                                        src={profile.image}
-                                        alt={profile.name}
-                                        fill
-                                        className="object-cover"
-                                    />
+                                    <Link href={`/${profile.name.toLowerCase().replace(/\s/g, "")}`}>
+                                        <Image
+                                            src={profile.image}
+                                            alt={profile.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </Link>
                                 </div>
                                 <div className="p-4">
                                     <p className="font-semibold text-white">{profile.name}</p>
@@ -179,10 +181,10 @@ export default function LandingGeneric() {
                     </div>
 
                     <p className="text-[var(--primary)] text-xl font-bold">
-                        $999 primer mes
+                        $500 primer mes
                     </p>
                     <p className="text-gray-400 mt-2">
-                        Luego $150/mes
+                        Luego $110/mes
                     </p>
 
                     <ul className="mt-6 text-left space-y-2 text-gray-300">
@@ -197,7 +199,6 @@ export default function LandingGeneric() {
                         <ul className="list-disc list-inside text-gray-300 space-y-1">
                             <li>Diseño de logotipo</li>
                             <li>Diseño de tarjeta de presentación</li>
-                            {/* <li>Diseño de post para redes sociales</li> */}
                         </ul>
                     </div>
 
@@ -238,7 +239,7 @@ export default function LandingGeneric() {
                 </h2>
 
                 <button className="mt-6 bg-black text-white px-6 py-3 rounded-lg font-semibold">
-                    Crear mi negocio online
+                    Quiero mi negocio online
                 </button>
             </section>
 
