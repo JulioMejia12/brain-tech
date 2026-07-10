@@ -24,6 +24,7 @@ function parseProductDetails(raw: FormDataEntryValue) {
 type ProductInput = {
     title: string
     price: number
+    promotionPrice?: number | string | null
     stock: number
     image: string
     description?: string
@@ -31,6 +32,16 @@ type ProductInput = {
     categoryId?: number
     category?: string
     details?: { label: string; value: string }[]
+}
+
+function toPromotionPriceDecimal(value: number | string | null | undefined) {
+    if (value === undefined) return undefined
+    if (value === null || value === '') return null
+
+    const raw = String(value).trim()
+    if (raw === '') return null
+
+    return new Prisma.Decimal(raw)
 }
 
 export async function POST(req: Request) {
@@ -45,6 +56,7 @@ export async function POST(req: Request) {
                 title: String(formData.get('title') || ''),
                 description: String(formData.get('description') || ''),
                 price: Number(formData.get('price')),
+                promotionPrice: formData.get('promotionPrice') ? Number(formData.get('promotionPrice')) : undefined,
                 stock: Number(formData.get('stock')),
                 negocioId: Number(formData.get('negocioId')),
                 // category handled below
@@ -130,6 +142,7 @@ export async function POST(req: Request) {
                     data: {
                         title,
                         price: Number(price),
+                        promotionPrice: toPromotionPriceDecimal(body.promotionPrice),
                         stock: Number(stock),
                         image: body.image ?? image,
                         description: description,
@@ -159,6 +172,7 @@ export async function POST(req: Request) {
                     data: {
                         title,
                         price: Number(price),
+                        promotionPrice: toPromotionPriceDecimal(body.promotionPrice),
                         stock: Number(stock),
                         image,
                         description: description,

@@ -58,7 +58,9 @@ export async function deleteProduct(req: NextRequest, ctx: RouteContext, options
 
         const id = result.value
 
-        if (options.deleteCloudinaryImage) {
+        const shouldDeleteCloudinaryImage = options.deleteCloudinaryImage ?? true
+
+        if (shouldDeleteCloudinaryImage) {
             try {
                 const product = await prisma.product.findUnique({ where: { id } })
                 await maybeDeleteCloudinaryImage(product?.image)

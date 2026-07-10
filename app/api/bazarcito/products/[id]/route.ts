@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/app/lib/prisma'
 import { isPlateriasCategoryName } from '@/app/api/_utils/catalog'
 import { errorMessage, jsonError, logError } from '@/app/api/_utils/http'
+import { deleteProduct } from '@/app/api/products/handlers/deleteProduct'
 import type { RouteContext } from '../../../_utils/route'
 import { getNumericRouteParam } from '../../../_utils/route'
 import cloudinary from 'cloudinary'
@@ -46,6 +48,7 @@ type ProductRequestBody = {
     name?: string
     title?: string
     price?: number | string
+    promotionPrice?: number | string | null
     pieces?: number | string
     stock?: number | string
     description?: string
@@ -53,6 +56,16 @@ type ProductRequestBody = {
     category?: string | number
     categoryId?: number
     details?: ProductDetailInput[]
+}
+
+function toPromotionPriceDecimal(value: number | string | null | undefined) {
+    if (value === undefined) return undefined
+    if (value === null || value === '') return null
+
+    const raw = String(value).trim()
+    if (raw === '') return null
+
+    return new Prisma.Decimal(raw)
 }
 
 type ProductUpdateData = {
@@ -120,8 +133,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
             return jsonError(`Product with id=${result.value} not found`, 404)
         }
 
-        await prisma.product.delete({ where: { id: result.value } })
-        return new NextResponse(null, { status: 204 })
+        return deleteProduct(req, ctx, { deleteCloudinaryImage: true })
     } catch (error: unknown) {
         logError('Delete bazarcito product error:', error)
         return jsonError('Failed to delete bazarcito product', 500, errorMessage(error))
@@ -159,6 +171,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
             const fdTitle = formData.get('title') || formData.get('name')
             const fdDescription = formData.get('description')
             const fdPrice = formData.get('price')
+            const fdPromotionPrice = formData.get('promotionPrice')
             const fdStock = formData.get('stock')
             const fdPieces = formData.get('pieces')
             const fdNegocioId = formData.get('negocioId')
@@ -167,6 +180,12 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
 
             if (fdTitle) body.title = String(fdTitle)
             if (fdPrice) body.price = String(fdPrice)
+            // treat explicit presence of the field as intent to update:
+            if (formData.has('promotionPrice')) {
+                const raw = fdPromotionPrice === null ? '' : String(fdPromotionPrice)
+                if (raw === '' || raw === 'null') body.promotionPrice = null
+                else body.promotionPrice = raw
+            }
             if (fdStock) body.stock = String(fdStock)
             if (fdPieces) body.pieces = String(fdPieces)
             if (fdNegocioId) body.negocioId = String(fdNegocioId)
@@ -245,6 +264,12 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
         if (uploadedImageUrl) data.image = uploadedImageUrl
 
         if (body.description !== undefined) data.description = String(body.description)
+        if (body.promotionPrice !== undefined) {
+            const promotionPrice = toPromotionPriceDecimal(body.promotionPrice)
+            if (promotionPrice !== undefined) {
+                ; (data as any).promotionPrice = promotionPrice
+            }
+        }
         if (body.details !== undefined) {
             try {
                 const detailsRaw = body.details

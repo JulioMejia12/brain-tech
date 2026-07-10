@@ -17,6 +17,7 @@ type EditPayload = {
     description?: string
     pieces?: number | null
     price?: number | null
+    promotionPrice?: string | null
     stock?: number | null
     negocioId?: number | null
     category?: string
@@ -31,11 +32,16 @@ type Props = {
     onSave: (payload: EditPayload) => Promise<void> | void
 }
 
-function parsePrice(raw?: string) {
-    if (!raw) return ''
+function parsePrice(raw?: string | number) {
+    if (raw === undefined || raw === null || raw === '') return ''
     const cleaned = String(raw).replace(/[^0-9.\-]/g, '')
     const n = Number(cleaned)
     return Number.isFinite(n) ? n : ''
+}
+
+function parseEditablePromotionPrice(raw?: string | number) {
+    if (raw === undefined || raw === null || raw === '') return ''
+    return String(raw).replace(/[^0-9.\-]/g, '')
 }
 
 export default function EditProductModal({ isOpen, product, isSaving = false, onCancel, onSave }: Props) {
@@ -43,6 +49,7 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
     const [description, setDescription] = useState(() => product?.description ?? '')
     const [pieces, setPieces] = useState<number | ''>(() => product?.pieces ?? '')
     const [price, setPrice] = useState<number | ''>(() => parsePrice(product?.price))
+    const [promotionPrice, setPromotionPrice] = useState<string>(() => parseEditablePromotionPrice(product?.promotionPrice))
     const [category, setCategory] = useState<string>(() => product?.category ?? '')
     const [details, setDetails] = useState<{ label: string; value: string }[]>(() => product?.details ?? [{ label: '', value: '' }])
 
@@ -108,7 +115,12 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label className="block">
                             <span className="text-sm text-gray-600">Precio</span>
-                            <input type="number" step="0.01" value={price === '' ? '' : String(price)} onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500" />
+                            <input min={0} type="number" step="0.01" value={price === '' ? '' : String(price)} onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500" />
+                        </label>
+
+                        <label className="block">
+                            <span className="text-sm text-gray-600">Precio de promoción</span>
+                            <input min={0} type="number" step="0.01" value={promotionPrice} onChange={(e) => setPromotionPrice(e.target.value)} className="mt-1 w-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500" />
                         </label>
 
                         {/* stock removed from edit form */}
@@ -227,6 +239,11 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                                 payload.stock = Number(pieces)
                             }
                             if (price !== '') payload.price = Number(price)
+                            if (promotionPrice === '') {
+                                payload.promotionPrice = null
+                            } else {
+                                payload.promotionPrice = promotionPrice
+                            }
                             if (resolvedNegocioId != null && !Number.isNaN(Number(resolvedNegocioId))) {
                                 payload.negocioId = Number(resolvedNegocioId)
                             }

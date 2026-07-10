@@ -9,9 +9,23 @@ export function toAbsoluteImage(img: unknown) {
     return value.startsWith('/') ? `${SITE_URL}${value}` : `${SITE_URL}/${value}`
 }
 
-export function formatProductPrice(price: string | number | undefined | null) {
+export function formatProductPrice(price: string | number | { toString(): string } | undefined | null) {
     if (typeof price === 'number') {
         return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(price)
+    }
+
+    if (price && typeof price === 'object') {
+        const numericPrice = Number(price.toString())
+        if (!Number.isNaN(numericPrice)) {
+            return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(numericPrice)
+        }
+    }
+
+    if (typeof price === 'string' && price.trim() !== '') {
+        const numericPrice = Number(price)
+        if (!Number.isNaN(numericPrice)) {
+            return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(numericPrice)
+        }
     }
 
     return String(price || '')
@@ -27,6 +41,7 @@ export function mapItemToProduct(item: ProductApiItem): Product {
         id: String(item.id),
         name: item.title || item.name || '',
         price: formatProductPrice(item.price),
+        promotionPrice: formatProductPrice((item as any).promotionPrice ?? (item as any).promotion_price ?? (item as any).promoPrice ?? (item as any).salePrice ?? undefined),
         image: toAbsoluteImage(item.image),
         description: item.description || '',
         category: item.category?.name || 'Otros',

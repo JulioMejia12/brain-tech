@@ -13,6 +13,7 @@ export default function NewMarronProductPage() {
     const router = useRouter()
     const [title, setTitle] = useState('')
     const [price, setPrice] = useState<number | ''>('')
+    const [promotionPrice, setPromotionPrice] = useState<string>('')
     const [stock, setStock] = useState<number | ''>('')
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -45,6 +46,7 @@ export default function NewMarronProductPage() {
             fd.append('title', title)
             fd.append('description', description)
             fd.append('price', String(price))
+            if (promotionPrice !== '') fd.append('promotionPrice', promotionPrice)
             fd.append('stock', String(stock))
             fd.append('negocioId', MARRON_NEGOCIO_ID)
             fd.append('category', category.trim())
@@ -132,6 +134,11 @@ export default function NewMarronProductPage() {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Precio</label>
                         <input type="number" step="0.01" className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100" value={price} onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} required />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Precio de promoción (opcional)</label>
+                        <input type="number" step="0.01" className="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-gray-100" value={promotionPrice} onChange={(e) => setPromotionPrice(e.target.value)} />
                     </div>
 
                     <div>

@@ -92,6 +92,7 @@ function mapProductApiItem(it: ProductApiItem): ProductWithPieces {
         id: String(it.id),
         name: it.title || it.name || '',
         price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
+        promotionPrice: (typeof (it as any).promotionPrice === 'number') ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format((it as any).promotionPrice) : String((it as any).promotionPrice ?? (it as any).promotion_price ?? (it as any).promoPrice ?? ''),
         image: it.image || '/placeholder.png',
         description: it.description || '',
         negocioId: it.negocioId == null ? null : Number(it.negocioId),
@@ -474,7 +475,27 @@ const ProductsSell = ({
                                         )}
                                         <div className="mt-3">
                                             <div className="flex flex-col gap-3 min-w-0">
-                                                <div className="text-lg font-bold text-gray-900">{p.price}</div>
+                                                {(() => {
+                                                    const promoRaw = (p as any).promotionPrice ?? (p as any).promotion_price ?? (p as any).promoPrice ?? null
+                                                    if (promoRaw == null || String(promoRaw).trim() === '') {
+                                                        return <div className="text-lg font-bold text-gray-900">{p.price}</div>
+                                                    }
+
+                                                    // Try to parse numeric value from the promo (handles formatted strings)
+                                                    const parsed = Number(String(promoRaw).replace(/[^0-9.-]/g, ''))
+                                                    const hasPositivePromo = !Number.isNaN(parsed) && parsed > 0
+                                                    if (!hasPositivePromo) {
+                                                        return <div className="text-lg font-bold text-gray-900">{p.price}</div>
+                                                    }
+
+                                                    const promoDisplay = typeof promoRaw === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(promoRaw) : String(promoRaw)
+                                                    return (
+                                                        <div className="flex flex-col">
+                                                            <div className="text-sm text-gray-500 line-through">{p.price}</div>
+                                                            <div className="text-lg font-bold" style={{ color: primary }}>{promoDisplay}</div>
+                                                        </div>
+                                                    )
+                                                })()}
                                                 {(() => {
                                                     const raw = (p as any).pieces ?? (p as any).stock ?? (p as any).quantity ?? null
                                                     const disp = raw == null || raw === '' ? null : Number(raw)
@@ -546,6 +567,7 @@ const ProductsSell = ({
                             form.append('title', String(payload.name ?? editingProduct.name))
                             if (payload.description !== undefined) form.append('description', String(payload.description))
                             if (payload.price !== undefined) form.append('price', String(payload.price))
+                            if (payload.promotionPrice !== undefined) form.append('promotionPrice', String(payload.promotionPrice))
                             // stock removed from edit payload
                             if (payload.pieces !== undefined) form.append('pieces', String(payload.pieces))
                             if (payload.details !== undefined) form.append('details', JSON.stringify(payload.details))
@@ -579,17 +601,45 @@ const ProductsSell = ({
                                     const newNegocioId = updated.negocioId ?? payload.negocioId ?? it.negocioId ?? null
                                     const newCategory = String((updated.category && (updated.category.name || updated.category)) || payload.category || it.category || '')
                                     const newPrice = (updated.price !== undefined && updated.price !== null) ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(updated.price)) : (payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price)
-                                    return { ...it, name: newName, description: newDescription, pieces: newPieces, details: newDetails, image: newImage, negocioId: newNegocioId, category: newCategory, price: newPrice }
+                                    const formatPromo = (val: any, fallback: any) => {
+                                        if (val === undefined) return fallback
+                                        if (val === null) return undefined
+                                        const n = Number(val)
+                                        if (Number.isNaN(n)) return fallback
+                                        return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n)
+                                    }
+                                    const newPromotionPrice = formatPromo((updated as any).promotionPrice, (payload.promotionPrice !== undefined ? formatPromo(payload.promotionPrice, it.promotionPrice ?? undefined) : it.promotionPrice ?? undefined))
+                                    return { ...it, name: newName, description: newDescription, pieces: newPieces, details: newDetails, image: newImage, negocioId: newNegocioId, category: newCategory, price: newPrice, promotionPrice: newPromotionPrice }
                                 }))
                             }
                             setToast({ message: 'Producto actualizado correctamente.', type: 'success' })
                         } else {
-                            setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: String(payload.name ?? it.name), description: String(payload.description ?? it.description), pieces: normalizedPieces ?? it.pieces, image: String(it.image), negocioId: payload.negocioId ?? it.negocioId, category: String(payload.category ?? it.category), price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price } : it)))
+                            setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? {
+                                ...it,
+                                name: String(payload.name ?? it.name),
+                                description: String(payload.description ?? it.description),
+                                pieces: normalizedPieces ?? it.pieces,
+                                image: String(it.image),
+                                negocioId: payload.negocioId ?? it.negocioId,
+                                category: String(payload.category ?? it.category),
+                                price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price,
+                                promotionPrice: payload.promotionPrice === null ? undefined : (payload.promotionPrice ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.promotionPrice)) : it.promotionPrice)
+                            } : it)))
                             setToast({ message: 'Producto actualizado localmente.', type: 'success' })
                         }
                     } catch (e) {
                         console.error('Update error', e)
-                        setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? { ...it, name: String(payload.name ?? it.name), description: String(payload.description ?? it.description), pieces: normalizedPieces ?? it.pieces, image: String(it.image), negocioId: payload.negocioId ?? it.negocioId, category: String(payload.category ?? it.category), price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price } : it)))
+                        setProducts((prev) => prev.map((it) => (String(it.id) === String(editingProduct.id) ? {
+                            ...it,
+                            name: String(payload.name ?? it.name),
+                            description: String(payload.description ?? it.description),
+                            pieces: normalizedPieces ?? it.pieces,
+                            image: String(it.image),
+                            negocioId: payload.negocioId ?? it.negocioId,
+                            category: String(payload.category ?? it.category),
+                            price: payload.price ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.price)) : it.price,
+                            promotionPrice: payload.promotionPrice === null ? undefined : (payload.promotionPrice ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(payload.promotionPrice)) : it.promotionPrice)
+                        } : it)))
                         setToast({ message: 'No se pudo actualizar en el servidor; se aplicó localmente.', type: 'error' })
                     } finally {
                         setSavingProductId(null)

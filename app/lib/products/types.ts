@@ -1,7 +1,12 @@
+type DecimalLike = {
+    toString(): string
+}
+
 export type Product = {
     id: string
     name: string
     price: string
+    promotionPrice?: string
     image: string
     description: string
     category: string
@@ -25,4 +30,5 @@ export type ProductApiItem = {
     pieces?: number | null
     quantity?: number | null
     stock?: number | null
+    promotionPrice?: string | number | DecimalLike | null
 }

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { deleteProduct } from '../handlers/deleteProduct'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../../../lib/prisma'
 import { getNumericRouteParam, type RouteContext } from '../../_utils/route'
 import { errorMessage, jsonError, logError } from '../../_utils/http'
@@ -8,8 +9,19 @@ type UpdateProductBody = {
     name?: string
     title?: string
     price?: number | string
+    promotionPrice?: number | string | null
     pieces?: number | string
     stock?: number | string
+}
+
+function toPromotionPriceDecimal(value: number | string | null | undefined) {
+    if (value === undefined) return undefined
+    if (value === null || value === '') return null
+
+    const raw = String(value).trim()
+    if (raw === '') return null
+
+    return new Prisma.Decimal(raw)
 }
 
 export async function GET(req: NextRequest, ctx: RouteContext) {
@@ -46,6 +58,12 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
         if (body.price !== undefined) {
             const parsed = Number(body.price)
             if (!Number.isNaN(parsed)) data.price = parsed
+        }
+        if (body.promotionPrice !== undefined) {
+            const promotionPrice = toPromotionPriceDecimal(body.promotionPrice)
+            if (promotionPrice !== undefined) {
+                ; (data as any).promotionPrice = promotionPrice
+            }
         }
         const stockSource = body.pieces ?? body.stock
         if (stockSource !== undefined) {

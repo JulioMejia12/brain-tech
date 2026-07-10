@@ -27,18 +27,19 @@ model Role {
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
-  title       String
-  price       Float
-  stock       Int
-  image       String
-  categoryId  Int
-  description String   @db.VarChar(400)
-  details     Json
-  negocioId   Int?
-  createdAt   DateTime @default(now())
-  category    Category @relation(fields: [categoryId], references: [id])
-  negocio     Negocio? @relation(fields: [negocioId], references: [id])
+  id             Int      @id @default(autoincrement())
+  title          String
+  price          Float
+  promotionPrice Decimal? @db.Decimal(10, 2)
+  stock          Int
+  image          String
+  categoryId     Int
+  description    String   @db.VarChar(400)
+  details        Json
+  negocioId      Int?
+  createdAt      DateTime @default(now())
+  category       Category @relation(fields: [categoryId], references: [id])
+  negocio        Negocio? @relation(fields: [negocioId], references: [id])
 }
 
 model Promotion {
