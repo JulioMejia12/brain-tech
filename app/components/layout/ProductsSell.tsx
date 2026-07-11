@@ -298,13 +298,18 @@ const ProductsSell = ({
         try {
             setSharingIds((prev) => [...prev, productId])
             const pageUrl = buildShareUrl(product)
+            const promoRaw = (product as any).promotionPrice ?? (product as any).promotion_price ?? (product as any).promoPrice ?? null
+            const hasPromo = promoRaw != null && String(promoRaw).trim() !== ''
+            const priceLines = hasPromo
+                ? [`Precio: ~${product.price}~`, `Precio promoción: ${String(promoRaw)}`]
+                : [`Precio: ${product.price}`]
             const detailsText = (product as any).details && Array.isArray((product as any).details) && (product as any).details.length
                 ? (product as any).details
                     .filter((d: any) => (d?.label && String(d.label).trim() !== '') || (d?.value && String(d.value).trim() !== ''))
                     .map((d: any) => `• ${d.label}: ${d.value}`)
                     .join('\n')
                 : ''
-            const textParts = [pageUrl, '', `Producto: ${product.name}`, `Precio: ${product.price}`, product.description || `Mira este producto en ${title || 'nuestra tienda'}.`]
+            const textParts = [pageUrl, '', `Producto: ${product.name}`, ...priceLines, product.description || `Mira este producto en ${title || 'nuestra tienda'}.`]
             if (detailsText) textParts.push('', detailsText)
             const text = textParts.join('\n')
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
