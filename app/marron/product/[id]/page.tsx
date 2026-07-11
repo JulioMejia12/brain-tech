@@ -34,10 +34,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         metadataBase: new URL(siteUrl),
         title: product.name,
         description: product.description,
+        alternates: {
+            canonical: productUrl,
+        },
         openGraph: {
             type: 'website',
             url: productUrl,
-            siteName: 'LocalHub',
+            siteName: 'brain-tech-kappa',
             title: product.name,
             description: product.description,
             images: [{ url: imageUrl, alt: product.name, width: 1200, height: 630 }],
