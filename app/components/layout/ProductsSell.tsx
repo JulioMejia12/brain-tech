@@ -261,6 +261,13 @@ const ProductsSell = ({
     const visible = products.filter((p) => {
         const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+        // hide products with 0 stock/pieces for non-admin users
+        if (!isAdmin) {
+            const raw = (p as any).pieces ?? (p as any).stock ?? (p as any).quantity ?? null
+            const qty = raw === '' || raw === null || raw === undefined ? null : Number(raw)
+            if (qty === 0) return false
+        }
+
         return matchesCategory && matchesSearch
     })
     const buildShareUrl = (product: Product) => {
