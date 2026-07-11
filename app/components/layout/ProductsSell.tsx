@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 const DEFAULT_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || ''
@@ -141,6 +141,10 @@ const ProductsSell = ({
     const searchParams = useSearchParams()
     const searchQuery = searchParams.get('q')?.trim() ?? ''
 
+    // Local input state to make the search feel instant; debounce updating URL
+    const [searchInput, setSearchInput] = useState<string>(searchQuery)
+    const searchDebounceRef = useRef<number | null>(null)
+
     const updateSearchQuery = (value: string) => {
         const params = new URLSearchParams(searchParams.toString())
         if (value.trim()) {
@@ -150,6 +154,32 @@ const ProductsSell = ({
         }
         router.replace(`${pathname}${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false })
     }
+
+    const handleSearchInputChange = (value: string) => {
+        setSearchInput(value)
+        if (searchDebounceRef.current) {
+            clearTimeout(searchDebounceRef.current)
+        }
+        // debounce updating the url/search params so router.replace isn't called on every keystroke
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        searchDebounceRef.current = window.setTimeout(() => {
+            updateSearchQuery(value)
+        }, 300)
+    }
+
+    // sync local input when the external searchQuery changes (e.g. back/forward navigation)
+    useEffect(() => {
+        setSearchInput(searchQuery)
+    }, [searchQuery])
+
+    // cleanup debounce on unmount
+    useEffect(() => {
+        return () => {
+            if (searchDebounceRef.current) {
+                clearTimeout(searchDebounceRef.current)
+            }
+        }
+    }, [])
 
     const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
     const auth = useAuth()
@@ -275,7 +305,7 @@ const ProductsSell = ({
 
     const filtered = products.filter((p) => {
         const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory
-        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+        const matchesSearch = p.name.toLowerCase().includes((searchInput || '').toLowerCase().trim())
         // hide products with 0 stock/pieces for non-admin users
         if (!isAdmin) {
             const raw = (p as any).pieces ?? (p as any).stock ?? (p as any).quantity ?? null
@@ -454,8 +484,8 @@ const ProductsSell = ({
                                 </span>
                                 <input
                                     type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => updateSearchQuery(e.target.value)}
+                                    value={searchInput}
+                                    onChange={(e) => handleSearchInputChange(e.target.value)}
                                     placeholder="Buscar productos"
                                     className="w-full rounded-full border border-white/70 bg-white px-4 py-3 pl-12 text-base text-gray-900 shadow-sm outline-none transition focus:border-pink-400 focus:ring-4 focus:ring-pink-100"
                                 />
