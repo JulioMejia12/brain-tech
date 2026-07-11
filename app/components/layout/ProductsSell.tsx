@@ -88,11 +88,17 @@ function getOptimizedHeroImage(src?: string) {
 }
 
 function mapProductApiItem(it: ProductApiItem): ProductWithPieces {
+    const rawPromotionPrice = (it as any).promotionPrice ?? (it as any).promotion_price ?? (it as any).promoPrice ?? ''
+    const promotionPriceNumber = Number(String(rawPromotionPrice).replace(/[^0-9.-]/g, ''))
+    const promotionPrice = rawPromotionPrice !== '' && !Number.isNaN(promotionPriceNumber)
+        ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(promotionPriceNumber)
+        : String(rawPromotionPrice || '')
+
     return {
         id: String(it.id),
         name: it.title || it.name || '',
         price: typeof it.price === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(it.price) : String(it.price || ''),
-        promotionPrice: (typeof (it as any).promotionPrice === 'number') ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format((it as any).promotionPrice) : String((it as any).promotionPrice ?? (it as any).promotion_price ?? (it as any).promoPrice ?? ''),
+        promotionPrice,
         image: it.image || '/placeholder.png',
         description: it.description || '',
         negocioId: it.negocioId == null ? null : Number(it.negocioId),
@@ -493,7 +499,7 @@ const ProductsSell = ({
                                                         return <div className="text-lg font-bold text-gray-900">{p.price}</div>
                                                     }
 
-                                                    const promoDisplay = typeof promoRaw === 'number' ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(promoRaw) : String(promoRaw)
+                                                    const promoDisplay = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(parsed)
                                                     return (
                                                         <div className="flex flex-col">
                                                             <div className="text-sm text-gray-500 line-through">{p.price}</div>
