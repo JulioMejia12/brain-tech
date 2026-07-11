@@ -208,6 +208,21 @@ const ProductsSell = ({
         return ['Todos', ...Array.from(set)]
     }, [products])
 
+    const [sortOrder, setSortOrder] = useState<'az' | 'za' | 'price_asc' | 'price_desc'>('az')
+    const sortOptions: Array<{ value: 'az' | 'za' | 'price_asc' | 'price_desc'; label: string }> = [
+        { value: 'az', label: 'A - Z' },
+        { value: 'za', label: 'Z - A' },
+        { value: 'price_asc', label: 'Menor precio' },
+        { value: 'price_desc', label: 'Mayor precio' },
+    ]
+
+    function parseCurrencyToNumber(value: string | number | undefined | null) {
+        if (value == null) return NaN
+        const s = String(value)
+        const n = Number(s.replace(/[^0-9.-]/g, ''))
+        return Number.isNaN(n) ? NaN : n
+    }
+
     useEffect(() => {
         let mounted = true
 
@@ -258,7 +273,7 @@ const ProductsSell = ({
         }
     }, [productsArray, resolvedProductsEndpoint])
 
-    const visible = products.filter((p) => {
+    const filtered = products.filter((p) => {
         const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
         // hide products with 0 stock/pieces for non-admin users
@@ -270,6 +285,36 @@ const ProductsSell = ({
 
         return matchesCategory && matchesSearch
     })
+
+    const visible = useMemo(() => {
+        const arr = filtered.slice()
+        switch (sortOrder) {
+            case 'az':
+                return arr.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'es'))
+            case 'za':
+                return arr.sort((a, b) => String(b.name || '').localeCompare(String(a.name || ''), 'es'))
+            case 'price_asc':
+                return arr.sort((a, b) => {
+                    const na = parseCurrencyToNumber(a.price)
+                    const nb = parseCurrencyToNumber(b.price)
+                    if (Number.isNaN(na) && Number.isNaN(nb)) return 0
+                    if (Number.isNaN(na)) return 1
+                    if (Number.isNaN(nb)) return -1
+                    return na - nb
+                })
+            case 'price_desc':
+                return arr.sort((a, b) => {
+                    const na = parseCurrencyToNumber(a.price)
+                    const nb = parseCurrencyToNumber(b.price)
+                    if (Number.isNaN(na) && Number.isNaN(nb)) return 0
+                    if (Number.isNaN(na)) return 1
+                    if (Number.isNaN(nb)) return -1
+                    return nb - na
+                })
+            default:
+                return arr.sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'es'))
+        }
+    }, [filtered, sortOrder])
     const buildShareUrl = (product: Product) => {
         const browserOrigin = typeof window !== 'undefined' ? window.location.origin : ''
         const isLocalhost = browserOrigin.includes('localhost') || browserOrigin.includes('127.0.0.1')
@@ -387,48 +432,86 @@ const ProductsSell = ({
             </div>
 
             <section className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                <h2 className="text-xl font-bold mb-4" style={{ color: secondary }}>Nuestros Productos</h2>
+                <div className="mb-5 flex flex-col gap-4 rounded-[28px] bg-white/30 p-4 shadow-[0_12px_30px_rgba(0,0,0,0.08)] backdrop-blur-sm md:p-5">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h2 className="text-2xl font-extrabold tracking-tight" style={{ color: secondary }}>Nuestros Productos</h2>
+                            <p className="mt-1 text-sm text-gray-700">Explora el catálogo y ordénalo a tu manera.</p>
+                        </div>
+                        <div className="inline-flex w-fit items-center rounded-full bg-white/85 px-3 py-1 text-sm font-medium text-gray-700 shadow-sm">
+                            {visible.length} {visible.length === 1 ? 'producto' : 'productos'}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <label className="block">
+                            <span className="mb-2 block text-sm font-medium text-gray-700">Buscar producto</span>
+                            <div className="relative">
+                                <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 10.5a7.5 7.5 0 0013.15 6.15z" />
+                                    </svg>
+                                </span>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => updateSearchQuery(e.target.value)}
+                                    placeholder="Buscar productos"
+                                    className="w-full rounded-full border border-white/70 bg-white px-4 py-3 pl-12 text-base text-gray-900 shadow-sm outline-none transition focus:border-pink-400 focus:ring-4 focus:ring-pink-100"
+                                />
+                            </div>
+                        </label>
+
+                        <div className="flex flex-col gap-2">
+                            <span className="text-sm font-medium text-gray-700">Ordenar por</span>
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                {sortOptions.map((option) => {
+                                    const active = sortOrder === option.value
+                                    return (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => setSortOrder(option.value)}
+                                            className={`min-h-[48px] rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${active ? 'text-white shadow-[0_8px_20px_rgba(236,72,153,0.3)]' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                            style={active ? { background: primary } : { border: '1px solid rgba(209, 213, 219, 0.9)' }}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <span className="text-sm font-medium text-gray-700">Categorías</span>
+                            <div className="relative">
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    className="w-full appearance-none rounded-2xl border border-white/70 bg-white px-4 py-3 pr-12 text-sm font-medium text-gray-800 shadow-sm outline-none transition focus:border-pink-400 focus:ring-4 focus:ring-pink-100"
+                                >
+                                    {categories.map((c) => (
+                                        <option key={c} value={c}>
+                                            {c}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 {loading && <Spinner />}
                 {fetchError && !loading && (
                     <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                         {fetchError}
                     </div>
                 )}
-                <div className="sm:hidden mb-4">
-                    <label className="block">
-                        <span className="sr-only">Buscar productos</span>
-                        <div className="relative">
-                            <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 10.5a7.5 7.5 0 0013.15 6.15z" />
-                                </svg>
-                            </span>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => updateSearchQuery(e.target.value)}
-                                placeholder="Buscar productos"
-                                className="w-full rounded-full border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 shadow-sm outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-200"
-                            />
-                        </div>
-                    </label>
-                </div>
                 <>
-                    <div className="flex flex-col gap-3 mb-4">
-                        <div className="flex gap-2 flex-wrap">
-                            {categories.map((c) => (
-                                <button
-                                    key={c}
-                                    onClick={() => setSelectedCategory(c)}
-                                    className={`px-3 py-1 rounded-full text-sm ${selectedCategory === c ? 'text-white' : 'text-gray-800'}`}
-                                    style={selectedCategory === c ? { background: primary } : { background: 'white' }}
-                                >
-                                    {c}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {visible.map((p) => {
                             return (
