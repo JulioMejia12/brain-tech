@@ -94,6 +94,7 @@ export default function MarronClientPage({ products, marronWhatsappNumber }: Pro
                 <StorefrontCatalogDownloads
                     catalogs={catalogs}
                     negocioId="2"
+                    whatsappNumber={marronWhatsappNumber}
                     borderColor={marronProductsSellProps.primary}
                     textColor="#7a4b16"
                     badgeClassName="bg-amber-100 text-amber-800"

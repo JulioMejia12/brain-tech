@@ -85,6 +85,7 @@ export default function BazarcitoClientPage({ products, bazarcitoWhatsappNumber 
                 <StorefrontCatalogDownloads
                     catalogs={catalogs}
                     negocioId="1"
+                    whatsappNumber={bazarcitoWhatsappNumber}
                     borderColor={bazarcitoProductsSellProps.primary}
                     textColor="#7a1858"
                     badgeClassName="bg-pink-100 text-pink-700"

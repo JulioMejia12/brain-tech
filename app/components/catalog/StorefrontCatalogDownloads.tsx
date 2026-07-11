@@ -16,6 +16,7 @@ type Props = {
     textColor: string
     badgeClassName: string
     helperText: string
+    whatsappNumber?: string
 }
 
 function getPartNumber(name: string) {
@@ -35,6 +36,7 @@ export default function StorefrontCatalogDownloads({
     textColor,
     badgeClassName,
     helperText,
+    whatsappNumber,
 }: Props) {
     const groupedCatalogs = useMemo(() => {
         const groups = new Map<string, { title: string; items: CatalogItem[] }>()
@@ -80,36 +82,26 @@ export default function StorefrontCatalogDownloads({
                                     Catálogos de {group.title}
                                 </h3>
                             </div>
-                            <p className="mt-1 text-sm text-gray-600">
-                                {group.items.length === 1
-                                    ? helperText
-                                    : `Descarga las ${group.items.length} partes en orden para no perderte.`}
-                            </p>
+                            {/* helper text removed per request; only WhatsApp request link shown */}
                         </div>
 
-                        <span className={`inline-flex items-center gap-2 self-start rounded-full px-3 py-1 text-xs font-semibold ${badgeClassName}`}>
-                            <FiLayers className="shrink-0" />
-                            {group.items.length} {group.items.length === 1 ? 'archivo' : 'partes'}
-                        </span>
+                        {whatsappNumber ? (
+                            <div className="mt-2 sm:mt-0">
+                                <a
+                                    href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola, quisiera recibir el catálogo de ${group.title}.`)}`}
+                                    target="_blank"
+                                    rel="noreferrer noopener"
+                                    className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium shadow-sm"
+                                    style={{ backgroundColor: borderColor, color: '#fff' }}
+                                >
+                                    <FiDownload className="text-sm" />
+                                    Pedir catálogo de {group.title}
+                                </a>
+                            </div>
+                        ) : null}
                     </div>
 
-                    <div className="mt-4 grid gap-3 md:grid-cols-2">
-                        {group.items.map((catalog, index) => (
-                            <a
-                                key={catalog.id}
-                                href={`/api/catalog/${catalog.id}/download?negocioId=${encodeURIComponent(negocioId)}`}
-                                className="inline-flex min-h-14 items-center gap-3 rounded-xl border bg-white px-4 py-3 font-medium shadow-sm transition hover:-translate-y-0.5"
-                                style={{ borderColor, color: textColor }}
-                            >
-                                <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full text-xs font-bold text-white"
-                                    style={{ backgroundColor: borderColor }}>
-                                    {index + 1}
-                                </span>
-                                <FiDownload className="shrink-0" />
-                                <span className="truncate">{catalog.name}</span>
-                            </a>
-                        ))}
-                    </div>
+                    {/* Descargas removidas: solo se muestra el enlace para pedir por WhatsApp por categoría */}
                 </div>
             ))}
         </div>
