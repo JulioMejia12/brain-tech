@@ -21,11 +21,12 @@ type AuthResponse = {
     }
 }
 
-type StorefrontContext = 'bazarcito' | 'marron' | undefined
+type StorefrontContext = 'bazarcito' | 'marron' | 'cremeria' | undefined
 
 function getSiteContextFromPath(path: string) {
     if (path.startsWith('/bazarcito')) return 'bazarcito'
     if (path.startsWith('/marron')) return 'marron'
+    if (path.startsWith('/cremeria')) return 'cremeria'
     return undefined
 }
 

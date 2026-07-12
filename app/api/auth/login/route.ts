@@ -28,6 +28,15 @@ function getAllowedNegocioFromContext(siteContext?: string) {
         return process.env.MARRON_NEGOCIO_ID || process.env.NEXT_PUBLIC_MARRON_NEGOCIO_ID || undefined
     }
 
+    if (siteContext === 'cremeria') {
+        return (
+            process.env.CREMERIA_NEGOCIO_ID ||
+            process.env.NEXT_PUBLIC_CREMERIA_NEGOCIO_ID ||
+            // default to 3 when not configured to keep Cremería locked
+            '3'
+        )
+    }
+
     return undefined
 }
 
