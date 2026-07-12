@@ -4,10 +4,14 @@ import type { Metadata } from 'next'
 import { getMarronProductById, getMarronProducts } from '../../services/products'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.vercel.app'
+const fallbackImage = 'https://res.cloudinary.com/ddfj0omil/image/upload/v1779923687/WhatsApp_Image_2026-05-20_at_10.56.58_PM_xxualo.jpg'
 
 const toAbsoluteUrl = (value: string) => {
-    if (!value) return siteUrl
-    return value.startsWith('http') ? value : `${siteUrl}${value}`
+    if (!value) return fallbackImage
+    // If already absolute (http/https), return as-is
+    if (value.startsWith('http://') || value.startsWith('https://')) return value
+    // If relative path, prepend site URL
+    return value.startsWith('/') ? `${siteUrl}${value}` : `${siteUrl}/${value}`
 }
 
 export async function generateStaticParams() {
@@ -29,26 +33,36 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     const productUrl = `${siteUrl}/marron/product/${product.id}`
     const imageUrl = toAbsoluteUrl(product.image)
+    const description = product.description || `${product.name} - Disponible en Marron`
 
     return {
         metadataBase: new URL(siteUrl),
         title: product.name,
-        description: product.description,
+        description: description,
         alternates: {
             canonical: productUrl,
         },
         openGraph: {
-            type: 'website',
+            type: 'product',
             url: productUrl,
-            siteName: 'brain-tech-kappa',
+            siteName: 'Marron',
             title: product.name,
-            description: product.description,
-            images: [{ url: imageUrl, alt: product.name, width: 1200, height: 630 }],
+            description: description,
+            images: [
+                {
+                    url: imageUrl,
+                    secureUrl: imageUrl,
+                    alt: product.name,
+                    width: 1200,
+                    height: 630,
+                    type: 'image/jpeg',
+                },
+            ],
         },
         twitter: {
             card: 'summary_large_image',
             title: product.name,
-            description: product.description,
+            description: description,
             images: [imageUrl],
         },
     }
