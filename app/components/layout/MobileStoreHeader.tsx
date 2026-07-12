@@ -41,6 +41,7 @@ export default function MobileStoreHeader({
                                 alt={logoAlt || title || heading}
                                 width={56}
                                 height={56}
+                                unoptimized
                                 className="h-9 w-9 object-contain"
                             />
                         ) : (
@@ -62,6 +63,7 @@ export default function MobileStoreHeader({
                         width={1200}
                         height={900}
                         priority
+                        unoptimized
                         className="h-auto w-full object-contain"
                         sizes="(max-width: 768px) 100vw, 448px"
                     />

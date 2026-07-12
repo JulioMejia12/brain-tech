@@ -6,6 +6,8 @@ const bazarcitoNegocioId = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || proce
 const bazarcitoProductsEndpoint = `/api/products?negocioId=${encodeURIComponent(bazarcitoNegocioId)}&limit=1000`
 const marronNegocioId = process.env.NEXT_PUBLIC_MARRON_NEGOCIO_ID || process.env.MARRON_NEGOCIO_ID || '2'
 const marronProductsEndpoint = `/api/products?negocioId=${encodeURIComponent(marronNegocioId)}&limit=1000`
+const cremeriaNegocioId = process.env.NEXT_PUBLIC_CREMERIA_NEGOCIO_ID || process.env.CREMERIA_NEGOCIO_ID || '3'
+const cremeriaProductsEndpoint = `/api/products?negocioId=${encodeURIComponent(cremeriaNegocioId)}&limit=1000`
 
 export type ProductsSellPageConfig = {
     title: string
@@ -76,6 +78,31 @@ export const marronProductsSellProps: ProductsSellPageConfig = {
     },
     productsEndpoint: marronProductsEndpoint,
     productMutationBase: '/api/products',
+}
+
+export const cremeriaProductsSellProps: ProductsSellPageConfig = {
+    title: 'Cremería online',
+    secondary: '#1f4756',
+    primary: '#0ea5a4',
+    textColor: '#042024',
+    bgColor: '#e6fbfb',
+    QuienesSomos: 'Somos una cremería en línea con productos lácteos y derivados de alta calidad. Atención rápida por WhatsApp y catálogo digital.',
+    promos: [],
+    cellPhone: process.env.NUMBER_CREMERIA || process.env.NUMBER_BAZARCITO || '',
+    heroImage: 'https://res.cloudinary.com/ddfj0omil/image/upload/cremeria-online_t7gd4l',
+    mobileHero: {
+        title: 'Cremería online',
+        logoSrc: '/cremeria-online.svg',
+        logoAlt: 'Logo Cremería online',
+        eyebrow: 'Catálogo online',
+        heading: 'Descubre Cremería',
+        description: 'Productos lácteos y más para tu hogar.',
+        imageSrc: 'https://res.cloudinary.com/ddfj0omil/image/upload/cremeria-online_t7gd4l',
+        imageAlt: 'Catálogo destacado de Cremería online',
+        backgroundTo: '#0ea5a4',
+    },
+    productsEndpoint: cremeriaProductsEndpoint,
+    productMutationBase: '/api/cremeria/products',
 }
 
 export const plateriasProductsSellProps: ProductsSellPageConfig = {
