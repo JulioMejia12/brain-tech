@@ -841,7 +841,7 @@ const ProductsSell = ({
                 </p>
             </section>
             <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Promociones</h2>
+                {promosComponent ?? <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Promociones</h2>}
                 <div>
                     {promosComponent ?? <PromotionsClient items={promos} />}
                 </div>

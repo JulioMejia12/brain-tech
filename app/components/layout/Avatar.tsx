@@ -49,7 +49,8 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
         // show admin-only actions
         const isAdmin = String(auth.user?.role?.name || '').toLowerCase() === 'admin'
         const isMarronPath = currentPath.startsWith('/marron')
-        const adminBasePath = isMarronPath ? '/marron' : '/bazarcito'
+        const isCremeriaPath = currentPath.startsWith('/cremeria')
+        const adminBasePath = isMarronPath ? '/marron' : isCremeriaPath ? '/cremeria' : '/bazarcito'
         if (isAdmin) defaultItems.push({ label: 'Agregar productos', href: `${adminBasePath}/products/new` })
         if (isAdmin) defaultItems.push({ label: 'Crear promociones', href: `${adminBasePath}/promotions/new` })
         if (isAdmin) defaultItems.push({ label: 'Subir catalogo', href: `${adminBasePath}/catalog` })
@@ -78,9 +79,11 @@ export default function Avatar({ src, name = 'Cuenta', items }: Props) {
     const initials = user ? getInitials(user?.name, user?.email) : ''
     const logoutRedirectPath = currentPath.startsWith('/marron')
         ? '/marron'
-        : currentPath.startsWith('/bazarcito')
-            ? '/bazarcito'
-            : '/'
+        : currentPath.startsWith('/cremeria')
+            ? '/cremeria'
+            : currentPath.startsWith('/bazarcito')
+                ? '/bazarcito'
+                : '/'
 
     return (
         <div className="relative" ref={ref}>
