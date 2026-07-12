@@ -75,6 +75,7 @@ type Props = {
 }
 
 const DEFAULT_PRODUCTS_ENDPOINT = '/api/bazarcito/products'
+const SEARCH_DEBOUNCE_MS = 3000
 
 function getOptimizedHeroImage(src?: string) {
     const fallback = 'https://res.cloudinary.com/ddfj0omil/image/upload/q_auto:best,f_auto,dpr_auto,c_fit,w_1600/v1778198183/laptop-store_tbir4n.png'
@@ -160,11 +161,11 @@ const ProductsSell = ({
         if (searchDebounceRef.current) {
             clearTimeout(searchDebounceRef.current)
         }
-        // debounce updating the url/search params so router.replace isn't called on every keystroke
+        // debounce updating the url/search params so search only runs after 3 seconds of inactivity
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         searchDebounceRef.current = window.setTimeout(() => {
             updateSearchQuery(value)
-        }, 300)
+        }, SEARCH_DEBOUNCE_MS)
     }
 
     // sync local input when the external searchQuery changes (e.g. back/forward navigation)
