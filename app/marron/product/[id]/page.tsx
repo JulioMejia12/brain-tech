@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             canonical: productUrl,
         },
         openGraph: {
-            type: 'product',
+            type: 'website',
             url: productUrl,
             siteName: 'Marron',
             title: product.name,
