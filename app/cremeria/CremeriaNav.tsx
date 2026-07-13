@@ -29,7 +29,7 @@ export default function CremeriaNav() {
             textColorLogo="#042024"
             title="Cremería online"
             query={query}
-            logo={'/cremeria-online.svg'}
+            logo={'/logo-cremeria.png'}
             onQueryChange={handleQueryChange}
             hideOnMobile
         />
