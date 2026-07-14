@@ -54,6 +54,8 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
     const [details, setDetails] = useState<{ label: string; value: string }[]>(() => product?.details ?? [{ label: '', value: '' }])
 
     const previewUrl = product?.image ?? ''
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [localPreview, setLocalPreview] = useState<string | null>(null)
     const [negocioNombre, setNegocioNombre] = useState<string>('')
     const resolvedNegocioId = product?.negocioId ?? (DEFAULT_NEGOCIO_ID ? Number(DEFAULT_NEGOCIO_ID) : null)
 
@@ -129,11 +131,27 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                     <label className="block">
                         <span className="text-sm text-gray-600">Imagen</span>
                         <div className="mt-1">
-                            {previewUrl && (
+                            {(localPreview || previewUrl) && (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={previewUrl} alt="preview" className="w-20 h-20 object-cover rounded-md border" />
+                                <img src={localPreview || previewUrl} alt="preview" className="w-20 h-20 object-cover rounded-md border" />
                             )}
                         </div>
+                    </label>
+
+                    <label className="block">
+                        <span className="text-sm text-gray-600">Cambiar imagen</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                const f = e.target.files && e.target.files[0] ? e.target.files[0] : null
+                                try { if (localPreview) URL.revokeObjectURL(localPreview) } catch { }
+                                setImageFile(f)
+                                if (f) setLocalPreview(URL.createObjectURL(f))
+                                else setLocalPreview(null)
+                            }}
+                            className="mt-1 text-sm text-gray-700"
+                        />
                     </label>
 
                     <label className="block">
@@ -251,6 +269,8 @@ export default function EditProductModal({ isOpen, product, isSaving = false, on
                             // image upload disabled here; promotions form handles promotion images
                             const filtered = details.filter(d => (d.label && d.label.trim() !== '') || (d.value && d.value.trim() !== ''))
                             if (filtered.length) payload.details = filtered
+                            // attach imageFile if provided so parent can send multipart/form-data
+                            if (imageFile) (payload as any).imageFile = imageFile
                             await onSave(payload)
                         }}
                         disabled={isSaving}
