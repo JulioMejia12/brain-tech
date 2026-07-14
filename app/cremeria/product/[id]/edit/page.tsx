@@ -139,12 +139,15 @@ export default function EditCremeriaProductPage() {
                         <div className="sm:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Imagen</label>
                             <div className="flex flex-col gap-2">
-                                <input type="file" accept="image/*" onChange={(e) => {
-                                    const f = e.target.files && e.target.files[0] ? e.target.files[0] : null
-                                    try { if (previewUrl) URL.revokeObjectURL(previewUrl) } catch { }
-                                    setImageFile(f)
-                                    if (f) setPreviewUrl(URL.createObjectURL(f))
-                                }} className="text-sm text-gray-700" />
+                                <label className="inline-block bg-white text-gray-800 border border-gray-200 rounded px-3 py-2 cursor-pointer text-sm">
+                                    Elegir archivo
+                                    <input type="file" accept="image/*" onChange={(e) => {
+                                        const f = e.target.files && e.target.files[0] ? e.target.files[0] : null
+                                        try { if (previewUrl) URL.revokeObjectURL(previewUrl) } catch { }
+                                        setImageFile(f)
+                                        if (f) setPreviewUrl(URL.createObjectURL(f))
+                                    }} className="hidden" />
+                                </label>
 
                                 {previewUrl && (
                                     <div className="pt-2">

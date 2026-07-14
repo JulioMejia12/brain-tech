@@ -140,23 +140,25 @@ export default function NewBazarcitoProductPage() {
                         <div className="sm:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Imagen</label>
                             <div className="flex flex-col gap-2">
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => {
-                                        const f = e.target.files && e.target.files[0] ? e.target.files[0] : null
-                                        // revoke previous preview
-                                        try { if (previewUrl) URL.revokeObjectURL(previewUrl) } catch { }
-                                        setImageFile(f)
-                                        if (f) {
-                                            const url = URL.createObjectURL(f)
-                                            setPreviewUrl(url)
-                                        } else {
-                                            setPreviewUrl(null)
-                                        }
-                                    }}
-                                    className="text-sm text-gray-700"
-                                />
+                                <label className="inline-block bg-white text-gray-800 border border-gray-200 rounded px-3 py-2 cursor-pointer text-sm">
+                                    Elegir archivo
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const f = e.target.files && e.target.files[0] ? e.target.files[0] : null
+                                            try { if (previewUrl) URL.revokeObjectURL(previewUrl) } catch { }
+                                            setImageFile(f)
+                                            if (f) {
+                                                const url = URL.createObjectURL(f)
+                                                setPreviewUrl(url)
+                                            } else {
+                                                setPreviewUrl(null)
+                                            }
+                                        }}
+                                        className="hidden"
+                                    />
+                                </label>
 
                                 {imageFile && <div className="text-xs text-gray-500">Archivo seleccionado: {imageFile.name}</div>}
                                 {previewUrl && (
