@@ -140,7 +140,14 @@ const ProductPage = async ({ params }: { params: { id: string } }) => {
                     </div>
                     <div className="p-6">
                         <h1 className="text-3xl font-extrabold mb-3">{product.name}</h1>
-                        <p className="text-xl font-semibold" style={{ color: cremeriaProductsSellProps.primary, marginBottom: 16 }}>{product.price}</p>
+                        {product.promotionPrice && String(product.promotionPrice).trim() !== '' && String(product.promotionPrice) !== String(product.price) ? (
+                            <div style={{ marginBottom: 16 }}>
+                                <div className="text-sm text-gray-500 line-through">{product.price}</div>
+                                <div className="text-xl font-semibold" style={{ color: cremeriaProductsSellProps.primary }}>{product.promotionPrice}</div>
+                            </div>
+                        ) : (
+                            <p className="text-xl font-semibold" style={{ color: cremeriaProductsSellProps.primary, marginBottom: 16 }}>{product.price}</p>
+                        )}
                         <p className="text-gray-700 leading-7 mb-4">{product.description}</p>
                         <p className="text-sm text-gray-500 mb-4">Categoría: {product.category}</p>
                         {product.details && product.details.length > 0 && (
