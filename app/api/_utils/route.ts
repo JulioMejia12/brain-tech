@@ -51,7 +51,7 @@ export async function getNumericRouteParam(
     return { value: Number(rawValue) }
 }
 
-export function getPaginationParams(req: RequestLike, defaultTake = 20, maxTake = 100) {
+export function getPaginationParams(req: RequestLike, defaultTake = 20, maxTake = 1000) {
     const url = new URL(req.url)
     const limitParam = url.searchParams.get('limit')
     const skipParam = url.searchParams.get('skip')
