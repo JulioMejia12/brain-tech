@@ -490,6 +490,27 @@ const ProductsSell = ({
                                     placeholder="Buscar productos"
                                     className="w-full rounded-full border border-white/70 bg-white px-4 py-3 pl-12 text-base text-gray-900 shadow-sm outline-none transition focus:border-pink-400 focus:ring-4 focus:ring-pink-100"
                                 />
+                                <span className="absolute inset-y-0 right-4 flex items-center">
+                                    {searchInput ? (
+                                        <button
+                                            type="button"
+                                            aria-label="Limpiar búsqueda"
+                                            onClick={() => {
+                                                setSearchInput('')
+                                                if (searchDebounceRef.current) {
+                                                    clearTimeout(searchDebounceRef.current)
+                                                    searchDebounceRef.current = null
+                                                }
+                                                updateSearchQuery('')
+                                            }}
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-500 hover:bg-gray-100"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    ) : null}
+                                </span>
                             </div>
                         </label>
 
