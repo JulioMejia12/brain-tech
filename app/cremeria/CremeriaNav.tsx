@@ -29,7 +29,7 @@ export default function CremeriaNav() {
             textColorLogo="#042024"
             title="Cremería online"
             query={query}
-            logo={'/logo-cremeria.png'}
+            logo={'https://res.cloudinary.com/ddfj0omil/image/upload/cremeria_tse1ps'}
             onQueryChange={handleQueryChange}
             hideOnMobile
         />
