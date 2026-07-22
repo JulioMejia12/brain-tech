@@ -5,6 +5,26 @@ import type { Product } from '@/app/lib/products/types'
 
 const MARRON_NEGOCIO_ID = Number(process.env.NEXT_PUBLIC_MARRON_NEGOCIO_ID || process.env.MARRON_NEGOCIO_ID || '2')
 
+async function getMarronProductByIdFromApi(id: string): Promise<Product | undefined> {
+    const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const url = new URL(`/api/products/${encodeURIComponent(id)}`, base)
+    url.searchParams.set('negocioId', String(MARRON_NEGOCIO_ID))
+
+    const res = await fetch(url, { cache: 'no-store' })
+    if (res.status === 404) return undefined
+    if (!res.ok) {
+        throw new Error(`Failed to fetch Marron product ${id}: HTTP ${res.status}`)
+    }
+
+    const body = await res.json()
+    const item = body?.data || body
+    if (!item || Number(item.negocioId) !== MARRON_NEGOCIO_ID) {
+        return undefined
+    }
+
+    return mapItemToProduct(item)
+}
+
 export async function getMarronProducts(category?: string): Promise<Product[]> {
     const isServer = typeof window === 'undefined'
 
@@ -70,29 +90,23 @@ export async function getMarronProductById(id: string): Promise<Product | undefi
             `)
 
             if (!rows.length) {
-                return undefined
+                return await getMarronProductByIdFromApi(id)
             }
 
             const item = await prisma.product.findUnique({ where: { id: Number(id) }, include: { category: true } })
             return item ? mapItemToProduct(item) : undefined
         } catch (error) {
-            console.error('Prisma get Marron product by id failed; returning undefined on server:', error)
-            return undefined
+            console.error('Prisma get Marron product by id failed; falling back to API on server:', error)
+            try {
+                return await getMarronProductByIdFromApi(id)
+            } catch (fallbackError) {
+                console.error('Marron product by id API fallback failed on server:', fallbackError)
+                return undefined
+            }
         }
     }
 
-    const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const url = new URL(`/api/products/${encodeURIComponent(id)}`, base)
-    url.searchParams.set('negocioId', String(MARRON_NEGOCIO_ID))
-    const res = await fetch(url, { cache: 'no-store' })
-    if (res.status === 404) return undefined
-    if (!res.ok) throw new Error(`Failed to fetch Marron product ${id}: HTTP ${res.status}`)
-    const body = await res.json()
-    const item = body?.data || body
-    if (!item || Number(item.negocioId) !== MARRON_NEGOCIO_ID) {
-        return undefined
-    }
-    return mapItemToProduct(item)
+    return getMarronProductByIdFromApi(id)
 }
 
 export { MARRON_NEGOCIO_ID }

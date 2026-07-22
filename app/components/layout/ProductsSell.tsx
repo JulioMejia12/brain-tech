@@ -350,11 +350,27 @@ const ProductsSell = ({
         const browserOrigin = typeof window !== 'undefined' ? window.location.origin : ''
         const isLocalhost = browserOrigin.includes('localhost') || browserOrigin.includes('127.0.0.1')
         const baseUrl = !browserOrigin || isLocalhost ? SHARE_BASE_URL : browserOrigin
-        const detailPath = `${storeBasePath || ''}/product/${product.id}`
-        const url = new URL(detailPath, baseUrl)
+        const normalizedStore = (storeBasePath || '/bazarcito').replace(/^\//, '') || 'bazarcito'
+        const useSharePreviewRoute = normalizedStore === 'cremeria'
+        const useStoreDetailRoute = normalizedStore === 'marron'
+        const url = useSharePreviewRoute
+            ? new URL(`/share/product/${product.id}`, baseUrl)
+            : new URL(`${useStoreDetailRoute ? '/marron' : storeBasePath || ''}/product/${product.id}`, baseUrl)
+
+        if (useSharePreviewRoute) {
+            url.searchParams.set('store', normalizedStore)
+        }
+
         url.searchParams.set('utm_source', 'whatsapp')
         url.searchParams.set('utm_medium', 'share')
-        url.searchParams.set('preview', String(Date.now()))
+        // Force a unique preview value for marron to bypass scraper caches
+        if (normalizedStore === 'marron') {
+            const nonce = `${Date.now()}-${Math.floor(Math.random() * 100000)}`
+            url.searchParams.set('preview', nonce)
+            url.searchParams.set('force_preview', '1')
+        } else {
+            url.searchParams.set('preview', String(Date.now()))
+        }
         return url.toString()
     }
 
@@ -364,6 +380,7 @@ const ProductsSell = ({
             setRequestingIds((prev) => [...prev, productId])
             if (!whatsappDigits) return
             const pageUrl = buildShareUrl(product)
+            console.log('Requesting product via WhatsApp: Page URL:', pageUrl)
             const detailsText = (product as any).details && Array.isArray((product as any).details) && (product as any).details.length
                 ? (product as any).details
                     .filter((d: any) => (d?.label && String(d.label).trim() !== '') || (d?.value && String(d.value).trim() !== ''))
