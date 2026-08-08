@@ -12,6 +12,12 @@ const toAbsoluteUrl = (value: string) => {
     return value.startsWith('http') ? value : `${siteUrl}${value}`
 }
 
+const toShareImageUrl = (value: string) => {
+    const absolute = toAbsoluteUrl(value)
+    if (!absolute.includes('/upload/')) return absolute
+    return absolute.replace('/upload/', '/upload/f_jpg,q_auto:good,c_limit,w_1200/')
+}
+
 export async function generateStaticParams() {
     try {
         const products = (await getCremeriaProducts()) || []
@@ -33,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
 
     const productUrl = `${siteUrl}/cremeria/product/${product.id}`
-    const imageUrl = toAbsoluteUrl(product.image)
+    const imageUrl = toShareImageUrl(product.image)
     const description = product.description?.trim() || `${product.name} - Disponible en Cremería`
 
     return {

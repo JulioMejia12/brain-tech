@@ -110,51 +110,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
         }
     }, [previewUrl])
 
-    async function onChooseFile(nextFile?: File | null) {
-        setError(null)
-        setMessage(null)
-
-        if (previewUrl && previewUrl.startsWith('blob:')) {
-            URL.revokeObjectURL(previewUrl)
-        }
-
-        if (!nextFile) {
-            setFile(null)
-            setPreviewUrl(null)
-            return
-        }
-
-        if (nextFile.size > MAX_SIZE) {
-            setFile(null)
-            setPreviewUrl(null)
-            setError('El archivo excede el máximo permitido de 35MB')
-            return
-        }
-
-        const normalizedName = nextFile.name.toLowerCase()
-        const looksLikePdf = await fileLooksLikePdf(nextFile)
-        const allowed = nextFile.type.startsWith('image/')
-            || nextFile.type === 'application/pdf'
-            || normalizedName.endsWith('.pdf')
-            || looksLikePdf
-
-        if (!allowed) {
-            setFile(null)
-            setPreviewUrl(null)
-            setError('Solo se permiten imágenes o archivos PDF')
-            return
-        }
-
-        setFile(nextFile)
-        if (nextFile.type.startsWith('image/')) {
-            setPreviewUrl(URL.createObjectURL(nextFile))
-        } else {
-            setPreviewUrl(null)
-        }
-        if (!name.trim()) {
-            setName(nextFile.name.replace(/\.[^.]+$/, ''))
-        }
-    }
+    // file upload removed: catalogs can be created without attaching a file
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -170,22 +126,13 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
             setError('Ingresa una categoría para el catálogo')
             return
         }
-        if (!file) {
-            setError('Selecciona una imagen o PDF')
-            return
-        }
 
         setSaving(true)
         setError(null)
         setMessage(null)
         try {
-            const form = new FormData()
-            form.append('name', name.trim())
-            form.append('categoria', categoria.trim())
-            form.append('negocioId', negocioId)
-            form.append('file', file)
-
-            const res = await fetch('/api/catalog', { method: 'POST', body: form })
+            const payload = { name: name.trim(), categoria: categoria.trim(), negocioId }
+            const res = await fetch('/api/catalog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             const json = await res.json().catch(() => ({})) as { error?: string; totalParts?: number }
             if (!res.ok) {
                 throw new Error(json?.error || json?.error)
@@ -198,10 +145,6 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
             setCategoria('')
             setFile(null)
             setPreviewUrl(null)
-            try {
-                const input = document.querySelector('input[type=file][data-catalog-input="true"]') as HTMLInputElement | null
-                if (input) input.value = ''
-            } catch { }
             await loadCatalogs()
         } catch (err) {
             setError(err instanceof Error ? err.message : 'No se pudo subir el catálogo')
@@ -257,38 +200,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
                             />
                         </label>
 
-                        <label className="block md:col-span-2">
-                            <span className="mb-2 block text-sm font-medium text-gray-900">Archivo</span>
-                            <input
-                                type="file"
-                                accept="image/*,application/pdf"
-                                data-catalog-input="true"
-                                onChange={(e) => { void onChooseFile(e.target.files?.[0] ?? null) }}
-                                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 file:mr-3 file:rounded-lg file:border-0 file:bg-pink-50 file:px-3 file:py-2 file:text-pink-700"
-                                required
-                            />
-                            <p className="mt-2 text-xs text-gray-500">Acepta imágenes o PDF. Tamaño máximo: 35MB. Si el PDF es muy pesado, se dividirá automáticamente en varias partes.</p>
-                        </label>
-
-                        {file && (
-                            <div className="md:col-span-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
-                                <div className="text-sm font-medium text-gray-900">Vista previa</div>
-                                <div className="mt-3 flex items-center gap-4">
-                                    {previewUrl ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={previewUrl} alt="Vista previa del catálogo" className="h-28 w-28 rounded-lg object-cover border border-gray-200" />
-                                    ) : (
-                                        <div className="flex h-28 w-28 items-center justify-center rounded-lg border border-gray-200 bg-white text-center text-xs font-semibold text-gray-500">
-                                            PDF listo para subir
-                                        </div>
-                                    )}
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-medium text-gray-900">{file.name}</p>
-                                        <p className="text-xs text-gray-500">{Math.round(file.size / 1024)} KB</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {/* Archivo removido: ahora sólo solicitamos nombre y marca */}
 
                         <div className="md:col-span-2 flex items-center gap-3">
                             <button
@@ -341,10 +253,10 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
 
                                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                                     {group.items.map((item) => {
-                                        const pdf = isPdf(item.image) || isPdf(item.name)
+                                        // const pdf = isPdf(item.image) || isPdf(item.name)
                                         return (
                                             <article key={item.id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                                                <div className="flex h-48 items-center justify-center bg-gray-100">
+                                                {/* <div className="flex h-48 items-center justify-center bg-gray-100">
                                                     {pdf ? (
                                                         <div className="flex flex-col items-center gap-3 px-4 text-center">
                                                             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-2xl text-red-600">PDF</div>
@@ -354,7 +266,7 @@ export default function CatalogManager({ negocioId, storefrontName, accentClassN
                                                         // eslint-disable-next-line @next/next/no-img-element
                                                         <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                                                     )}
-                                                </div>
+                                                </div> */}
                                                 <div className="space-y-3 p-4">
                                                     <div>
                                                         {item.categoria && (

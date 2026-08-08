@@ -15,11 +15,19 @@ export async function getCremeriaProducts() {
 export async function getCremeriaProductById(id: string) {
     if (!id) return undefined
     const url = new URL(`/api/products/${encodeURIComponent(String(id))}?negocioId=${encodeURIComponent(String(CREMERIA_NEGOCIO_ID))}`, BASE).toString()
-    const res = await fetch(url, { cache: 'no-store' })
-    if (res.status === 404) return undefined
-    if (!res.ok) throw new Error(`Failed to fetch product ${id}: HTTP ${res.status}`)
-    const body = await res.json().catch(() => ({}))
-    const item = body.data || body
-    return item ? mapItemToProduct(item) : undefined
+    try {
+        const res = await fetch(url, { cache: 'no-store' })
+        if (res.status === 404) return undefined
+        if (!res.ok) {
+            console.error(`getCremeriaProductById: API returned HTTP ${res.status} for id ${id}`)
+            return undefined
+        }
+        const body = await res.json().catch(() => ({}))
+        const item = body.data || body
+        return item ? mapItemToProduct(item) : undefined
+    } catch (error) {
+        console.error('getCremeriaProductById: fetch failed', error)
+        return undefined
+    }
 }
 

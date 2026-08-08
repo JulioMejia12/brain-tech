@@ -142,15 +142,25 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         const contentType = req.headers.get('content-type') || ''
-        if (!contentType.includes('multipart/form-data')) {
-            return NextResponse.json({ error: 'Content-Type must be multipart/form-data' }, { status: 400 })
-        }
+        let name = ''
+        let categoria = ''
+        let negocioId: number | undefined | null = undefined
+        let file: any = null
 
-        const form = await req.formData()
-        const name = String(form.get('name') || '').trim()
-        const categoria = String(form.get('categoria') || '').trim()
-        const negocioId = parseNegocioId(String(form.get('negocioId') || ''))
-        const file = form.get('file')
+        if (contentType.includes('application/json')) {
+            const body = await req.json().catch(() => ({})) as any
+            name = String(body.name || '').trim()
+            categoria = String(body.categoria || '').trim()
+            negocioId = parseNegocioId(String(body.negocioId || ''))
+        } else if (contentType.includes('multipart/form-data')) {
+            const form = await req.formData()
+            name = String(form.get('name') || '').trim()
+            categoria = String(form.get('categoria') || '').trim()
+            negocioId = parseNegocioId(String(form.get('negocioId') || ''))
+            file = form.get('file')
+        } else {
+            return NextResponse.json({ error: 'Unsupported Content-Type. Use multipart/form-data or application/json' }, { status: 400 })
+        }
 
         if (!name) {
             return NextResponse.json({ error: 'El nombre del catálogo es requerido' }, { status: 400 })
@@ -168,77 +178,96 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'negocioId es requerido' }, { status: 400 })
         }
 
-        if (!(file instanceof File) || typeof file.arrayBuffer !== 'function') {
-            return NextResponse.json({ error: 'Debes adjuntar un archivo válido' }, { status: 400 })
-        }
+        // If no file provided, create catalog entry without an uploaded asset
 
         if (!(await ensureNegocioExists(negocioId))) {
             return NextResponse.json({ error: `Negocio with id=${negocioId} not found` }, { status: 400 })
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer())
-        const isPdf = file.type === 'application/pdf'
-            || file.name.toLowerCase().endsWith('.pdf')
-            || bufferLooksLikePdf(buffer)
+        let createdItems: Array<{ id?: number; name: string; categoria: string | null; image: string; imagePublicId: string | null; negocioId: number | null; createdAt?: Date }> = []
 
-        const isImage = String(file.type || '').startsWith('image/')
-        if (!isPdf && !isImage) {
-            return NextResponse.json({
-                error: 'Archivo no soportado. Adjunta una imagen o PDF válido.',
-            }, { status: 400 })
-        }
+        if (file && typeof (file as any).arrayBuffer === 'function') {
+            const buffer = Buffer.from(await (file as any).arrayBuffer())
+            const isPdf = (file as any).type === 'application/pdf'
+                || String((file as any).name || '').toLowerCase().endsWith('.pdf')
+                || bufferLooksLikePdf(buffer)
 
-        const safeBaseName = `${Date.now()}-${name.replace(/[^a-zA-Z0-9-_]+/g, '-').slice(0, 60)}`
-
-        let partBuffers: Array<Uint8Array | Buffer> = [buffer]
-        if (isPdf && buffer.length > MAX_CATALOG_PART_SIZE) {
-            try {
-                partBuffers = await splitPdfIntoParts(buffer, MAX_CATALOG_PART_SIZE)
-            } catch (splitError) {
-                console.warn('POST /api/catalog splitPdfIntoParts failed, uploading original PDF without splitting', splitError)
-                partBuffers = [buffer]
+            const isImage = String((file as any).type || '').startsWith('image/')
+            if (!isPdf && !isImage) {
+                return NextResponse.json({
+                    error: 'Archivo no soportado. Adjunta una imagen o PDF válido.',
+                }, { status: 400 })
             }
-        }
 
-        const createdItems: Array<{ id?: number; name: string; categoria: string | null; image: string; imagePublicId: string | null; negocioId: number | null; createdAt?: Date }> = []
+            const safeBaseName = `${Date.now()}-${name.replace(/[^a-zA-Z0-9-_]+/g, '-').slice(0, 60)}`
 
-        for (let index = 0; index < partBuffers.length; index += 1) {
-            const hasMultipleParts = partBuffers.length > 1
-            const partNumber = index + 1
-            const partName = hasMultipleParts ? `${name} - Parte ${partNumber}` : name
-            const partSafeBaseName = hasMultipleParts ? `${safeBaseName}-parte-${partNumber}` : safeBaseName
-            const uploaded = await uploadCatalogAsset(Buffer.from(partBuffers[index]), {
-                isPdf,
-                safeBaseName: partSafeBaseName,
-            })
+            let partBuffers: Array<Uint8Array | Buffer> = [buffer]
+            if (isPdf && buffer.length > MAX_CATALOG_PART_SIZE) {
+                try {
+                    partBuffers = await splitPdfIntoParts(buffer, MAX_CATALOG_PART_SIZE)
+                } catch (splitError) {
+                    console.warn('POST /api/catalog splitPdfIntoParts failed, uploading original PDF without splitting', splitError)
+                    partBuffers = [buffer]
+                }
+            }
 
+            for (let index = 0; index < partBuffers.length; index += 1) {
+                const hasMultipleParts = partBuffers.length > 1
+                const partNumber = index + 1
+                const partName = hasMultipleParts ? `${name} - Parte ${partNumber}` : name
+                const partSafeBaseName = hasMultipleParts ? `${safeBaseName}-parte-${partNumber}` : safeBaseName
+                const uploaded = await uploadCatalogAsset(Buffer.from(partBuffers[index]), {
+                    isPdf,
+                    safeBaseName: partSafeBaseName,
+                })
+
+                await prisma.$executeRaw`
+                    INSERT INTO Catalogo (name, image, imagePublicId, negocioId, createdAt, categoria)
+                    VALUES (${partName}, ${uploaded.image}, ${uploaded.imagePublicId}, ${negocioId}, NOW(), ${categoria})
+                `
+
+                const rows = await prisma.$queryRaw<Array<{ id: number; name: string; categoria: string | null; image: string; imagePublicId: string | null; negocioId: number | null; createdAt: Date }>>`
+                    SELECT id, name, categoria, image, imagePublicId, negocioId, createdAt
+                    FROM Catalogo
+                    WHERE negocioId = ${negocioId} AND image = ${uploaded.image}
+                    ORDER BY id DESC
+                    LIMIT 1
+                `
+
+                createdItems.push(rows[0] ?? {
+                    name: partName,
+                    categoria,
+                    image: uploaded.image,
+                    imagePublicId: uploaded.imagePublicId,
+                    negocioId,
+                })
+            }
+        } else {
+            // No file uploaded: create a catalog entry without an asset
             await prisma.$executeRaw`
                 INSERT INTO Catalogo (name, image, imagePublicId, negocioId, createdAt, categoria)
-                VALUES (${partName}, ${uploaded.image}, ${uploaded.imagePublicId}, ${negocioId}, NOW(), ${categoria})
+                VALUES (${name}, '', NULL, ${negocioId}, NOW(), ${categoria})
             `
 
             const rows = await prisma.$queryRaw<Array<{ id: number; name: string; categoria: string | null; image: string; imagePublicId: string | null; negocioId: number | null; createdAt: Date }>>`
                 SELECT id, name, categoria, image, imagePublicId, negocioId, createdAt
                 FROM Catalogo
-                WHERE negocioId = ${negocioId} AND image = ${uploaded.image}
+                WHERE negocioId = ${negocioId} AND name = ${name}
                 ORDER BY id DESC
                 LIMIT 1
             `
 
-            createdItems.push(rows[0] ?? {
-                name: partName,
+            const created = rows[0] ?? {
+                name,
                 categoria,
-                image: uploaded.image,
-                imagePublicId: uploaded.imagePublicId,
+                image: '',
+                imagePublicId: null,
                 negocioId,
-            })
+            }
+            createdItems = [created]
         }
 
-        return NextResponse.json({
-            data: createdItems[0] ?? null,
-            items: createdItems,
-            totalParts: createdItems.length,
-        }, { status: 201 })
+        return NextResponse.json({ data: createdItems[0] ?? null, items: createdItems, totalParts: createdItems.length }, { status: 201 })
     } catch (error) {
         console.error('POST /api/catalog error', error)
         if (isMissingCatalogTableError(error)) {

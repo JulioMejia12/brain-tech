@@ -351,15 +351,8 @@ const ProductsSell = ({
         const isLocalhost = browserOrigin.includes('localhost') || browserOrigin.includes('127.0.0.1')
         const baseUrl = !browserOrigin || isLocalhost ? SHARE_BASE_URL : browserOrigin
         const normalizedStore = (storeBasePath || '/bazarcito').replace(/^\//, '') || 'bazarcito'
-        const useSharePreviewRoute = normalizedStore === 'cremeria'
-        const useStoreDetailRoute = normalizedStore === 'marron'
-        const url = useSharePreviewRoute
-            ? new URL(`/share/product/${product.id}`, baseUrl)
-            : new URL(`${useStoreDetailRoute ? '/marron' : storeBasePath || ''}/product/${product.id}`, baseUrl)
-
-        if (useSharePreviewRoute) {
-            url.searchParams.set('store', normalizedStore)
-        }
+        const useStoreDetailRoute = normalizedStore === 'marron' || normalizedStore === 'cremeria'
+        const url = new URL(`${useStoreDetailRoute ? `/${normalizedStore}` : storeBasePath || ''}/product/${product.id}`, baseUrl)
 
         url.searchParams.set('utm_source', 'whatsapp')
         url.searchParams.set('utm_medium', 'share')
