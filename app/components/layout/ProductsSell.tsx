@@ -356,14 +356,10 @@ const ProductsSell = ({
 
         url.searchParams.set('utm_source', 'whatsapp')
         url.searchParams.set('utm_medium', 'share')
-        // Force a unique preview value for marron to bypass scraper caches
-        if (normalizedStore === 'marron') {
-            const nonce = `${Date.now()}-${Math.floor(Math.random() * 100000)}`
-            url.searchParams.set('preview', nonce)
-            url.searchParams.set('force_preview', '1')
-        } else {
-            url.searchParams.set('preview', String(Date.now()))
-        }
+        // Force a unique preview value for every store to bypass scraper caches
+        const nonce = `${Date.now()}-${Math.floor(Math.random() * 100000)}`
+        url.searchParams.set('preview', nonce)
+        url.searchParams.set('force_preview', '1')
         return url.toString()
     }
 
@@ -872,7 +868,6 @@ const ProductsSell = ({
                 </p>
             </section>
             <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                {promosComponent ?? <h2 className="text-2xl font-bold mb-4" style={{ color: secondary }}>Promociones</h2>}
                 <div>
                     {promosComponent ?? <PromotionsClient items={promos} />}
                 </div>

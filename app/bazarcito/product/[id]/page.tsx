@@ -7,7 +7,14 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://brain-tech-kappa.ve
 
 const toAbsoluteUrl = (value: string) => {
     if (!value) return siteUrl
-    return value.startsWith('http') ? value : `${siteUrl}${value}`
+    if (value.startsWith('http://') || value.startsWith('https://')) return value
+    return value.startsWith('/') ? `${siteUrl}${value}` : `${siteUrl}/${value}`
+}
+
+const toShareImageUrl = (value: string) => {
+    const absoluteUrl = toAbsoluteUrl(value)
+    if (!absoluteUrl.includes('/upload/')) return absoluteUrl
+    return absoluteUrl.replace('/upload/', '/upload/f_jpg,q_auto:good,c_limit,w_1200/')
 }
 
 export async function generateStaticParams() {
@@ -27,21 +34,25 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
 
     const productUrl = `${siteUrl}/bazarcito/product/${product.id}`
-    const imageUrl = toAbsoluteUrl(product.image)
+    const imageUrl = toShareImageUrl(product.image)
+    const description = product.description || `${product.name} - Disponible en Bazarcito`
 
     return {
         metadataBase: new URL(siteUrl),
         title: product.name,
-        description: product.description,
+        description,
         openGraph: {
             type: 'website',
+            locale: 'es_MX',
             url: productUrl,
-            siteName: 'brain-tech-kappa',
+            siteName: 'Bazarcito',
             title: product.name,
-            description: product.description,
+            description,
             images: [
                 {
                     url: imageUrl,
+                    secureUrl: imageUrl,
+                    type: 'image/jpeg',
                     alt: product.name,
                     width: 1200,
                     height: 630,
@@ -51,9 +62,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         twitter: {
             card: 'summary_large_image',
             title: product.name,
-            description: product.description,
+            description,
             images: [imageUrl],
         },
+        other: {
+            'og:image:secure_url': imageUrl,
+            'og:image:type': 'image/jpeg',
+            'og:description': description,
+            'twitter:description': description,
+        }
     };
 }
 

@@ -102,7 +102,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
         const shareUrl = `${siteUrl}/share/product/${product.id}?store=${store}`
         const productUrl = `${siteUrl}${storeConfig.detailHref}/${product.id}`
         const imageUrl = toAbsoluteUrl(product.image)
-        const shareImageUrl = imageUrl
+        const shareImageUrl = toShareImageUrl(product.image)
         const guessImageType = (u: string) => {
             if (!u) return 'image/jpeg'
             if (/\.png(\?|$)/i.test(u)) return 'image/png'
@@ -110,7 +110,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
             if (/\.svg(\?|$)/i.test(u)) return 'image/svg+xml'
             return 'image/jpeg'
         }
-        const imageType = guessImageType(imageUrl)
+        const imageType = shareImageUrl !== imageUrl ? 'image/jpeg' : guessImageType(imageUrl)
         const description = product.description?.trim() || `Descubre ${product.name} en ${storeConfig.name} por ${product.price}.`
 
         return {
@@ -144,7 +144,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
                 site: '@braintech',
                 title: product.name,
                 description,
-                images: [imageUrl],
+                images: [shareImageUrl],
             },
             other: {
                 'og:image:secure_url': shareImageUrl,
