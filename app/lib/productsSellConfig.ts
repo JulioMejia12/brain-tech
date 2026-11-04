@@ -86,7 +86,7 @@ export const cremeriaProductsSellProps: ProductsSellPageConfig = {
     primary: '#0ea5a4',
     textColor: '#042024',
     bgColor: '#e6fbfb',
-    QuienesSomos: 'Somos una cremería en línea con productos lácteos y derivados de alta calidad. Atención rápida por WhatsApp y catálogo digital.',
+    QuienesSomos: 'En Mi Cremería Online somos una tienda en línea donde encontrarás una gran variedad de productos lácteos, quesos, cremas, abarrotes y mucho más.',
     promos: [],
     cellPhone: process.env.NUMBER_CREMERIA || process.env.NUMBER_BAZARCITO || '',
     heroImage: 'https://res.cloudinary.com/ddfj0omil/image/upload/cremeria_tse1ps',
