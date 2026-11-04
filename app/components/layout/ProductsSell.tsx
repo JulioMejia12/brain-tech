@@ -570,6 +570,11 @@ const ProductsSell = ({
                     </div>
                 )}
                 <>
+                    <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
+                        <div>
+                            {promosComponent ?? <PromotionsClient items={promos} />}
+                        </div>
+                    </section>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {visible.map((p) => {
                             return (
@@ -867,11 +872,7 @@ const ProductsSell = ({
                     {QuienesSomos}
                 </p>
             </section>
-            <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
-                <div>
-                    {promosComponent ?? <PromotionsClient items={promos} />}
-                </div>
-            </section>
+
             {children ? <div>{children}</div> : null}
             <MobileMenu primary={primary} whatsappNumber={whatsappDigits} />
         </div>
