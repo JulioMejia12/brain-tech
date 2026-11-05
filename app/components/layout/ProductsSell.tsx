@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { Fragment, useMemo, useState, useEffect, useRef, type ReactNode } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 const DEFAULT_NEGOCIO_ID = process.env.NEXT_PUBLIC_BAZARCITO_NEGOCIO_ID || ''
@@ -29,8 +29,23 @@ import { useAuth } from '@/contexts/AuthContext'
 import type { Product } from '@/app/lib/products'
 import MobileStoreHeader, { type MobileStoreHeaderProps } from './MobileStoreHeader'
 
-type ProductWithPieces = Product & {
+export type ProductWithPieces = Product & {
     pieces?: number | null
+}
+
+export type ProductCardRenderArgs = {
+    product: ProductWithPieces
+    primary: string
+    secondary: string
+    isAdmin: boolean
+    editing: boolean
+    deleting: boolean
+    requesting: boolean
+    sharing: boolean
+    onEdit: () => void
+    onDelete: () => void
+    onRequest: () => void
+    onShare: () => void
 }
 
 type ProductApiItem = {
@@ -72,7 +87,10 @@ type Props = {
     mobileHero?: MobileStoreHeaderProps
     mobileHeroVariant?: 'default' | 'compact-card'
     mobileHeroSubtitle?: string
+    renderProductCard?: (args: ProductCardRenderArgs) => ReactNode
 }
+
+export type ProductsSellProps = Props
 
 const DEFAULT_PRODUCTS_ENDPOINT = '/api/bazarcito/products'
 const SEARCH_DEBOUNCE_MS = 3000
@@ -127,6 +145,7 @@ const ProductsSell = ({
     mobileHeroVariant = 'default',
     mobileHeroSubtitle,
     textColor,
+    renderProductCard,
 }: Props) => {
     const resolvedProductsEndpoint = productsEndpoint || DEFAULT_PRODUCTS_ENDPOINT
     const resolvedProductMutationBase = productMutationBase || resolvedProductsEndpoint.split('?')[0]
@@ -577,6 +596,33 @@ const ProductsSell = ({
                     </section>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {visible.map((p) => {
+                            if (renderProductCard) {
+                                return (
+                                    <Fragment key={p.id}>
+                                        {renderProductCard({
+                                            product: p,
+                                            primary,
+                                            secondary,
+                                            isAdmin,
+                                            editing: openingEditId === String(p.id),
+                                            deleting: deletingIds.includes(String(p.id)),
+                                            requesting: requestingIds.includes(String(p.id)),
+                                            sharing: sharingIds.includes(String(p.id)),
+                                            onEdit: () => {
+                                                console.info('[ProductsSell] opening edit modal for', p)
+                                                setOpeningEditId(String(p.id))
+                                                setEditingProduct(p)
+                                                setModalOpen(true)
+                                                window.setTimeout(() => setOpeningEditId((current) => (current === String(p.id) ? null : current)), 250)
+                                            },
+                                            onDelete: () => setProductPendingDelete(p),
+                                            onRequest: () => handleRequestProduct(p),
+                                            onShare: () => handleShareProduct(p),
+                                        })}
+                                    </Fragment>
+                                )
+                            }
+
                             return (
                                 <div key={p.id} className="relative bg-white rounded-lg shadow overflow-hidden">
                                     <div className="w-full bg-gray-50">

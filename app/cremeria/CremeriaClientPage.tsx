@@ -1,6 +1,6 @@
 'use client'
 
-import ProductsSell from '../components/layout/ProductsSell'
+import CremeriasSell from '../components/layout/CremeriasSell'
 import { cremeriaProductsSellProps } from '../lib/productsSellConfig'
 import PromotionsLoader from './PromotionsLoader'
 import type { Product } from '../lib/products'
@@ -13,6 +13,6 @@ type Props = {
 
 export default function CremeriaClientPage({ products, cremeriaWhatsappNumber }: Props) {
     return (
-        <ProductsSell {...cremeriaProductsSellProps} cellPhone={cremeriaWhatsappNumber} products={products} promosComponent={<PromotionsLoader />} />
+        <CremeriasSell {...cremeriaProductsSellProps} cellPhone={cremeriaWhatsappNumber} products={products} promosComponent={<PromotionsLoader />} />
     )
 }
