@@ -589,11 +589,12 @@ const ProductsSell = ({
                     </div>
                 )}
                 <>
-                    <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
+                    {promosComponent && <section id="promos" className="max-w-4xl mx-auto px-4 lg:px-0 py-6">
+                        <h2 className="text-2xl font-extrabold tracking-tight p-4 pl-0" style={{ color: secondary }}>Promociones</h2>
                         <div>
                             {promosComponent ?? <PromotionsClient items={promos} />}
                         </div>
-                    </section>
+                    </section>}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {visible.map((p) => {
                             if (renderProductCard) {
