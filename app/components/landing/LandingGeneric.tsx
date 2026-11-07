@@ -16,21 +16,21 @@ const demoLinks = [
         category: "Tienda",
         description: "Productos, fotos y venta directa desde el celular.",
         href: "/bazarcito",
-        image: "/1.jpeg",
+        image: "https://res.cloudinary.com/ddfj0omil/image/upload/f_auto,q_auto,c_fill,w_900,h_700/v1793780756/bazarcito/oz9alepowe9zhnhazuin.jpg",
     },
     {
         name: "Cremería",
         category: "Abarrotes",
         description: "Catálogo de productos lácteos, abarrotes y más.",
         href: "/cremeria",
-        image: "/3.jpeg",
+        image: "https://res.cloudinary.com/ddfj0omil/image/upload/f_auto,q_auto,c_fill,w_900,h_700/v1784008487/cremeria/npisqs0oe32e7whcrbc5.jpg",
     },
     {
         name: "Marrón",
         category: "Hogar",
         description: "Productos para el hogar y novedades cada día.",
         href: "/marron",
-        image: "/2.jpeg",
+        image: "https://res.cloudinary.com/ddfj0omil/image/upload/f_auto,q_auto,c_fill,w_900,h_700/v1793930299/bazarcito/mvea0a0igsbomydvlhno.jpg",
     },
 ];
 
