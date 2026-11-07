@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import cloudinary from 'cloudinary'
+import { deleteCloudinaryImageByUrl } from '../../_utils/cloudinary'
 import { revalidateProductPaths } from '../../_utils/revalidateProducts'
 import { prisma } from '../../../lib/prisma'
 import { getNumericRouteParam, type RouteContext } from '../../_utils/route'
@@ -7,65 +7,6 @@ import { errorMessage, jsonError, logError, toError } from '../../_utils/http'
 
 type DeleteProductOptions = {
     deleteCloudinaryImage?: boolean
-}
-
-function extractCloudinaryPublicId(urlStr: string | null | undefined) {
-    if (!urlStr) return null
-    try {
-        const u = new URL(urlStr)
-        const parts = u.pathname.split('/').filter(Boolean)
-        const uploadIdx = parts.findIndex((p) => p === 'upload')
-        if (uploadIdx === -1) return null
-
-        let rest = parts.slice(uploadIdx + 1)
-        const versionIdx = rest.findIndex((p) => /^v\d+$/.test(p))
-
-        if (versionIdx !== -1) {
-            rest = rest.slice(versionIdx + 1)
-        } else if (rest.length > 1 && /[,:]/.test(rest[0])) {
-            rest = rest.slice(1)
-        }
-
-        const publicPath = rest.join('/').replace(/\.[^.]+$/, '')
-        return publicPath || null
-    } catch {
-        return null
-    }
-}
-
-function configureCloudinary() {
-    if (process.env.CLOUDINARY_URL) {
-        cloudinary.v2.config({ cloudinary_url: process.env.CLOUDINARY_URL })
-        return true
-    }
-
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME
-    const apiKey = process.env.CLOUDINARY_API_KEY
-    const apiSecret = process.env.CLOUDINARY_API_SECRET
-
-    if (!cloudName || !apiKey || !apiSecret) return false
-
-    cloudinary.v2.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret })
-    return true
-}
-
-async function maybeDeleteCloudinaryImage(imageUrl: string | null | undefined) {
-    if (!imageUrl || !String(imageUrl).includes('res.cloudinary.com')) return
-    if (!configureCloudinary()) return
-
-    const publicId = extractCloudinaryPublicId(String(imageUrl))
-    if (!publicId) return
-
-    await new Promise<void>((resolve) => {
-        cloudinary.v2.uploader.destroy(publicId, { invalidate: true }, (error, result) => {
-            if (error) {
-                console.warn('Cloudinary delete failed', { publicId, error })
-            } else {
-                console.info('Cloudinary image deleted', { publicId, result })
-            }
-            resolve()
-        })
-    })
 }
 
 export async function deleteProduct(req: NextRequest, ctx: RouteContext, options: DeleteProductOptions = {}) {
@@ -103,7 +44,7 @@ export async function deleteProduct(req: NextRequest, ctx: RouteContext, options
 
         if (shouldDeleteCloudinaryImage) {
             try {
-                await maybeDeleteCloudinaryImage(imageUrl)
+                await deleteCloudinaryImageByUrl(imageUrl)
             } catch (error) {
                 console.warn('Could not delete Cloudinary image:', error)
             }

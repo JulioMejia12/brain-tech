@@ -6,6 +6,7 @@ import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
 import { getNumericRouteParam, type RouteContext } from '../../_utils/route'
 import { errorMessage, jsonError, logError } from '../../_utils/http'
+import { deleteCloudinaryImageByUrl } from '../../_utils/cloudinary'
 import { revalidateProductPaths } from '../../_utils/revalidateProducts'
 
 type UpdateProductBody = {
@@ -173,6 +174,14 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
                     WHERE id = ${numericId}
                 `
                 updated = { ...updated, negocioId: nextNegocioId }
+            }
+
+            if (uploadedImageUrl && product.image && product.image !== uploadedImageUrl) {
+                try {
+                    await deleteCloudinaryImageByUrl(product.image)
+                } catch (error) {
+                    console.warn('Could not delete previous Cloudinary image:', error)
+                }
             }
 
             revalidateProductPaths(numericId)
