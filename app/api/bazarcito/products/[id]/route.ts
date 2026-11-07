@@ -6,6 +6,7 @@ import { errorMessage, jsonError, logError } from '@/app/api/_utils/http'
 import { deleteProduct } from '@/app/api/products/handlers/deleteProduct'
 import type { RouteContext } from '../../../_utils/route'
 import { getNumericRouteParam } from '../../../_utils/route'
+import { revalidateProductPaths } from '../../../_utils/revalidateProducts'
 import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
 
@@ -317,6 +318,8 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
             `
             updated = { ...updated, negocioId: nextNegocioId }
         }
+
+        revalidateProductPaths(result.value)
 
         return NextResponse.json({ data: updated })
     } catch (error: unknown) {

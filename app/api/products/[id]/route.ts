@@ -6,6 +6,7 @@ import cloudinary from 'cloudinary'
 import { Readable } from 'stream'
 import { getNumericRouteParam, type RouteContext } from '../../_utils/route'
 import { errorMessage, jsonError, logError } from '../../_utils/http'
+import { revalidateProductPaths } from '../../_utils/revalidateProducts'
 
 type UpdateProductBody = {
     name?: string
@@ -173,6 +174,8 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
                 `
                 updated = { ...updated, negocioId: nextNegocioId }
             }
+
+            revalidateProductPaths(numericId)
 
             return NextResponse.json({ data: updated })
         } catch (error: unknown) {
