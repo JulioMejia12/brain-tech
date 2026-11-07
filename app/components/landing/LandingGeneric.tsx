@@ -12,25 +12,25 @@ const whatsappLink = whatsappDigits
 
 const demoLinks = [
     {
-        name: "Taquería",
-        category: "Restaurante",
-        description: "Menú digital y pedidos directos.",
-        href: "/demo",
-        image: "/eats.jpeg",
-    },
-    {
-        name: "Barbería",
-        category: "Servicios",
-        description: "Catálogo de servicios y reservas por WhatsApp.",
-        href: "/barberias",
-        image: "/hero-barber.jpeg",
-    },
-    {
         name: "Bazarcito",
         category: "Tienda",
         description: "Productos, fotos y venta directa desde el celular.",
         href: "/bazarcito",
         image: "/1.jpeg",
+    },
+    {
+        name: "Cremería",
+        category: "Abarrotes",
+        description: "Catálogo de productos lácteos, abarrotes y más.",
+        href: "/cremeria",
+        image: "/3.jpeg",
+    },
+    {
+        name: "Marrón",
+        category: "Hogar",
+        description: "Productos para el hogar y novedades cada día.",
+        href: "/marron",
+        image: "/2.jpeg",
     },
 ];
 
@@ -417,18 +417,6 @@ export default function LandingGeneric() {
                     ))}
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center gap-3 text-sm">
-                    <span className="text-white/40">También puedes ver:</span>
-                    <Link href="/marron" className="rounded-full border border-white/10 px-3 py-1.5 text-white/70 transition hover:border-white/25 hover:text-white">
-                        Marrón
-                    </Link>
-                    <Link href="/cremeria" className="rounded-full border border-white/10 px-3 py-1.5 text-white/70 transition hover:border-white/25 hover:text-white">
-                        Cremería
-                    </Link>
-                    <Link href="/bazarcito" className="rounded-full border border-white/10 px-3 py-1.5 text-white/70 transition hover:border-white/25 hover:text-white">
-                        Bazarcito
-                    </Link>
-                </div>
             </section>
 
             <section id="beneficios" className="scroll-mt-24 border-y border-white/10 bg-white/[0.02] py-20 lg:py-28">
