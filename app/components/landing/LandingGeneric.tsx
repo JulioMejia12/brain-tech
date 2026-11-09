@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import NavBar from "@/app/components/layout/NavBar";
 
 const rawWhatsapp =
     process.env.NEXT_PUBLIC_LANDING_WHATSAPP ||
@@ -152,41 +153,28 @@ function WhatsAppIcon() {
 export default function LandingGeneric() {
     return (
         <main id="inicio" className="min-h-screen overflow-x-hidden bg-[#060a08] text-white selection:bg-[var(--primary)] selection:text-black">
-            <header className="sticky top-0 z-50 border-b border-white/10 bg-[#060a08]/85 backdrop-blur-xl">
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-                    <Link href="#inicio" className="flex items-center gap-2.5" aria-label="LocalHub, ir al inicio">
-                        <span className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--primary)] text-sm font-black text-black shadow-lg shadow-[var(--primary)]/20">
-                            L
-                        </span>
-                        <span className="text-base font-bold tracking-tight">LocalHub</span>
-                    </Link>
-
-                    <nav className="hidden items-center gap-7 text-sm text-white/55 md:flex" aria-label="Navegación principal">
-                        <Link href="#solucion" className="transition hover:text-white">Solución</Link>
-                        <Link href="#demos" className="transition hover:text-white">Ejemplos</Link>
-                        <Link href="#planes" className="transition hover:text-white">Precio</Link>
-                        <Link href="#faq" className="transition hover:text-white">Preguntas</Link>
-                    </nav>
-
-                    <div className="flex items-center gap-2 sm:gap-3">
-                        <Link
-                            href="#demos"
-                            className="hidden rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:text-white sm:inline-flex"
-                        >
-                            Ver demos
-                        </Link>
-                        <a
-                            href={whatsappLink}
-                            target={whatsappDigits ? "_blank" : undefined}
-                            rel={whatsappDigits ? "noreferrer" : undefined}
-                            className="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-4 py-2.5 text-sm font-bold text-black transition hover:brightness-110"
-                        >
-                            Empezar ahora
-                            <ArrowIcon />
-                        </a>
-                    </div>
-                </div>
-            </header>
+            <NavBar
+                brand={{ name: "LocalHub", href: "#inicio", initials: "L" }}
+                links={[
+                    { label: "Solución", href: "#solucion" },
+                    { label: "Ejemplos", href: "#demos" },
+                    { label: "Precio", href: "#planes" },
+                    { label: "Preguntas", href: "#faq" },
+                ]}
+                actions={[
+                    { label: "Ver demos", href: "#demos", variant: "secondary" },
+                    {
+                        label: "Empezar ahora",
+                        href: whatsappLink,
+                        external: Boolean(whatsappDigits),
+                        icon: <ArrowIcon />,
+                        showOnMobile: true,
+                    },
+                ]}
+                variant="dark"
+                sticky
+                className="backdrop-blur-xl"
+            />
 
             <section className="relative overflow-hidden">
                 <div className="pointer-events-none absolute -left-32 top-10 h-80 w-80 rounded-full bg-[var(--primary)]/15 blur-3xl" />
