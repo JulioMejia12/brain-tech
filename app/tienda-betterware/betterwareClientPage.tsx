@@ -136,27 +136,27 @@ export default function BetterwareClientPage({ products, bazarcitoWhatsappNumber
                 />
             </main>
             <Footer
-                brand={{
-                    name: 'Tienda Betterware',
-                    href: '/tienda-betterware',
-                    initials: 'BW',
-                    tagline: 'Productos para tu hogar con atención directa por WhatsApp.',
-                }}
-                sections={[
-                    {
-                        title: 'Tienda',
-                        links: [
-                            { label: 'Catálogo', href: '/tienda-betterware' },
-                            { label: 'Inicio', href: '/' },
-                        ],
-                    },
-                ]}
-                contact={whatsappDigits ? { whatsapp: bazarcitoWhatsappNumber } : undefined}
-                legalLinks={[
-                    { label: 'Términos', href: '/terminos' },
-                    { label: 'Privacidad', href: '/privacidad' },
-                ]}
-                variant="light"
+            // brand={{
+            //     name: 'Tienda Betterware',
+            //     href: '/tienda-betterware',
+            //     initials: 'BW',
+            //     tagline: 'Productos para tu hogar con atención directa por WhatsApp.',
+            // }}
+            // sections={[
+            //     {
+            //         title: 'Tienda',
+            //         links: [
+            //             { label: 'Catálogo', href: '/tienda-betterware' },
+            //             { label: 'Inicio', href: '/' },
+            //         ],
+            //     },
+            // ]}
+            // contact={whatsappDigits ? { whatsapp: bazarcitoWhatsappNumber } : undefined}
+            // legalLinks={[
+            //     { label: 'Términos', href: '/terminos' },
+            //     { label: 'Privacidad', href: '/privacidad' },
+            // ]}
+            // variant="light"
             />
         </div>
     )

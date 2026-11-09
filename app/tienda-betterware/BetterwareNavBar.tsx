@@ -25,30 +25,30 @@ export default function BetterwareNavBar({
     return (
         <NavBar
             textColor={textColor}
-            backgroundColor={backgroundColor}
-            brand={{
-                name: 'Tienda Betterware',
-                href: '/tienda-betterware',
-                initials: 'BW',
-                subtitle: 'Catálogo online',
-            }}
-            actions={
-                whatsappHref
-                    ? [
-                        {
-                            label: 'WhatsApp',
-                            href: whatsappHref,
-                            external: true,
-                            icon: <FaWhatsapp className="h-4 w-4" />,
-                            showOnMobile: true,
-                        },
-                    ]
-                    : []
-            }
-            variant={variant}
-            sticky={sticky}
-            className={className}
-            containerClassName={containerClassName}
+            primary={backgroundColor}
+        // brand={{
+        //     name: 'Tienda Betterware',
+        //     href: '/tienda-betterware',
+        //     initials: 'BW',
+        //     subtitle: 'Catálogo online',
+        // }}
+        // actions={
+        //     whatsappHref
+        //         ? [
+        //             {
+        //                 label: 'WhatsApp',
+        //                 href: whatsappHref,
+        //                 external: true,
+        //                 icon: <FaWhatsapp className="h-4 w-4" />,
+        //                 showOnMobile: true,
+        //             },
+        //         ]
+        //         : []
+        // }
+        // variant={variant}
+        // sticky={sticky}
+        // className={className}
+        // containerClassName={containerClassName}
         />
     )
 }

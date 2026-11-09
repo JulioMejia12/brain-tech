@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import NavBar from "@/app/components/layout/NavBar";
+import SiteNavBar from "@/app/components/layout/SiteNavBar";
 
 const rawWhatsapp =
     process.env.NEXT_PUBLIC_LANDING_WHATSAPP ||
@@ -153,7 +153,7 @@ function WhatsAppIcon() {
 export default function LandingGeneric() {
     return (
         <main id="inicio" className="min-h-screen overflow-x-hidden bg-[#060a08] text-white selection:bg-[var(--primary)] selection:text-black">
-            <NavBar
+            <SiteNavBar
                 brand={{ name: "LocalHub", href: "#inicio", initials: "L" }}
                 links={[
                     { label: "Solución", href: "#solucion" },
