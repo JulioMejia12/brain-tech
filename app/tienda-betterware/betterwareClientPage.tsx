@@ -77,12 +77,6 @@ function BetterwareProductCard({ product, whatsappDigits, theme }: BetterwarePro
                 ) : null}
                 {product.details && product.details.length > 0 ? (
                     <div className="mt-1">
-                        <p
-                            className="text-[11px] font-semibold uppercase tracking-wide"
-                            style={{ color: theme.text }}
-                        >
-                            Características
-                        </p>
                         <ul className="mt-1 space-y-1 text-xs leading-5" style={{ color: theme.mutedText }}>
                             {product.details.slice(0, 4).map((detail, index) => (
                                 <li key={`${detail.label}-${detail.value}-${index}`}>
