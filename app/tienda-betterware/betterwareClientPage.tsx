@@ -96,8 +96,7 @@ function BetterwareProductCard({ product, whatsappDigits, theme }: BetterwarePro
                         product={product}
                         label="Compartir"
                         storeBasePath="/tienda-betterware"
-                        productPath="store"
-                        includePreview={false}
+                        productPath="detail"
                         storeName="Tienda Betterware"
                         className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
                         style={{ color: theme.text, borderColor: theme.border }}
@@ -107,8 +106,7 @@ function BetterwareProductCard({ product, whatsappDigits, theme }: BetterwarePro
                             product={product}
                             whatsappNumber={whatsappDigits}
                             storeBasePath="/tienda-betterware"
-                            productPath="store"
-                            includePreview={false}
+                            productPath="detail"
                             label="Pedir"
                             className="inline-flex items-center gap-2 rounded-full bg-[var(--secondary)] px-3 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
                         />

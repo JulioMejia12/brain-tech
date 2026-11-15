@@ -15,8 +15,7 @@ import ProductWhatsAppShareButton from '@/app/components/catalog/ProductWhatsApp
 <ProductWhatsAppShareButton
     product={product}
     storeBasePath="/tienda-betterware"
-    productPath="store"
-    includePreview={false}
+    productPath="detail"
     storeName="Tienda Betterware"
     label="Compartir"
 />
@@ -32,6 +31,8 @@ Para una página con detalle de producto:
     storeName="Mi Tienda"
 />
 ```
+
+La URL compartida debe ser una página con metadatos Open Graph e imagen del producto para que WhatsApp muestre la vista previa. En Betterware se usa `app/tienda-betterware/product/[id]/page.tsx`.
 
 ### Props
 
