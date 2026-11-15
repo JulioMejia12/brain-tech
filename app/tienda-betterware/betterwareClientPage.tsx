@@ -57,23 +57,43 @@ function BetterwareProductCard({ product, whatsappDigits, theme }: BetterwarePro
                 fit="contain"
             />
             <Card.Header>
-                <Card.Badge tone="info" className="capitalize">
-                    {product.category}
-                </Card.Badge>
+                <Card.Title className="min-w-0 flex-1 line-clamp-2" style={{ color: theme.text }}>
+                    {product.name.trim()}
+                </Card.Title>
                 {product.pieces != null ? (
-                    <Card.Badge tone={product.pieces > 0 ? 'success' : 'danger'}>
+                    <Card.Badge
+                        tone={product.pieces > 0 ? 'success' : 'danger'}
+                        className="shrink-0"
+                    >
                         {product.pieces > 0 ? formatPieces(product.pieces) : 'Agotado'}
                     </Card.Badge>
                 ) : null}
             </Card.Header>
             <Card.Body>
-                <Card.Title className="line-clamp-2" style={{ color: theme.text }}>
-                    {product.name.trim()}
-                </Card.Title>
                 {product.description ? (
                     <Card.Description className="line-clamp-3" style={{ color: theme.mutedText }}>
                         {product.description.trim()}
                     </Card.Description>
+                ) : null}
+                {product.details && product.details.length > 0 ? (
+                    <div className="mt-1">
+                        <p
+                            className="text-[11px] font-semibold uppercase tracking-wide"
+                            style={{ color: theme.text }}
+                        >
+                            Características
+                        </p>
+                        <ul className="mt-1 space-y-1 text-xs leading-5" style={{ color: theme.mutedText }}>
+                            {product.details.slice(0, 4).map((detail, index) => (
+                                <li key={`${detail.label}-${detail.value}-${index}`}>
+                                    <span className="font-semibold" style={{ color: theme.text }}>
+                                        {detail.label}:
+                                    </span>{' '}
+                                    {detail.value}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 ) : null}
             </Card.Body>
             <Card.Footer style={{ borderColor: theme.border }}>
