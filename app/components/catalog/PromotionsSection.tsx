@@ -16,6 +16,7 @@ export type PromotionsSectionProps = Omit<
     description?: ReactNode
     action?: ReactNode
     textColor?: string
+    mutedTextColor?: string
     backgroundColor?: string
     className?: string
     sliderClassName?: string
@@ -29,6 +30,7 @@ export default function PromotionsSection({
     description,
     action,
     textColor,
+    mutedTextColor,
     backgroundColor,
     className,
     sliderClassName,
@@ -60,10 +62,16 @@ export default function PromotionsSection({
                     </h2>
                     {description ? (
                         <p
-                            style={textColor ? { color: textColor } : undefined}
+                            style={
+                                mutedTextColor
+                                    ? { color: mutedTextColor }
+                                    : textColor
+                                        ? { color: textColor }
+                                        : undefined
+                            }
                             className={cx(
                                 'mt-1 text-sm text-[#4b5563] dark:text-white/70',
-                                textColor && 'opacity-70',
+                                !mutedTextColor && textColor && 'opacity-70',
                                 descriptionClassName,
                             )}
                         >
@@ -78,6 +86,7 @@ export default function PromotionsSection({
                 {...sliderProps}
                 className={sliderClassName}
                 textColor={textColor}
+                mutedTextColor={mutedTextColor}
                 backgroundColor={backgroundColor ? 'transparent' : undefined}
             />
         </section>

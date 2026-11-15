@@ -1,54 +1,51 @@
 'use client'
 
-import { FaWhatsapp } from 'react-icons/fa'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import NavBar from '../components/layout/NavBar'
 
 export type BetterwareNavBarProps = {
-    whatsappHref?: string | null
     textColor?: string
     backgroundColor?: string
-    variant?: 'light' | 'dark' | 'transparent'
-    sticky?: boolean
-    className?: string
-    containerClassName?: string
+    title?: string
+    logo?: string
+    hideOnMobile?: boolean
 }
 
 export default function BetterwareNavBar({
-    whatsappHref,
     textColor = '#fff',
     backgroundColor = '#4C2365',
-    variant = 'light',
-    sticky = true,
-    className,
-    containerClassName,
+    title = 'Tienda Betterware',
+    logo,
+    hideOnMobile = false,
 }: BetterwareNavBarProps) {
+    const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const query = searchParams.get('q') || ''
+
+    const handleQueryChange = (value: string) => {
+        const params = new URLSearchParams(searchParams.toString())
+
+        if (value.trim()) {
+            params.set('q', value)
+        } else {
+            params.delete('q')
+        }
+
+        const newPath = `${pathname}${params.toString() ? `?${params.toString()}` : ''}`
+        router.replace(newPath, { scroll: false })
+    }
+
     return (
         <NavBar
-            textColor={textColor}
             primary={backgroundColor}
-        // brand={{
-        //     name: 'Tienda Betterware',
-        //     href: '/tienda-betterware',
-        //     initials: 'BW',
-        //     subtitle: 'Catálogo online',
-        // }}
-        // actions={
-        //     whatsappHref
-        //         ? [
-        //             {
-        //                 label: 'WhatsApp',
-        //                 href: whatsappHref,
-        //                 external: true,
-        //                 icon: <FaWhatsapp className="h-4 w-4" />,
-        //                 showOnMobile: true,
-        //             },
-        //         ]
-        //         : []
-        // }
-        // variant={variant}
-        // sticky={sticky}
-        // className={className}
-        // containerClassName={containerClassName}
+            textColor={textColor}
+            textColorLogo={textColor}
+            title={title}
+            logo={logo}
+            query={query}
+            onQueryChange={handleQueryChange}
+            hideOnMobile={hideOnMobile}
         />
     )
 }

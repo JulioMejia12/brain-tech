@@ -1,59 +1,183 @@
 'use client'
-import React, { useState } from 'react'
-import { FiHome, FiMenu, FiPhone, FiStar } from 'react-icons/fi'
-type Props = {
-    primary: string;
-    whatsappNumber?: string;
-    title?: string;
-}
-const MobileMenu = ({ primary, whatsappNumber, title }: Props) => {
-    const [activeNav, setActiveNav] = useState<'home' | 'menu' | 'promos' | 'contact'>('home')
-    // const [dotsOpen, setDotsOpen] = useState<boolean>(false)
 
-    const openWhatsApp = (service?: string) => {
-        const raw = whatsappNumber || ''
-        const digits = raw.replace(/[^0-9]/g, '')
-        if (!digits) {
-            // graceful fallback: do nothing if no number configured
-            // you may replace this with an alert or other UX
-            return
+import { createContext, useContext, useState, type ReactNode } from 'react'
+import { FiHome, FiMenu, FiPhone, FiStar } from 'react-icons/fi'
+
+type MobileMenuContextValue = {
+    primary: string
+    textColor?: string
+    inactiveTextColor?: string
+    activeTextColor?: string
+    activeId: string
+    setActiveId: (id: string) => void
+}
+
+const MobileMenuContext = createContext<MobileMenuContextValue | null>(null)
+
+function useMobileMenu() {
+    const context = useContext(MobileMenuContext)
+
+    if (!context) {
+        throw new Error('MobileMenu.Item must be used within MobileMenu.Root')
+    }
+
+    return context
+}
+
+export type MobileMenuItemProps = {
+    id: string
+    label: string
+    icon: ReactNode
+    targetId?: string
+    href?: string
+    external?: boolean
+    onClick?: () => void
+    className?: string
+}
+
+export function MobileMenuItem({
+    id,
+    label,
+    icon,
+    targetId,
+    href,
+    external = false,
+    onClick,
+    className = '',
+}: MobileMenuItemProps) {
+    const { primary, textColor, inactiveTextColor, activeTextColor, activeId, setActiveId } = useMobileMenu()
+    const active = activeId === id
+
+    const handleClick = () => {
+        setActiveId(id)
+        onClick?.()
+
+        if (targetId) {
+            const element = document.getElementById(targetId)
+
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' })
+                return
+            }
         }
 
-        const message = service
-            ? `Hola, quiero comprar el producto: ${service}`
-            : `Hola, me interesa comprar productos. ¿Me pueden ayudar con más información?`
-        const url = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
-        window.open(url, '_blank')
+        if (href) {
+            if (external) {
+                window.open(href, '_blank', 'noopener,noreferrer')
+            } else {
+                window.location.href = href
+            }
+        }
     }
+
     return (
-        <nav aria-label="Mobile navigation" className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-[94%] max-w-3xl sm:hidden bg-white/95 backdrop-blur rounded-xl shadow-lg px-3 py-2">
-            <div className="flex items-center justify-between">
-                <button onClick={() => { setActiveNav('home'); window.scrollTo({ top: 0, behavior: 'smooth' }) }} className={`flex flex-col items-center text-sm px-2 py-1 rounded ${activeNav === 'home' ? '' : ''}`} style={activeNav === 'home' ? { backgroundColor: primary, color: '#fff' } : { color: '#374151' }}>
-                    <FiHome className="h-6 w-6 mb-1 text-current" />
-                    <span>Productos</span>
-                </button>
-
-                <button onClick={() => { setActiveNav('menu'); const el = document.querySelector('#info'); el && (el as HTMLElement).scrollIntoView({ behavior: 'smooth' }); }} className={`flex flex-col items-center text-sm px-2 py-1 rounded`} style={activeNav === 'menu' ? { backgroundColor: primary, color: '#fff' } : { color: '#374151' }}>
-                    <FiMenu className="h-6 w-6 mb-1 text-current" />
-                    <span>nosotros</span>
-                </button>
-
-                <button onClick={() => { setActiveNav('promos'); const el = document.querySelector('#promos'); el && (el as HTMLElement).scrollIntoView({ behavior: 'smooth' }); }} className={`flex flex-col items-center text-sm px-2 py-1 rounded`} style={activeNav === 'promos' ? { backgroundColor: primary, color: '#fff' } : { color: '#374151' }}>
-                    <FiStar className="h-6 w-6 mb-1 text-current" />
-                    <span>Promos</span>
-                </button>
-
-                <div className="relative flex flex-col items-center text-sm px-2 py-1 rounded">
-                    <button onClick={() => { setActiveNav('contact'); openWhatsApp() }} className={`flex flex-col items-center text-sm px-2 py-1 rounded`} style={activeNav === 'contact' ? { backgroundColor: primary, color: '#fff' } : { color: '#374151' }}>
-                        <div className="mb-1 rounded-full p-1" style={activeNav === 'contact' ? { background: 'transparent' } : { background: '#25D366' }}>
-                            <FiPhone className="h-4 w-4" color="white" />
-                        </div>
-                        <span>Contactame</span>
-                    </button>
-                </div>
-            </div>
-        </nav>
+        <button
+            type="button"
+            onClick={handleClick}
+            className={`flex flex-col items-center rounded px-2 py-1 text-sm transition ${className}`}
+            style={
+                active
+                    ? { backgroundColor: primary, color: activeTextColor ?? textColor ?? '#fff' }
+                    : { color: inactiveTextColor ?? '#374151' }
+            }
+        >
+            <span className="mb-1 flex h-6 w-6 items-center justify-center text-current">{icon}</span>
+            <span>{label}</span>
+        </button>
     )
 }
+
+export type MobileMenuRootProps = {
+    primary: string
+    textColor?: string
+    inactiveTextColor?: string
+    activeTextColor?: string
+    backgroundColor?: string
+    whatsappNumber?: string
+    children?: ReactNode
+    className?: string
+    defaultActiveId?: string
+}
+
+function DefaultMobileMenuItems({ whatsappNumber }: { whatsappNumber?: string }) {
+    const digits = (whatsappNumber || '').replace(/[^0-9]/g, '')
+    const whatsappHref = digits
+        ? `https://wa.me/${digits}?text=${encodeURIComponent('Hola, me interesa comprar productos. ¿Me pueden ayudar con más información?')}`
+        : undefined
+
+    return (
+        <>
+            <MobileMenuItem
+                id="productos"
+                label="Productos"
+                icon={<FiHome className="h-6 w-6" />}
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            />
+            <MobileMenuItem
+                id="nosotros"
+                label="Nosotros"
+                icon={<FiMenu className="h-6 w-6" />}
+                targetId="info"
+            />
+            <MobileMenuItem
+                id="promos"
+                label="Promos"
+                icon={<FiStar className="h-6 w-6" />}
+                targetId="promos"
+            />
+            <MobileMenuItem
+                id="contacto"
+                label="Contáctanos"
+                icon={
+                    <span className="rounded-full bg-[#25D366] p-1 text-white">
+                        <FiPhone className="h-4 w-4" />
+                    </span>
+                }
+                href={whatsappHref}
+                external
+            />
+        </>
+    )
+}
+
+export function MobileMenuRoot({
+    primary,
+    textColor,
+    inactiveTextColor,
+    activeTextColor,
+    backgroundColor,
+    whatsappNumber,
+    children,
+    className = '',
+    defaultActiveId = 'productos',
+}: MobileMenuRootProps) {
+    const [activeId, setActiveId] = useState(defaultActiveId)
+
+    return (
+        <MobileMenuContext.Provider
+            value={{ primary, textColor, inactiveTextColor, activeTextColor, activeId, setActiveId }}
+        >
+            <nav
+                aria-label="Mobile navigation"
+                className={`fixed bottom-0 left-1/2 z-50 w-[94%] max-w-3xl -translate-x-1/2 rounded-xl px-3 py-2 shadow-lg backdrop-blur sm:hidden ${
+                    backgroundColor ? '' : 'bg-white/95'
+                } ${className}`}
+                style={{
+                    ...(backgroundColor ? { backgroundColor } : {}),
+                    ...(textColor ? { color: textColor } : {}),
+                }}
+            >
+                <div className="flex items-center justify-between">
+                    {children ?? <DefaultMobileMenuItems whatsappNumber={whatsappNumber} />}
+                </div>
+            </nav>
+        </MobileMenuContext.Provider>
+    )
+}
+
+const MobileMenu = Object.assign(MobileMenuRoot, {
+    Root: MobileMenuRoot,
+    Item: MobileMenuItem,
+})
 
 export default MobileMenu

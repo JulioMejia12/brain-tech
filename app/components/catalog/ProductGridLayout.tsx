@@ -14,7 +14,9 @@ export type ProductGridLayoutProps<T> = {
     renderItem: (item: T, index: number) => ReactNode
     emptyMessage?: string
     textColor?: string
+    mutedTextColor?: string
     backgroundColor?: string
+    borderColor?: string
     className?: string
     headerClassName?: string
     titleClassName?: string
@@ -33,7 +35,9 @@ export default function ProductGridLayout<T>({
     renderItem,
     emptyMessage = 'No hay elementos disponibles por el momento.',
     textColor,
+    mutedTextColor,
     backgroundColor,
+    borderColor,
     className,
     headerClassName,
     titleClassName,
@@ -70,10 +74,16 @@ export default function ProductGridLayout<T>({
                     </h2>
                     {description ? (
                         <p
-                            style={textColor ? { color: textColor } : undefined}
+                            style={
+                                mutedTextColor
+                                    ? { color: mutedTextColor }
+                                    : textColor
+                                        ? { color: textColor }
+                                        : undefined
+                            }
                             className={cx(
                                 'mt-1 text-sm text-[#4b5563] dark:text-white/70',
-                                textColor && 'opacity-70',
+                                !mutedTextColor && textColor && 'opacity-70',
                                 descriptionClassName,
                             )}
                         >
@@ -90,12 +100,19 @@ export default function ProductGridLayout<T>({
                         'rounded-2xl border border-dashed border-[#111827]/15 px-6 py-12 text-center dark:border-white/15',
                         emptyClassName,
                     )}
+                    style={borderColor ? { borderColor } : undefined}
                 >
                     <p
-                        style={textColor ? { color: textColor } : undefined}
+                        style={
+                            mutedTextColor
+                                ? { color: mutedTextColor }
+                                : textColor
+                                    ? { color: textColor }
+                                    : undefined
+                        }
                         className={cx(
                             'text-sm text-[#4b5563] dark:text-white/70',
-                            textColor && 'opacity-70',
+                            !mutedTextColor && textColor && 'opacity-70',
                         )}
                     >
                         {emptyMessage}

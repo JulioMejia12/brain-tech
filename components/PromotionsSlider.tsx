@@ -46,7 +46,9 @@ export type PromotionsSliderProps = {
     emptyMessage?: ReactNode
     ariaLabel?: string
     textColor?: string
+    mutedTextColor?: string
     backgroundColor?: string
+    accentColor?: string
     onSlideClick?: (slide: NormalizedPromotionSlide, index: number) => void
 }
 
@@ -66,7 +68,9 @@ export default function PromotionsSlider({
     emptyMessage,
     ariaLabel = 'Promociones',
     textColor,
+    mutedTextColor,
     backgroundColor,
+    accentColor,
     onSlideClick,
 }: PromotionsSliderProps) {
     const customColorsStyle = {
@@ -295,8 +299,10 @@ export default function PromotionsSlider({
                                             <p
                                                 className={joinClasses(
                                                     'mt-1 line-clamp-2 text-xs sm:text-sm',
-                                                    textColor ? 'opacity-80' : 'text-white/80',
+                                                    !mutedTextColor && textColor && 'opacity-80',
+                                                    !mutedTextColor && !textColor && 'text-white/80',
                                                 )}
+                                                style={mutedTextColor ? { color: mutedTextColor } : undefined}
                                             >
                                                 {slide.description}
                                             </p>
@@ -412,9 +418,10 @@ export default function PromotionsSlider({
                             className={joinClasses(
                                 'h-2 rounded-full transition-all',
                                 slideIndex === safeIndex
-                                    ? 'w-6 bg-[var(--primary)]'
+                                    ? 'w-6'
                                     : 'w-2 bg-[#111827]/20 hover:bg-[#111827]/40 dark:bg-white/25 dark:hover:bg-white/45'
                             )}
+                            style={slideIndex === safeIndex ? { backgroundColor: accentColor ?? 'var(--primary)' } : undefined}
                         />
                     ))}
                 </div>
