@@ -63,7 +63,11 @@ function BetterwareProductCard({ product, whatsappDigits, theme }: BetterwarePro
                 {product.pieces != null ? (
                     <Card.Badge
                         tone={product.pieces > 0 ? 'success' : 'danger'}
-                        className="shrink-0"
+                        className="shrink-0 font-bold"
+                        style={{
+                            backgroundColor: product.pieces > 0 ? '#00E5FF' : '#FF2E88',
+                            color: '#000000',
+                        }}
                     >
                         {product.pieces > 0 ? formatPieces(product.pieces) : 'Agotado'}
                     </Card.Badge>
@@ -113,7 +117,7 @@ function BetterwareProductCard({ product, whatsappDigits, theme }: BetterwarePro
                         productPath="detail"
                         storeName="Tienda Betterware"
                         className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
-                        style={{ color: theme.text, borderColor: theme.border }}
+                        style={{ color: theme.background, borderColor: theme.background }}
                     />
                     {whatsappDigits ? (
                         <ProductWhatsAppButton
@@ -122,7 +126,7 @@ function BetterwareProductCard({ product, whatsappDigits, theme }: BetterwarePro
                             storeBasePath="/tienda-betterware"
                             productPath="detail"
                             label="Pedir"
-                            className="inline-flex items-center gap-2 rounded-full bg-[var(--secondary)] px-3 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
+                            className="inline-flex items-center gap-2 rounded-full bg-[var(--background)] px-3 py-2 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
                         />
                     ) : null}
                 </Card.Actions>
@@ -213,6 +217,7 @@ export default function BetterwareClientPage({ products, bazarcitoWhatsappNumber
         color: theme.text,
         '--primary': theme.primary,
         '--secondary': theme.secondary,
+        '--background': theme.background,
     } as CSSProperties
 
     return (
@@ -273,6 +278,8 @@ export default function BetterwareClientPage({ products, bazarcitoWhatsappNumber
                                 rel="noreferrer noopener"
                                 className="inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition hover:brightness-95"
                                 style={{ backgroundColor: theme.primary, color: theme.text }}
+                                title="Abre el chat de WhatsApp para pedir"
+                                aria-label="Pedir por WhatsApp: abre el chat de WhatsApp"
                             >
                                 <FaWhatsapp className="h-4 w-4" />
                                 Pedir por WhatsApp

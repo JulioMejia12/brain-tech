@@ -65,6 +65,8 @@ export default function ProductWhatsAppButton({
             onClick={handleRequest}
             disabled={!hasWhatsApp || requesting}
             className={className}
+            title="Abre el chat de WhatsApp para pedir este producto"
+            aria-label="Pedir por WhatsApp: abre el chat de WhatsApp"
         >
             {requesting ? (
                 <ButtonSpinner className="h-4 w-4 text-current" />

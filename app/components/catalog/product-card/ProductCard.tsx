@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import type { ReactNode } from 'react'
 import { FiTrash2 } from 'react-icons/fi'
+import { FaWhatsapp } from 'react-icons/fa'
 import type { Product } from '@/app/lib/products'
 import ButtonSpinner from '@/app/components/ui/ButtonSpinner'
 import { ProductCardContext, useProductCard } from './product-card-context'
@@ -200,14 +201,24 @@ function RequestButton({ onClick, loading, disabled, label = 'Pedir por WhatsApp
                 className,
             )}
             style={{ background: primary }}
+            title="Abre el chat de WhatsApp para pedir este producto"
+            aria-label="Pedir por WhatsApp: abre el chat de WhatsApp"
         >
             {loading ? (
                 <>
                     <ButtonSpinner className="h-4 w-4 text-white" />
-                    <span>Abriendo...</span>
+                    <span>Abriendo WhatsApp...</span>
                 </>
             ) : (
-                label
+                <>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20">
+                        <FaWhatsapp className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="flex flex-col items-start leading-tight">
+                        <span>{label}</span>
+                        <span className="text-[11px] font-normal text-white/80">Abre el chat</span>
+                    </span>
+                </>
             )}
         </button>
     )
@@ -225,14 +236,24 @@ function ShareButton({ onClick, loading, disabled, label = 'Compartir por WhatsA
                 'inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded border border-gray-300 px-4 py-2 text-sm text-gray-800 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70 md:text-base',
                 className,
             )}
+            title="Abre WhatsApp para compartir este producto"
+            aria-label="Compartir por WhatsApp: abre WhatsApp para compartir"
         >
             {loading ? (
                 <>
                     <ButtonSpinner className="h-4 w-4 text-gray-800" />
-                    <span>Abriendo...</span>
+                    <span>Abriendo WhatsApp...</span>
                 </>
             ) : (
-                label
+                <>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100">
+                        <FaWhatsapp className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="flex flex-col items-start leading-tight">
+                        <span>{label}</span>
+                        <span className="text-[11px] font-normal text-gray-500">Abre WhatsApp</span>
+                    </span>
+                </>
             )}
         </button>
     )

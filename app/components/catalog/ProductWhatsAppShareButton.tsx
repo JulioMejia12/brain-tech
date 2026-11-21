@@ -67,6 +67,8 @@ export default function ProductWhatsAppShareButton({
             disabled={disabled || sharing}
             className={className}
             style={style}
+            title="Abre WhatsApp para compartir este producto"
+            aria-label="Compartir por WhatsApp: abre WhatsApp para compartir"
         >
             {sharing ? (
                 <ButtonSpinner className="h-4 w-4 text-current" />
