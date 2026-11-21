@@ -19,6 +19,7 @@ import AdsCarousel from '../../../components/AdsCarousel'
 import PromotionsClient from '../../../components/PromotionsClient'
 import Image from 'next/image'
 import { FiTrash2 } from 'react-icons/fi'
+import { FaWhatsapp } from 'react-icons/fa'
 import FloatingWhatsApp from '@/components/FloatingWhatsApp'
 import MobileMenu from './MobileMenu'
 import ConfirmModal from '../ui/ConfirmModal'
@@ -718,31 +719,49 @@ const ProductsSell = ({
                                                     type="button"
                                                     className="w-full px-4 py-2 rounded text-white text-sm md:text-base whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                                                     style={{ background: primary }}
+                                                    title="Abre el chat de WhatsApp para pedir este producto"
+                                                    aria-label="Pedir por WhatsApp: abre el chat de WhatsApp"
                                                     disabled={requestingIds.includes(String(p.id))}
                                                     onClick={() => handleRequestProduct(p)}
                                                 >
                                                     {requestingIds.includes(String(p.id)) ? (
                                                         <>
                                                             <ButtonSpinner className="h-4 w-4 text-white" />
-                                                            <span>Abriendo...</span>
+                                                            <span>Abriendo WhatsApp...</span>
                                                         </>
                                                     ) : (
-                                                        'Pedir por WhatsApp'
+                                                        <>
+                                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20">
+                                                                <FaWhatsapp className="h-4 w-4" aria-hidden="true" />
+                                                            </span>
+                                                            <span className="flex flex-col items-start leading-tight">
+                                                                <span className="text-sm font-semibold md:text-base">Pedir por WhatsApp</span>
+                                                            </span>
+                                                        </>
                                                     )}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     className="w-full px-4 py-2 rounded border border-gray-300 text-gray-800 text-sm md:text-base whitespace-nowrap hover:bg-gray-50 disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                                                    title="Abre WhatsApp para compartir este producto"
+                                                    aria-label="Compartir por WhatsApp: abre WhatsApp para compartir"
                                                     disabled={sharingIds.includes(String(p.id))}
                                                     onClick={() => handleShareProduct(p)}
                                                 >
                                                     {sharingIds.includes(String(p.id)) ? (
                                                         <>
                                                             <ButtonSpinner className="h-4 w-4 text-gray-800" />
-                                                            <span>Abriendo...</span>
+                                                            <span>Abriendo WhatsApp...</span>
                                                         </>
                                                     ) : (
-                                                        'Compartir por WhatsApp'
+                                                        <>
+                                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-100">
+                                                                <FaWhatsapp className="h-4 w-4" aria-hidden="true" />
+                                                            </span>
+                                                            <span className="flex flex-col items-start leading-tight">
+                                                                <span className="text-sm font-semibold md:text-base">Compartir por WhatsApp</span>
+                                                            </span>
+                                                        </>
                                                     )}
                                                 </button>
                                             </div>
